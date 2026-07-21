@@ -1,0 +1,1 @@
+<?php get_header(); ?><div class="container"><header class="page-header"><h1 class="page-title">Страница не найдена</h1></header><div class="content-area"><p>Похоже, такой страницы нет.</p><a class="button" href="<?php echo esc_url(home_url('/')); ?>">На главную</a></div></div><?php get_footer(); ?>
