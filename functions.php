@@ -20,8 +20,12 @@ function cg_setup() {
 add_action('after_setup_theme','cg_setup');
 
 function cg_assets() {
-    wp_enqueue_style('cg-style', get_stylesheet_uri(), [], '1.1.0');
-    wp_enqueue_script('cg-main', get_template_directory_uri().'/assets/js/main.js', [], '1.1.0', true);
+    $version = wp_get_theme()->get('Version');
+    wp_enqueue_style('cg-style', get_stylesheet_uri(), [], $version);
+    if (is_front_page()) {
+        wp_enqueue_style('cg-homepage', get_template_directory_uri().'/assets/css/homepage.css', ['cg-style'], $version);
+    }
+    wp_enqueue_script('cg-main', get_template_directory_uri().'/assets/js/main.js', [], $version, true);
 }
 add_action('wp_enqueue_scripts','cg_assets');
 
@@ -58,7 +62,6 @@ function cg_fallback_menu(){ echo '<ul><li><a href="'.esc_url(home_url('/')).'">
 
 add_filter('loop_shop_columns', fn()=>4);
 add_filter('loop_shop_per_page', fn($n)=>12, 20);
-
 
 /** Elementor compatibility. */
 function cg_register_elementor_locations($elementor_theme_manager) {
