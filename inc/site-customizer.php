@@ -26,6 +26,8 @@ function cg_site_customize($wp_customize) {
         'cg_brand_subtitle' => ['Подпись под названием', 'магазин цветов', 'cg_header_settings', 'text'],
         'cg_whatsapp_url' => ['Ссылка WhatsApp', '', 'cg_header_settings', 'url'],
         'cg_telegram_url' => ['Ссылка Telegram', '', 'cg_header_settings', 'url'],
+        'cg_vk_url' => ['Ссылка ВКонтакте', '', 'cg_header_settings', 'url'],
+        'cg_instagram_url' => ['Ссылка Instagram', '', 'cg_header_settings', 'url'],
         'cg_footer_text' => ['Описание в подвале', 'Букеты и подарки с доставкой по Нововоронежу и Воронежской области.', 'cg_footer_settings', 'textarea'],
         'cg_footer_catalog_title' => ['Заголовок колонки каталога', 'Каталог', 'cg_footer_settings', 'text'],
         'cg_footer_buyers_title' => ['Заголовок колонки покупателям', 'Покупателям', 'cg_footer_settings', 'text'],
