@@ -7,29 +7,33 @@ if (cg_elementor_is_built(get_the_ID())) :
 <main id="primary" class="site-main elementor-front-page"><?php the_content(); ?></main>
 <?php else: ?>
 <main id="primary" class="site-main cg-home">
+<?php $slides = cg_get_home_slides(); if ($slides): ?>
 <section class="cg-slider" aria-label="Главные предложения">
-    <button class="cg-slider__arrow cg-slider__arrow--prev" type="button" aria-label="Предыдущий слайд">‹</button>
-    <div class="cg-slide cg-slide--one is-active">
+    <?php if (count($slides) > 1): ?><button class="cg-slider__arrow cg-slider__arrow--prev" type="button" aria-label="Предыдущий слайд">‹</button><?php endif; ?>
+    <?php foreach ($slides as $index => $slide):
+        $media_style = $slide['image'] ? ' style="background-image:url(' . esc_url($slide['image']) . ')"' : '';
+        $heading_tag = $index === 0 ? 'h1' : 'h2';
+    ?>
+    <div class="cg-slide cg-slide--<?php echo esc_attr($slide['number']); ?><?php echo $index === 0 ? ' is-active' : ''; ?>">
         <div class="container cg-slide__inner">
-            <div class="cg-slide__copy"><div class="eyebrow">Цветы с доставкой</div><h1><?php echo esc_html(get_theme_mod('cg_hero_title','Дарите эмоции вместе с цветами')); ?></h1><p><?php echo esc_html(get_theme_mod('cg_hero_text','Свежие цветы, стильные букеты и быстрая доставка по Нововоронежу и Воронежской области.')); ?></p><div class="hero-actions"><a class="button" href="<?php echo esc_url(cg_catalog_url()); ?>"><?php echo esc_html(get_theme_mod('cg_hero_button','Смотреть каталог')); ?></a><a class="button button--ghost" href="#popular">Популярные букеты</a></div></div>
-            <div class="cg-slide__media"></div>
+            <div class="cg-slide__copy">
+                <?php if ($slide['eyebrow']): ?><div class="eyebrow"><?php echo esc_html($slide['eyebrow']); ?></div><?php endif; ?>
+                <<?php echo $heading_tag; ?>><?php echo esc_html($slide['title']); ?></<?php echo $heading_tag; ?>>
+                <?php if ($slide['text']): ?><p><?php echo esc_html($slide['text']); ?></p><?php endif; ?>
+                <?php if ($slide['button'] && $slide['url']): ?><div class="hero-actions"><a class="button" href="<?php echo esc_url($slide['url']); ?>"><?php echo esc_html($slide['button']); ?></a><?php if ($index === 0): ?><a class="button button--ghost" href="#popular">Популярные букеты</a><?php endif; ?></div><?php endif; ?>
+            </div>
+            <div class="cg-slide__media"<?php echo $media_style; ?>></div>
         </div>
     </div>
-    <div class="cg-slide cg-slide--two">
-        <div class="container cg-slide__inner">
-            <div class="cg-slide__copy"><div class="eyebrow">Авторская флористика</div><h2>Букеты, созданные специально для вас</h2><p>Соберём композицию под повод, настроение и бюджет. Перед доставкой отправим фотографию готового букета.</p><div class="hero-actions"><a class="button" href="<?php echo esc_url(home_url('/product-category/avtorskie/')); ?>">Авторские букеты</a></div></div>
-            <div class="cg-slide__media"></div>
+    <?php endforeach; ?>
+    <?php if (count($slides) > 1): ?>
+        <button class="cg-slider__arrow cg-slider__arrow--next" type="button" aria-label="Следующий слайд">›</button>
+        <div class="cg-slider__nav" aria-label="Навигация по слайдам">
+            <?php foreach ($slides as $index => $slide): ?><button class="cg-slider__dot<?php echo $index === 0 ? ' is-active' : ''; ?>" type="button" aria-label="Слайд <?php echo esc_attr($index + 1); ?>"></button><?php endforeach; ?>
         </div>
-    </div>
-    <div class="cg-slide cg-slide--three">
-        <div class="container cg-slide__inner">
-            <div class="cg-slide__copy"><div class="eyebrow">Доставка в день заказа</div><h2>Красивый подарок точно ко времени</h2><p>Доставляем по Нововоронежу и Воронежской области. Добавим открытку с вашим текстом бесплатно.</p><div class="hero-actions"><a class="button" href="<?php echo esc_url(cg_catalog_url()); ?>">Выбрать букет</a></div></div>
-            <div class="cg-slide__media"></div>
-        </div>
-    </div>
-    <button class="cg-slider__arrow cg-slider__arrow--next" type="button" aria-label="Следующий слайд">›</button>
-    <div class="cg-slider__nav" aria-label="Навигация по слайдам"><button class="cg-slider__dot is-active" type="button" aria-label="Слайд 1"></button><button class="cg-slider__dot" type="button" aria-label="Слайд 2"></button><button class="cg-slider__dot" type="button" aria-label="Слайд 3"></button></div>
+    <?php endif; ?>
 </section>
+<?php endif; ?>
 
 <section class="cg-benefits"><div class="container cg-benefits__grid">
     <div class="cg-benefit"><div class="cg-benefit__icon">🌷</div><div><strong>Свежие цветы</strong><span>Ежедневные поставки</span></div></div>
