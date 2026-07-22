@@ -31,16 +31,24 @@ function cg_site_customize($wp_customize) {
         'cg_footer_buyers_title' => ['Заголовок колонки покупателям', 'Покупателям', 'cg_footer_settings', 'text'],
         'cg_footer_contacts_title' => ['Заголовок колонки контактов', 'Контакты', 'cg_footer_settings', 'text'],
         'cg_footer_copyright' => ['Текст копирайта', 'Цветочный город', 'cg_footer_settings', 'text'],
-        'cg_footer_legal' => ['Юридические ссылки/текст', 'Политика конфиденциальности · Публичная оферта', 'cg_footer_settings', 'text'],
+        'cg_footer_legal' => ['Юридический текст', 'Политика конфиденциальности · Публичная оферта', 'cg_footer_settings', 'text'],
     ];
 
     foreach ($fields as $id => $field) {
         $type = $field[3];
         $sanitize = $type === 'textarea' ? 'sanitize_textarea_field' : ($type === 'url' ? 'esc_url_raw' : 'sanitize_text_field');
-        $wp_customize->add_setting($id, [
-            'default' => $field[1],
-            'sanitize_callback' => $sanitize,
-        ]);
+
+        if (!$wp_customize->get_setting($id)) {
+            $wp_customize->add_setting($id, [
+                'default' => $field[1],
+                'sanitize_callback' => $sanitize,
+            ]);
+        }
+
+        if ($wp_customize->get_control($id)) {
+            $wp_customize->remove_control($id);
+        }
+
         $wp_customize->add_control($id, [
             'label' => $field[0],
             'section' => $field[2],
@@ -58,4 +66,4 @@ function cg_site_customize($wp_customize) {
         'type' => 'checkbox',
     ]);
 }
-add_action('customize_register', 'cg_site_customize');
+add_action('customize_register', 'cg_site_customize', 20);
