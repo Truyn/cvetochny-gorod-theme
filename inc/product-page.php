@@ -26,17 +26,30 @@ function cg_single_product_status() {
 }
 add_action('woocommerce_single_product_summary', 'cg_single_product_status', 6);
 
+/** Inline SVG icon used by the product advantages. */
+function cg_product_benefit_icon($name) {
+    $icons = [
+        'delivery' => '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h11v9H3z"/><path d="M14 9h4l3 3v3h-7z"/><circle cx="7" cy="18" r="2"/><circle cx="18" cy="18" r="2"/></svg>',
+        'photo' => '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h4l2-2h4l2 2h4v12H4z"/><circle cx="12" cy="13" r="4"/></svg>',
+        'fresh' => '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21V10"/><path d="M12 14c-5 0-8-3-8-7 5 0 8 3 8 7Z"/><path d="M12 11c0-4 3-7 8-7 0 4-3 7-8 7Z"/></svg>',
+        'card' => '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="14" rx="2"/><path d="m7 9 5 4 5-4"/></svg>',
+    ];
+
+    return isset($icons[$name]) ? $icons[$name] : '';
+}
+
 /** Add delivery and quality advantages next to the buy form. */
 function cg_single_product_benefits() {
-    echo '<div class="cg-product-benefits" aria-label="Преимущества заказа">';
     $items = [
-        ['🚚', 'Доставка сегодня', 'По Нововоронежу в удобное время'],
-        ['📷', 'Фото перед отправкой', 'Покажем готовый букет до доставки'],
-        ['🌿', 'Свежие цветы', 'Собираем букет непосредственно перед отправкой'],
-        ['💌', 'Открытка бесплатно', 'Добавим ваши пожелания к заказу'],
+        ['delivery', 'Доставка сегодня', 'По Нововоронежу в удобное время'],
+        ['photo', 'Фото перед отправкой', 'Покажем готовый букет до доставки'],
+        ['fresh', 'Свежие цветы', 'Собираем букет непосредственно перед отправкой'],
+        ['card', 'Открытка бесплатно', 'Добавим ваши пожелания к заказу'],
     ];
+
+    echo '<div class="cg-product-benefits" aria-label="Преимущества заказа">';
     foreach ($items as $item) {
-        echo '<div class="cg-product-benefit"><span class="cg-product-benefit__icon" aria-hidden="true">'.esc_html($item[0]).'</span><span><strong>'.esc_html($item[1]).'</strong><small>'.esc_html($item[2]).'</small></span></div>';
+        echo '<div class="cg-product-benefit"><span class="cg-product-benefit__icon" aria-hidden="true">'.cg_product_benefit_icon($item[0]).'</span><span><strong>'.esc_html($item[1]).'</strong><small>'.esc_html($item[2]).'</small></span></div>';
     }
     echo '</div>';
 }
