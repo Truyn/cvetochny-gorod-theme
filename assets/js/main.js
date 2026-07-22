@@ -8,6 +8,16 @@ document.addEventListener('DOMContentLoaded',()=>{
     });
   }
 
+  const filterButton=document.querySelector('.cg-filter-toggle');
+  const shopSidebar=document.querySelector('.cg-shop-sidebar');
+  if(filterButton&&shopSidebar){
+    filterButton.addEventListener('click',()=>{
+      const open=shopSidebar.classList.toggle('is-open');
+      filterButton.setAttribute('aria-expanded',open?'true':'false');
+      filterButton.textContent=open?'Скрыть фильтры':'Показать фильтры';
+    });
+  }
+
   const slider=document.querySelector('.cg-slider');
   if(!slider) return;
   const slides=[...slider.querySelectorAll('.cg-slide')];
