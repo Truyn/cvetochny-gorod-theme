@@ -42,10 +42,16 @@
                     <a href="tel:<?php echo esc_attr(preg_replace('/[^0-9+]/', '', get_theme_mod('cg_phone', '+7 (900) 000-00-00'))); ?>"><?php echo esc_html(get_theme_mod('cg_phone', '+7 (900) 000-00-00')); ?></a>
                     <span><?php echo esc_html(get_theme_mod('cg_worktime', 'Ежедневно с 09:00 до 21:00')); ?></span>
                     <?php if (get_theme_mod('cg_whatsapp_url', '')): ?>
-                        <a href="<?php echo esc_url(get_theme_mod('cg_whatsapp_url')); ?>" target="_blank" rel="noopener">WhatsApp</a>
+                        <a href="<?php echo esc_url(get_theme_mod('cg_whatsapp_url')); ?>" target="_blank" rel="noopener noreferrer">WhatsApp</a>
                     <?php endif; ?>
                     <?php if (get_theme_mod('cg_telegram_url', '')): ?>
-                        <a href="<?php echo esc_url(get_theme_mod('cg_telegram_url')); ?>" target="_blank" rel="noopener">Telegram</a>
+                        <a href="<?php echo esc_url(get_theme_mod('cg_telegram_url')); ?>" target="_blank" rel="noopener noreferrer">Telegram</a>
+                    <?php endif; ?>
+                    <?php if (get_theme_mod('cg_vk_url', '')): ?>
+                        <a href="<?php echo esc_url(get_theme_mod('cg_vk_url')); ?>" target="_blank" rel="noopener noreferrer">ВКонтакте</a>
+                    <?php endif; ?>
+                    <?php if (get_theme_mod('cg_instagram_url', '')): ?>
+                        <a href="<?php echo esc_url(get_theme_mod('cg_instagram_url')); ?>" target="_blank" rel="noopener noreferrer">Instagram</a>
                     <?php endif; ?>
                 </div>
             </div>
