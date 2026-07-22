@@ -192,7 +192,7 @@ $slides = function_exists('cg_get_home_slides') ? cg_get_home_slides() : [];
         $about_image = get_theme_mod('cg_about_image', '');
         $about_style = $about_image ? 'background-image:url(' . esc_url($about_image) . ');' : '';
         ?>
-        <section class="section">
+        <section class="section cg-about-section">
             <div class="container">
                 <div class="cg-about">
                     <div class="cg-about__image"<?php echo $about_style ? ' style="' . esc_attr($about_style) . '"' : ''; ?> aria-hidden="true"></div>
@@ -200,8 +200,45 @@ $slides = function_exists('cg_get_home_slides') ? cg_get_home_slides() : [];
                         <div class="eyebrow"><?php echo esc_html(get_theme_mod('cg_about_eyebrow', 'О нас')); ?></div>
                         <h2><?php echo esc_html(get_theme_mod('cg_about_title', 'Мы создаём букеты, которые говорят за вас')); ?></h2>
                         <p><?php echo esc_html(get_theme_mod('cg_about_text', 'Каждый букет — это забота, вдохновение и внимание к деталям. Мы бережно собираем композиции и доставляем их по Нововоронежу и Воронежской области.')); ?></p>
+                        <div class="cg-about__facts" aria-label="О магазине">
+                            <div><strong>7 дней</strong><span>работаем без выходных</span></div>
+                            <div><strong>Фото</strong><span>согласуем букет до отправки</span></div>
+                            <div><strong>Свежесть</strong><span>собираем непосредственно перед доставкой</span></div>
+                        </div>
                         <a class="button" href="<?php echo esc_url(get_theme_mod('cg_about_url', home_url('/about/'))); ?>"><?php echo esc_html(get_theme_mod('cg_about_button', 'Подробнее о нас')); ?></a>
                     </div>
+                </div>
+            </div>
+        </section>
+    <?php endif; ?>
+
+    <?php if (get_theme_mod('cg_instagram_enabled', true)) :
+        $instagram_url = get_theme_mod('cg_instagram_url', '');
+        ?>
+        <section class="section cg-instagram-section">
+            <div class="container">
+                <div class="section-head">
+                    <div>
+                        <div class="eyebrow"><?php echo esc_html(get_theme_mod('cg_instagram_eyebrow', 'Вдохновение')); ?></div>
+                        <h2 class="section-title"><?php echo esc_html(get_theme_mod('cg_instagram_title', 'Цветочный город в Instagram')); ?></h2>
+                        <div class="section-subtitle"><?php echo esc_html(get_theme_mod('cg_instagram_text', 'Новые букеты, детали сборки и идеи для особенных поводов.')); ?></div>
+                    </div>
+                    <?php if ($instagram_url) : ?>
+                        <a class="text-link" href="<?php echo esc_url($instagram_url); ?>" target="_blank" rel="noopener noreferrer">Перейти в Instagram →</a>
+                    <?php endif; ?>
+                </div>
+                <div class="cg-instagram-grid">
+                    <?php for ($i = 1; $i <= 6; $i++) :
+                        $image = get_theme_mod("cg_instagram_image_{$i}", '');
+                        $style = $image ? 'background-image:url(' . esc_url($image) . ');' : '';
+                        ?>
+                        <a class="cg-instagram-card cg-instagram-card--<?php echo esc_attr($i); ?>" href="<?php echo esc_url($instagram_url ?: '#'); ?>"<?php echo $instagram_url ? ' target="_blank" rel="noopener noreferrer"' : ''; ?> aria-label="Публикация <?php echo esc_attr($i); ?>">
+                            <span class="cg-instagram-card__image"<?php echo $style ? ' style="' . esc_attr($style) . '"' : ''; ?>></span>
+                            <span class="cg-instagram-card__overlay" aria-hidden="true">
+                                <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1"/></svg>
+                            </span>
+                        </a>
+                    <?php endfor; ?>
                 </div>
             </div>
         </section>
