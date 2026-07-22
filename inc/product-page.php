@@ -7,6 +7,8 @@
 
 if (!defined('ABSPATH')) exit;
 
+require_once get_template_directory() . '/inc/cart-checkout.php';
+
 /** Add a compact product status row below the title. */
 function cg_single_product_status() {
     global $product;
@@ -49,31 +51,14 @@ function cg_single_product_guarantee() {
 }
 add_action('woocommerce_after_single_product_summary', 'cg_single_product_guarantee', 8);
 
-/** Rename related products heading for the flower shop. */
-add_filter('woocommerce_product_related_products_heading', function () {
-    return 'Похожие букеты';
-});
+add_filter('woocommerce_product_related_products_heading', function () { return 'Похожие букеты'; });
+add_filter('woocommerce_output_related_products_args', function ($args) { $args['posts_per_page']=4; $args['columns']=4; return $args; });
 
-/** Keep related products compact and balanced. */
-add_filter('woocommerce_output_related_products_args', function ($args) {
-    $args['posts_per_page'] = 4;
-    $args['columns'] = 4;
-    return $args;
-});
-
-/** Add a delivery tab with store-specific information. */
 function cg_product_delivery_tab($tabs) {
-    $tabs['cg_delivery'] = [
-        'title'    => 'Доставка и оплата',
-        'priority' => 25,
-        'callback' => 'cg_product_delivery_tab_content',
-    ];
+    $tabs['cg_delivery']=['title'=>'Доставка и оплата','priority'=>25,'callback'=>'cg_product_delivery_tab_content'];
     return $tabs;
 }
 add_filter('woocommerce_product_tabs', 'cg_product_delivery_tab');
-
 function cg_product_delivery_tab_content() {
-    echo '<h2>Доставка и оплата</h2>';
-    echo '<p>Доставляем букеты по Нововоронежу и ближайшим районам. Точную стоимость и доступное время подтвердит менеджер после оформления заказа.</p>';
-    echo '<ul><li>Можно выбрать удобный интервал доставки.</li><li>Перед отправкой пришлём фотографию готового букета.</li><li>Оплата доступна способами, настроенными в WooCommerce.</li></ul>';
+    echo '<h2>Доставка и оплата</h2><p>Доставляем букеты по Нововоронежу и ближайшим районам. Точную стоимость и доступное время подтвердит менеджер после оформления заказа.</p><ul><li>Можно выбрать удобный интервал доставки.</li><li>Перед отправкой пришлём фотографию готового букета.</li><li>Оплата доступна способами, настроенными в WooCommerce.</li></ul>';
 }
