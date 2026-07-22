@@ -103,3 +103,5 @@ function cg_get_home_slides() {
     }
     return $slides;
 }
+
+require_once get_template_directory() . '/inc/home-sections.php';
