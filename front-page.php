@@ -75,17 +75,29 @@ $slides = function_exists('cg_get_home_slides') ? cg_get_home_slides() : [];
 
     <?php if (get_theme_mod('cg_benefits_enabled', true)) :
         $benefit_defaults = [
-            1 => ['🌷', 'Свежие цветы', 'Ежедневные поставки'],
-            2 => ['🚚', 'Быстрая доставка', 'По городу и области'],
-            3 => ['📷', 'Фото перед отправкой', 'Покажем готовый букет'],
-            4 => ['💌', 'Открытка бесплатно', 'Добавим ваши слова'],
+            1 => ['flower', 'Свежие цветы', 'Ежедневные поставки'],
+            2 => ['delivery', 'Быстрая доставка', 'По городу и области'],
+            3 => ['camera', 'Фото перед отправкой', 'Покажем готовый букет'],
+            4 => ['card', 'Открытка бесплатно', 'Добавим ваши слова'],
         ];
         ?>
-        <section class="cg-benefits">
+        <section class="cg-benefits" aria-label="Преимущества магазина">
             <div class="container cg-benefits__grid">
-                <?php foreach ($benefit_defaults as $number => $defaults) : ?>
+                <?php foreach ($benefit_defaults as $number => $defaults) :
+                    $icon = get_theme_mod("cg_benefit_{$number}_icon", $defaults[0]);
+                    ?>
                     <div class="cg-benefit">
-                        <div class="cg-benefit__icon"><?php echo esc_html(get_theme_mod("cg_benefit_{$number}_icon", $defaults[0])); ?></div>
+                        <div class="cg-benefit__icon" aria-hidden="true">
+                            <?php if ($icon === 'delivery') : ?>
+                                <svg viewBox="0 0 24 24"><path d="M3 6h11v9H3zM14 9h4l3 3v3h-7zM7 18a2 2 0 1 0 0-4 2 2 0 0 0 0 4ZM18 18a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z"/></svg>
+                            <?php elseif ($icon === 'camera') : ?>
+                                <svg viewBox="0 0 24 24"><path d="M4 7h3l1.5-2h7L17 7h3v11H4zM12 16a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z"/></svg>
+                            <?php elseif ($icon === 'card') : ?>
+                                <svg viewBox="0 0 24 24"><path d="M3 6h18v12H3zM3 8l9 6 9-6"/></svg>
+                            <?php else : ?>
+                                <svg viewBox="0 0 24 24"><path d="M12 21c-1.5-3.7-1-6.7 1.6-9.1 2.2-2 4.7-2.6 7.4-1.8-1.2 4.8-4.2 8.2-9 10.9ZM11 21C6 19.4 3 16.1 2 11.2c2.9-.9 5.5-.2 7.7 2 2.3 2.3 2.7 4.9 1.3 7.8ZM12 12C8.7 9.8 7.3 7 8 3.4c3.2.7 5.4 2.5 6.5 5.4-1 1-1.8 2-2.5 3.2Z"/></svg>
+                            <?php endif; ?>
+                        </div>
                         <div>
                             <strong><?php echo esc_html(get_theme_mod("cg_benefit_{$number}_title", $defaults[1])); ?></strong>
                             <span><?php echo esc_html(get_theme_mod("cg_benefit_{$number}_text", $defaults[2])); ?></span>
