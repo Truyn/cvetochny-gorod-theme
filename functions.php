@@ -25,12 +25,24 @@ function cg_assets() {
     if (is_front_page()) {
         wp_enqueue_style('cg-homepage', get_template_directory_uri().'/assets/css/homepage.css', ['cg-style'], $version);
     }
+    if (class_exists('WooCommerce') && (is_woocommerce() || is_cart() || is_checkout() || is_account_page())) {
+        wp_enqueue_style('cg-woocommerce', get_template_directory_uri().'/assets/css/woocommerce.css', ['cg-style'], $version);
+    }
     wp_enqueue_script('cg-main', get_template_directory_uri().'/assets/js/main.js', [], $version, true);
 }
 add_action('wp_enqueue_scripts','cg_assets');
 
 function cg_widgets() {
     register_sidebar(['name'=>'Подвал: колонка 1','id'=>'footer-1','before_widget'=>'<div class="footer-widget">','after_widget'=>'</div>','before_title'=>'<div class="footer-title">','after_title'=>'</div>']);
+    register_sidebar([
+        'name'=>'Фильтры каталога',
+        'id'=>'shop-filters',
+        'description'=>'Добавьте сюда фильтры WooCommerce: категории, цена, атрибуты и наличие.',
+        'before_widget'=>'<section class="widget %2$s">',
+        'after_widget'=>'</section>',
+        'before_title'=>'<h2 class="widget-title">',
+        'after_title'=>'</h2>'
+    ]);
 }
 add_action('widgets_init','cg_widgets');
 
@@ -91,13 +103,68 @@ function cg_body_classes($classes) {
 }
 add_filter('body_class', 'cg_body_classes');
 
-/** Keep WooCommerce notices and pages stable inside Elementor layouts. */
-function cg_wc_wrapper_start(){ echo '<main id="primary" class="site-main"><div class="container content-area cg-woo-wrap">'; }
-function cg_wc_wrapper_end(){ echo '</div></main>'; }
+/** WooCommerce layout. */
+function cg_shop_sidebar() {
+    echo '<button class="cg-filter-toggle" type="button" aria-expanded="false" aria-controls="cg-shop-sidebar">Показать фильтры</button>';
+    echo '<aside id="cg-shop-sidebar" class="cg-shop-sidebar" aria-label="Фильтры каталога">';
+    if (is_active_sidebar('shop-filters')) {
+        dynamic_sidebar('shop-filters');
+    } else {
+        echo '<section class="widget"><h2 class="widget-title">Категории</h2><ul>';
+        wp_list_categories(['taxonomy'=>'product_cat','title_li'=>'','hide_empty'=>true]);
+        echo '</ul></section>';
+    }
+    echo '</aside>';
+}
+
+function cg_wc_wrapper_start(){
+    echo '<main id="primary" class="site-main"><div class="container content-area cg-woo-wrap">';
+    if (is_shop() || is_product_taxonomy()) {
+        echo '<div class="cg-shop-shell">';
+        cg_shop_sidebar();
+        echo '<div class="cg-shop-content">';
+    }
+}
+function cg_wc_wrapper_end(){
+    if (is_shop() || is_product_taxonomy()) echo '</div></div>';
+    echo '</div></main>';
+}
 remove_action('woocommerce_before_main_content','woocommerce_output_content_wrapper',10);
 remove_action('woocommerce_after_main_content','woocommerce_output_content_wrapper_end',10);
+remove_action('woocommerce_sidebar','woocommerce_get_sidebar',10);
 add_action('woocommerce_before_main_content','cg_wc_wrapper_start',10);
 add_action('woocommerce_after_main_content','cg_wc_wrapper_end',10);
+
+function cg_shop_toolbar_start(){ echo '<div class="cg-shop-toolbar">'; }
+function cg_shop_toolbar_end(){ echo '</div>'; }
+add_action('woocommerce_before_shop_loop','cg_shop_toolbar_start',15);
+add_action('woocommerce_before_shop_loop','cg_shop_toolbar_end',35);
+
+/** Product card image, badges and compact metadata. */
+function cg_loop_product_media(){
+    global $product;
+    if (!$product) return;
+    echo '<div class="cg-product-image-wrap"><div class="cg-product-badges">';
+    if ($product->is_on_sale()) echo '<span class="cg-product-badge cg-product-badge--sale">Скидка</span>';
+    $created = $product->get_date_created();
+    if ($created && (time() - $created->getTimestamp()) < DAY_IN_SECONDS * 30) echo '<span class="cg-product-badge cg-product-badge--new">Новинка</span>';
+    if ($product->is_featured()) echo '<span class="cg-product-badge cg-product-badge--hit">Хит</span>';
+    echo '</div>'.woocommerce_get_product_thumbnail('woocommerce_thumbnail').'</div>';
+}
+remove_action('woocommerce_before_shop_loop_item_title','woocommerce_show_product_loop_sale_flash',10);
+remove_action('woocommerce_before_shop_loop_item_title','woocommerce_template_loop_product_thumbnail',10);
+add_action('woocommerce_before_shop_loop_item_title','cg_loop_product_media',10);
+
+function cg_loop_product_meta(){
+    global $product;
+    if (!$product) return;
+    $parts = [];
+    if ($product->is_in_stock()) $parts[] = 'В наличии';
+    if ($product->get_shipping_class()) $parts[] = 'Доставка сегодня';
+    if (!$parts) return;
+    echo '<div class="cg-product-meta"><span>'.implode('</span><span>', array_map('esc_html', $parts)).'</span></div>';
+}
+add_action('woocommerce_after_shop_loop_item_title','cg_loop_product_meta',7);
 
 /** Admin notice with the recommended setup. */
 function cg_admin_notice() {
