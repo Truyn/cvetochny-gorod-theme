@@ -4,6 +4,7 @@ if (!defined('ABSPATH')) exit;
 require_once get_template_directory() . '/inc/product-page.php';
 require_once get_template_directory() . '/inc/account-search.php';
 require_once get_template_directory() . '/inc/home-slider.php';
+require_once get_template_directory() . '/inc/home-sections.php';
 
 function cg_setup() {
     load_theme_textdomain('cvetochny-gorod', get_template_directory() . '/languages');
