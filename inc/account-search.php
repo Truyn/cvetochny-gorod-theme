@@ -7,6 +7,17 @@
 
 if (!defined('ABSPATH')) exit;
 
+/** Load search and account styles after the main theme stylesheet. */
+function cg_account_search_assets() {
+    wp_enqueue_style(
+        'cg-account-search',
+        get_template_directory_uri() . '/assets/css/account-search.css',
+        ['cg-style'],
+        wp_get_theme()->get('Version')
+    );
+}
+add_action('wp_enqueue_scripts', 'cg_account_search_assets', 20);
+
 /** Limit the header search to WooCommerce products. */
 function cg_product_search_form() {
     $value = get_search_query();
@@ -46,7 +57,7 @@ add_filter('woocommerce_account_menu_items', function ($items) {
     return $items;
 });
 
-/** Use a more suitable empty-order message. */
+/** Keep the order history compact. */
 add_filter('woocommerce_my_account_my_orders_query', function ($args) {
     $args['limit'] = 10;
     return $args;
