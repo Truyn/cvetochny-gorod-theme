@@ -1,0 +1,15 @@
+/* Дополнительные параметры доставки на странице оформления заказа */
+.woocommerce-checkout .woocommerce-additional-fields{margin-top:24px;padding:26px;border:1px solid var(--cg-line);border-radius:18px;background:#fffdfa}
+.woocommerce-checkout .woocommerce-additional-fields>h3{margin:0 0 18px;font:500 28px/1.15 Georgia,serif}
+.woocommerce-checkout .cg-checkout-field label{font-weight:600;color:var(--cg-text)}
+.woocommerce-checkout .cg-checkout-field input,
+.woocommerce-checkout .cg-checkout-field select,
+.woocommerce-checkout .cg-checkout-field textarea{width:100%;border:1px solid #ded3d0;border-radius:10px;background:#fff;padding:12px 14px;min-height:48px;font:inherit;color:var(--cg-text)}
+.woocommerce-checkout .cg-checkout-field textarea{min-height:110px;resize:vertical}
+.woocommerce-checkout .cg-checkout-checkbox{margin:8px 0 0!important;padding:13px 15px;border:1px solid var(--cg-line);border-radius:12px;background:#fff}
+.woocommerce-checkout .cg-checkout-checkbox label{display:flex;align-items:flex-start;gap:9px;line-height:1.4;font-weight:600}
+.woocommerce-checkout .cg-checkout-checkbox input{width:18px;height:18px;margin-top:2px;accent-color:var(--cg-accent-dark)}
+.cg-order-delivery-meta{margin-top:18px;padding:16px;border-left:3px solid var(--cg-accent);background:#fff8f6}
+.cg-order-delivery-meta h3{margin:0 0 10px}
+.cg-order-delivery-meta p{margin:5px 0}
+@media(max-width:640px){.woocommerce-checkout .woocommerce-additional-fields{padding:20px 16px}.woocommerce-checkout .woocommerce-additional-fields>h3{font-size:25px}.woocommerce-checkout .form-row-first.cg-checkout-field,.woocommerce-checkout .form-row-last.cg-checkout-field{float:none;width:100%}}
