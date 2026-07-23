@@ -1,13 +1,13 @@
 (function($){
   'use strict';
 
-  const drawer=document.getElementById('cg-mini-cart');
-  const overlay=document.querySelector('.cg-mini-cart-overlay');
-  const openButtons=document.querySelectorAll('[data-cg-mini-cart-open]');
-
-  if(!drawer||!overlay||typeof cgMiniCart==='undefined') return;
+  const getDrawer=()=>document.getElementById('cg-mini-cart');
+  const getOverlay=()=>document.querySelector('.cg-mini-cart-overlay');
 
   const openCart=()=>{
+    const drawer=getDrawer();
+    const overlay=getOverlay();
+    if(!drawer||!overlay) return;
     drawer.classList.add('is-open');
     drawer.setAttribute('aria-hidden','false');
     overlay.hidden=false;
@@ -17,6 +17,9 @@
   };
 
   const closeCart=()=>{
+    const drawer=getDrawer();
+    const overlay=getOverlay();
+    if(!drawer||!overlay) return;
     drawer.classList.remove('is-open');
     drawer.setAttribute('aria-hidden','true');
     overlay.classList.remove('is-visible');
@@ -37,6 +40,8 @@
   };
 
   const request=(action,key,quantity)=>{
+    const drawer=getDrawer();
+    if(!drawer||typeof cgMiniCart==='undefined') return $.Deferred().reject().promise();
     const data={action,nonce:cgMiniCart.nonce,cart_item_key:key};
     if(quantity!==undefined) data.quantity=quantity;
 
@@ -48,15 +53,16 @@
           $(document.body).trigger('wc_fragment_refresh');
         }
       })
-      .always(()=>drawer.classList.remove('is-loading'));
+      .always(()=>getDrawer()?.classList.remove('is-loading'));
   };
 
-  openButtons.forEach((button)=>button.addEventListener('click',(event)=>{
-    event.preventDefault();
-    openCart();
-  }));
-
   document.addEventListener('click',(event)=>{
+    if(event.target.closest('[data-cg-mini-cart-open]')){
+      event.preventDefault();
+      openCart();
+      return;
+    }
+
     if(event.target.closest('[data-cg-mini-cart-close]')){
       closeCart();
       return;
@@ -96,7 +102,8 @@
   });
 
   document.addEventListener('keydown',(event)=>{
-    if(event.key==='Escape'&&drawer.classList.contains('is-open')) closeCart();
+    const drawer=getDrawer();
+    if(event.key==='Escape'&&drawer?.classList.contains('is-open')) closeCart();
   });
 
   $(document.body).on('added_to_cart',()=>openCart());
