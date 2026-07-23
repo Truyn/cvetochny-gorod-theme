@@ -58,8 +58,8 @@
 /* Single product */
 .single-product .woocommerce div.product{
   display:grid!important;
-  grid-template-columns:minmax(0,1.05fr) minmax(360px,.95fr)!important;
-  gap:54px!important;
+  grid-template-columns:minmax(0,1.02fr) minmax(380px,.98fr)!important;
+  gap:48px!important;
   align-items:start!important;
 }
 .single-product .woocommerce div.product div.images,
@@ -67,16 +67,19 @@
   float:none!important;
   width:auto!important;
   min-width:0;
+  align-self:start!important;
 }
 .single-product .woocommerce div.product div.images{
   margin:0!important;
+  position:static!important;
 }
+.single-product .woocommerce-product-gallery,
 .single-product .woocommerce-product-gallery__wrapper,
-.single-product .woocommerce-product-gallery__image{
-  width:100%;
-}
+.single-product .woocommerce-product-gallery__image,
 .single-product .woocommerce-product-gallery__image a{
-  display:block;
+  display:block!important;
+  width:100%!important;
+  margin:0!important;
 }
 .single-product .woocommerce-product-gallery__image img{
   display:block;
@@ -85,24 +88,27 @@
   aspect-ratio:1/1;
   object-fit:cover;
   border-radius:22px;
+  margin:0!important;
 }
 .single-product .woocommerce div.product div.summary{
   margin:0!important;
   padding:34px!important;
 }
-.single-product .woocommerce div.product form.cart,
-.single-product .woocommerce div.product form.cart .woocommerce-variation-add-to-cart{
-  display:grid!important;
-  grid-template-columns:104px minmax(0,1fr)!important;
+.single-product .woocommerce div.product form.cart{
+  display:flex!important;
+  align-items:center!important;
   gap:12px!important;
-  align-items:stretch!important;
+  flex-wrap:nowrap!important;
+  margin:24px 0 20px!important;
 }
 .single-product .woocommerce div.product form.cart .quantity{
   float:none!important;
+  flex:0 0 104px!important;
   width:104px!important;
   margin:0!important;
 }
 .single-product .woocommerce div.product form.cart .qty{
+  display:block!important;
   width:100%!important;
   min-width:0!important;
   height:54px!important;
@@ -112,19 +118,34 @@
   border-radius:12px!important;
   text-align:center;
   font-size:16px;
+  line-height:54px!important;
 }
 .single-product .woocommerce div.product form.cart .single_add_to_cart_button{
-  width:100%!important;
+  flex:1 1 auto!important;
+  width:auto!important;
   min-width:0!important;
+  height:54px!important;
   min-height:54px!important;
   margin:0!important;
-  padding:12px 20px!important;
+  padding:0 24px!important;
   border-radius:999px!important;
-  white-space:normal!important;
+  white-space:nowrap!important;
+  line-height:1!important;
 }
 .single-product .woocommerce div.product form.cart .variations,
 .single-product .woocommerce div.product form.cart .single_variation_wrap{
-  grid-column:1/-1;
+  width:100%!important;
+}
+.single-product .woocommerce div.product form.cart.variations_form{
+  display:grid!important;
+  grid-template-columns:1fr!important;
+  align-items:stretch!important;
+}
+.single-product .woocommerce div.product form.cart .woocommerce-variation-add-to-cart{
+  display:flex!important;
+  align-items:center!important;
+  gap:12px!important;
+  flex-wrap:nowrap!important;
 }
 
 @media(max-width:980px){
@@ -163,10 +184,10 @@
   }
   .single-product .woocommerce div.product form.cart,
   .single-product .woocommerce div.product form.cart .woocommerce-variation-add-to-cart{
-    grid-template-columns:92px minmax(0,1fr)!important;
     gap:10px!important;
   }
   .single-product .woocommerce div.product form.cart .quantity{
+    flex-basis:92px!important;
     width:92px!important;
   }
 }
@@ -177,9 +198,13 @@
   }
   .single-product .woocommerce div.product form.cart,
   .single-product .woocommerce div.product form.cart .woocommerce-variation-add-to-cart{
+    display:grid!important;
     grid-template-columns:1fr!important;
   }
   .single-product .woocommerce div.product form.cart .quantity{
+    width:100%!important;
+  }
+  .single-product .woocommerce div.product form.cart .single_add_to_cart_button{
     width:100%!important;
   }
 }
