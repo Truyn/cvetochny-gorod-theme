@@ -1,6 +1,6 @@
 <?php
 /**
- * AJAX catalog filtering and product quick view.
+ * AJAX catalog filtering.
  *
  * @package Cvetochny_Gorod
  */
@@ -122,51 +122,3 @@ function cg_ajax_catalog_filter() {
 }
 add_action('wp_ajax_cg_filter_products', 'cg_ajax_catalog_filter');
 add_action('wp_ajax_nopriv_cg_filter_products', 'cg_ajax_catalog_filter');
-
-/** Add quick-view button to product cards. */
-function cg_loop_quick_view_button() {
-    global $product;
-    if (!$product) return;
-
-    echo '<button type="button" class="cg-quick-view-button" data-product-id="' . esc_attr($product->get_id()) . '">Быстрый просмотр</button>';
-}
-add_action('woocommerce_after_shop_loop_item', 'cg_loop_quick_view_button', 12);
-
-/** AJAX quick-view endpoint. */
-function cg_ajax_quick_view() {
-    check_ajax_referer('cg_ajax_catalog', 'nonce');
-
-    $product_id = absint($_POST['product_id'] ?? 0);
-    $product = wc_get_product($product_id);
-    if (!$product || !$product->is_visible()) {
-        wp_send_json_error(['message' => 'Товар не найден.'], 404);
-    }
-
-    $image = $product->get_image('woocommerce_single');
-    $description = $product->get_short_description();
-    if (!$description) {
-        $description = wp_trim_words(wp_strip_all_tags($product->get_description()), 28);
-    }
-
-    ob_start();
-    ?>
-    <article class="cg-quick-view-card">
-        <div class="cg-quick-view-media"><?php echo wp_kses_post($image); ?></div>
-        <div class="cg-quick-view-copy">
-            <span class="cg-quick-view-eyebrow"><?php echo $product->is_in_stock() ? 'В наличии' : 'Нет в наличии'; ?></span>
-            <h2><?php echo esc_html($product->get_name()); ?></h2>
-            <div class="cg-quick-view-price"><?php echo wp_kses_post($product->get_price_html()); ?></div>
-            <?php if ($description): ?><div class="cg-quick-view-description"><?php echo wp_kses_post(wpautop($description)); ?></div><?php endif; ?>
-            <div class="cg-quick-view-actions">
-                <?php if ($product->is_type('simple') && $product->is_purchasable() && $product->is_in_stock()): ?>
-                    <button type="button" class="button cg-quick-add" data-product-id="<?php echo esc_attr($product_id); ?>">Добавить в корзину</button>
-                <?php endif; ?>
-                <a class="button button--ghost" href="<?php echo esc_url($product->get_permalink()); ?>">Подробнее</a>
-            </div>
-        </div>
-    </article>
-    <?php
-    wp_send_json_success(['html' => ob_get_clean()]);
-}
-add_action('wp_ajax_cg_quick_view', 'cg_ajax_quick_view');
-add_action('wp_ajax_nopriv_cg_quick_view', 'cg_ajax_quick_view');
