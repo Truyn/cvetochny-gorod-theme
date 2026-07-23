@@ -37,6 +37,7 @@ function cg_assets() {
     if (class_exists('WooCommerce')) {
         wp_enqueue_style('cg-woocommerce', get_template_directory_uri().'/assets/css/woocommerce.css', ['cg-style'], $version);
         wp_enqueue_style('cg-product-hotfix', get_template_directory_uri().'/assets/css/hotfix-products.css', ['cg-woocommerce'], $version);
+        wp_enqueue_style('cg-mini-cart', get_template_directory_uri().'/assets/css/mini-cart.css', ['cg-woocommerce'], $version);
     }
     wp_enqueue_script('cg-main', get_template_directory_uri().'/assets/js/main.js', [], $version, true);
     if (class_exists('WooCommerce')) {
