@@ -76,18 +76,18 @@ function cg_product_delivery_tab_content() {
     echo '<h2>Доставка и оплата</h2><p>Доставляем букеты по Нововоронежу и ближайшим районам. Точную стоимость и доступное время подтвердит менеджер после оформления заказа.</p><ul><li>Можно выбрать удобный интервал доставки.</li><li>Перед отправкой пришлём фотографию готового букета.</li><li>Оплата доступна способами, настроенными в WooCommerce.</li></ul>';
 }
 
-/** Runtime alignment for desktop WooCommerce markup on the live site. */
-function cg_enqueue_single_product_alignment() {
+/** Load the custom, self-contained single product layout stylesheet. */
+function cg_enqueue_single_product_layout() {
     if (!is_product()) return;
 
-    $path = get_template_directory() . '/assets/js/single-product-align.js';
+    $path = get_template_directory() . '/assets/css/single-product-layout.css';
     $version = file_exists($path) ? filemtime($path) : wp_get_theme()->get('Version');
-    wp_enqueue_script(
-        'cg-single-product-align',
-        get_template_directory_uri() . '/assets/js/single-product-align.js',
-        ['jquery'],
-        $version,
-        true
+
+    wp_enqueue_style(
+        'cg-single-product-layout',
+        get_template_directory_uri() . '/assets/css/single-product-layout.css',
+        ['cg-product-hotfix'],
+        $version
     );
 }
-add_action('wp_enqueue_scripts', 'cg_enqueue_single_product_alignment', 30);
+add_action('wp_enqueue_scripts', 'cg_enqueue_single_product_layout', 30);
