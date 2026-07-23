@@ -5,12 +5,6 @@
     <meta charset="<?php bloginfo('charset'); ?>">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <?php wp_head(); ?>
-    <?php if (class_exists('WooCommerce') && is_product()):
-        $cg_desktop_fix_path = get_template_directory() . '/assets/css/desktop-product-fix.css';
-        $cg_desktop_fix_ver = file_exists($cg_desktop_fix_path) ? filemtime($cg_desktop_fix_path) : time();
-    ?>
-        <link rel="stylesheet" id="cg-desktop-product-fix-css" href="<?php echo esc_url(get_template_directory_uri() . '/assets/css/desktop-product-fix.css?v=' . $cg_desktop_fix_ver); ?>">
-    <?php endif; ?>
 </head>
 <body <?php body_class(); ?>>
 <?php wp_body_open(); ?>
