@@ -48,8 +48,10 @@ function cg_assets() {
         ]);
 
         if (is_shop() || is_product_taxonomy()) {
-            wp_enqueue_style('cg-ajax-catalog', get_template_directory_uri().'/assets/css/ajax-catalog.css', ['cg-woocommerce'], $version);
-            wp_enqueue_script('cg-ajax-catalog', get_template_directory_uri().'/assets/js/ajax-catalog.js', ['jquery', 'wc-add-to-cart'], $version, true);
+            $catalog_css = get_template_directory() . '/assets/css/ajax-catalog.css';
+            $catalog_js = get_template_directory() . '/assets/js/ajax-catalog.js';
+            wp_enqueue_style('cg-ajax-catalog', get_template_directory_uri().'/assets/css/ajax-catalog.css', ['cg-woocommerce'], file_exists($catalog_css) ? filemtime($catalog_css) : $version);
+            wp_enqueue_script('cg-ajax-catalog', get_template_directory_uri().'/assets/js/ajax-catalog.js', ['jquery', 'wc-add-to-cart'], file_exists($catalog_js) ? filemtime($catalog_js) : $version, true);
             wp_localize_script('cg-ajax-catalog', 'cgAjaxCatalog', [
                 'ajaxUrl' => admin_url('admin-ajax.php'),
                 'nonce' => wp_create_nonce('cg_ajax_catalog'),
@@ -197,12 +199,6 @@ function cg_loop_product_meta(){
     echo '<div class="cg-product-meta"><span>'.implode('</span><span>', array_map('esc_html', $parts)).'</span></div>';
 }
 add_action('woocommerce_after_shop_loop_item_title','cg_loop_product_meta',7);
-
-function cg_quick_view_modal() {
-    if (!class_exists('WooCommerce') || !(is_shop() || is_product_taxonomy())) return;
-    echo '<div class="cg-quick-view-modal" hidden><div class="cg-quick-view-backdrop" data-cg-quick-view-close></div><div class="cg-quick-view-dialog" role="dialog" aria-modal="true" aria-label="Быстрый просмотр товара"><button class="cg-quick-view-close" type="button" data-cg-quick-view-close aria-label="Закрыть">×</button><div class="cg-quick-view-body"></div></div></div>';
-}
-add_action('wp_footer', 'cg_quick_view_modal', 30);
 
 /** Admin notice with the recommended setup. */
 function cg_admin_notice() {
