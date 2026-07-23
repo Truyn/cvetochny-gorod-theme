@@ -8,6 +8,7 @@ require_once get_template_directory() . '/inc/home-sections.php';
 require_once get_template_directory() . '/inc/site-customizer.php';
 require_once get_template_directory() . '/inc/delivery-options.php';
 require_once get_template_directory() . '/inc/mini-cart.php';
+require_once get_template_directory() . '/inc/ajax-catalog.php';
 
 function cg_setup() {
     load_theme_textdomain('cvetochny-gorod', get_template_directory() . '/languages');
@@ -43,6 +44,15 @@ function cg_assets() {
             'ajaxUrl' => admin_url('admin-ajax.php'),
             'nonce' => wp_create_nonce('cg_mini_cart'),
         ]);
+
+        if (is_shop() || is_product_taxonomy()) {
+            wp_enqueue_style('cg-ajax-catalog', get_template_directory_uri().'/assets/css/ajax-catalog.css', ['cg-woocommerce'], $version);
+            wp_enqueue_script('cg-ajax-catalog', get_template_directory_uri().'/assets/js/ajax-catalog.js', ['jquery', 'wc-add-to-cart'], $version, true);
+            wp_localize_script('cg-ajax-catalog', 'cgAjaxCatalog', [
+                'ajaxUrl' => admin_url('admin-ajax.php'),
+                'nonce' => wp_create_nonce('cg_ajax_catalog'),
+            ]);
+        }
     }
 }
 add_action('wp_enqueue_scripts','cg_assets');
@@ -122,12 +132,17 @@ add_filter('body_class', 'cg_body_classes');
 function cg_shop_sidebar() {
     echo '<button class="cg-filter-toggle" type="button" aria-expanded="false" aria-controls="cg-shop-sidebar">Показать фильтры</button>';
     echo '<aside id="cg-shop-sidebar" class="cg-shop-sidebar" aria-label="Фильтры каталога">';
+    echo '<section class="widget"><h2 class="widget-title">Подбор букета</h2><div class="cg-catalog-filter">';
+    echo '<label>Категория<select name="cg_category"><option value="">Все категории</option>';
+    foreach (get_terms(['taxonomy'=>'product_cat','hide_empty'=>true]) as $term) {
+        echo '<option value="'.esc_attr($term->slug).'">'.esc_html($term->name).'</option>';
+    }
+    echo '</select></label><div class="cg-catalog-filter__prices">';
+    echo '<label>Цена от<input type="number" min="0" step="100" name="cg_min_price" placeholder="0"></label>';
+    echo '<label>Цена до<input type="number" min="0" step="100" name="cg_max_price" placeholder="5000"></label>';
+    echo '</div></div></section>';
     if (is_active_sidebar('shop-filters')) {
         dynamic_sidebar('shop-filters');
-    } else {
-        echo '<section class="widget"><h2 class="widget-title">Категории</h2><ul>';
-        wp_list_categories(['taxonomy'=>'product_cat','title_li'=>'','hide_empty'=>true]);
-        echo '</ul></section>';
     }
     echo '</aside>';
 }
@@ -180,6 +195,12 @@ function cg_loop_product_meta(){
     echo '<div class="cg-product-meta"><span>'.implode('</span><span>', array_map('esc_html', $parts)).'</span></div>';
 }
 add_action('woocommerce_after_shop_loop_item_title','cg_loop_product_meta',7);
+
+function cg_quick_view_modal() {
+    if (!class_exists('WooCommerce') || !(is_shop() || is_product_taxonomy())) return;
+    echo '<div class="cg-quick-view-modal" hidden><div class="cg-quick-view-backdrop" data-cg-quick-view-close></div><div class="cg-quick-view-dialog" role="dialog" aria-modal="true" aria-label="Быстрый просмотр товара"><button class="cg-quick-view-close" type="button" data-cg-quick-view-close aria-label="Закрыть">×</button><div class="cg-quick-view-body"></div></div></div>';
+}
+add_action('wp_footer', 'cg_quick_view_modal', 30);
 
 /** Admin notice with the recommended setup. */
 function cg_admin_notice() {
