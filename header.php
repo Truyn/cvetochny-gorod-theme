@@ -64,10 +64,10 @@
                 <a class="icon-button" href="<?php echo esc_url(wc_get_page_permalink('myaccount')); ?>" aria-label="Личный кабинет">
                     <svg class="cg-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm-7 8a7 7 0 0 1 14 0"/></svg>
                 </a>
-                <a class="icon-button" href="<?php echo esc_url(wc_get_cart_url()); ?>" aria-label="Корзина">
+                <button class="icon-button" type="button" data-cg-mini-cart-open aria-controls="cg-mini-cart" aria-label="Открыть корзину">
                     <svg class="cg-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 8h12l1 12H5L6 8Zm3 0a3 3 0 0 1 6 0"/></svg>
                     <span class="cart-count"><?php echo WC()->cart ? WC()->cart->get_cart_contents_count() : 0; ?></span>
-                </a>
+                </button>
             <?php endif; ?>
             <button class="menu-toggle" type="button" aria-controls="site-menu" aria-expanded="false" aria-label="Открыть меню">
                 <span></span><span></span><span></span>
