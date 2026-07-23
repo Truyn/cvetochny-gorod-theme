@@ -7,7 +7,17 @@
 
 if (!defined('ABSPATH')) exit;
 
-/** Add flower-store delivery fields to checkout. */
+function cg_delivery_options_assets() {
+    if (!is_checkout()) return;
+    wp_enqueue_style(
+        'cg-delivery-options',
+        get_template_directory_uri() . '/assets/css/delivery-options.css',
+        ['cg-woocommerce'],
+        wp_get_theme()->get('Version')
+    );
+}
+add_action('wp_enqueue_scripts', 'cg_delivery_options_assets', 20);
+
 function cg_delivery_checkout_fields($fields) {
     $fields['order']['cg_delivery_date'] = [
         'type' => 'date',
@@ -15,9 +25,7 @@ function cg_delivery_checkout_fields($fields) {
         'required' => true,
         'class' => ['form-row-first', 'cg-checkout-field'],
         'priority' => 20,
-        'custom_attributes' => [
-            'min' => wp_date('Y-m-d'),
-        ],
+        'custom_attributes' => ['min' => wp_date('Y-m-d')],
     ];
 
     $fields['order']['cg_delivery_time'] = [
@@ -43,9 +51,7 @@ function cg_delivery_checkout_fields($fields) {
         'required' => false,
         'class' => ['form-row-wide', 'cg-checkout-field'],
         'priority' => 22,
-        'custom_attributes' => [
-            'maxlength' => 300,
-        ],
+        'custom_attributes' => ['maxlength' => 300],
     ];
 
     $fields['order']['cg_anonymous_delivery'] = [
@@ -68,34 +74,23 @@ function cg_delivery_checkout_fields($fields) {
 }
 add_filter('woocommerce_checkout_fields', 'cg_delivery_checkout_fields');
 
-/** Validate delivery date. */
 function cg_validate_delivery_checkout_fields() {
     if (empty($_POST['cg_delivery_date'])) return;
 
     $delivery_date = sanitize_text_field(wp_unslash($_POST['cg_delivery_date']));
-    $today = wp_date('Y-m-d');
-
-    if ($delivery_date < $today) {
+    if ($delivery_date < wp_date('Y-m-d')) {
         wc_add_notice('Дата доставки не может быть в прошлом.', 'error');
     }
 }
 add_action('woocommerce_checkout_process', 'cg_validate_delivery_checkout_fields');
 
-/** Save checkout options to order meta. */
 function cg_save_delivery_checkout_fields($order, $data) {
-    $text_fields = [
-        'cg_delivery_date',
-        'cg_delivery_time',
-        'cg_card_message',
-    ];
-
-    foreach ($text_fields as $field) {
-        if (isset($_POST[$field])) {
-            $value = $field === 'cg_card_message'
-                ? sanitize_textarea_field(wp_unslash($_POST[$field]))
-                : sanitize_text_field(wp_unslash($_POST[$field]));
-            $order->update_meta_data('_' . $field, $value);
-        }
+    foreach (['cg_delivery_date', 'cg_delivery_time', 'cg_card_message'] as $field) {
+        if (!isset($_POST[$field])) continue;
+        $value = $field === 'cg_card_message'
+            ? sanitize_textarea_field(wp_unslash($_POST[$field]))
+            : sanitize_text_field(wp_unslash($_POST[$field]));
+        $order->update_meta_data('_' . $field, $value);
     }
 
     $order->update_meta_data('_cg_anonymous_delivery', isset($_POST['cg_anonymous_delivery']) ? 'yes' : 'no');
@@ -103,7 +98,6 @@ function cg_save_delivery_checkout_fields($order, $data) {
 }
 add_action('woocommerce_checkout_create_order', 'cg_save_delivery_checkout_fields', 10, 2);
 
-/** Show delivery options in the admin order screen. */
 function cg_admin_delivery_order_meta($order) {
     $date = $order->get_meta('_cg_delivery_date');
     $time = $order->get_meta('_cg_delivery_time');
@@ -121,30 +115,14 @@ function cg_admin_delivery_order_meta($order) {
 }
 add_action('woocommerce_admin_order_data_after_shipping_address', 'cg_admin_delivery_order_meta');
 
-/** Add delivery options to order emails and customer order details. */
 function cg_delivery_email_meta_fields($fields, $sent_to_admin, $order) {
     $date = $order->get_meta('_cg_delivery_date');
     $time = $order->get_meta('_cg_delivery_time');
     $message = $order->get_meta('_cg_card_message');
 
-    if ($date) {
-        $fields['cg_delivery_date'] = [
-            'label' => 'Дата доставки',
-            'value' => wp_date('d.m.Y', strtotime($date)),
-        ];
-    }
-    if ($time) {
-        $fields['cg_delivery_time'] = [
-            'label' => 'Интервал доставки',
-            'value' => $time,
-        ];
-    }
-    if ($message) {
-        $fields['cg_card_message'] = [
-            'label' => 'Текст открытки',
-            'value' => $message,
-        ];
-    }
+    if ($date) $fields['cg_delivery_date'] = ['label' => 'Дата доставки', 'value' => wp_date('d.m.Y', strtotime($date))];
+    if ($time) $fields['cg_delivery_time'] = ['label' => 'Интервал доставки', 'value' => $time];
+    if ($message) $fields['cg_card_message'] = ['label' => 'Текст открытки', 'value' => $message];
 
     $fields['cg_anonymous_delivery'] = [
         'label' => 'Анонимная доставка',
