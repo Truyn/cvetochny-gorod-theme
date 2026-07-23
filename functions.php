@@ -7,6 +7,7 @@ require_once get_template_directory() . '/inc/home-slider.php';
 require_once get_template_directory() . '/inc/home-sections.php';
 require_once get_template_directory() . '/inc/site-customizer.php';
 require_once get_template_directory() . '/inc/delivery-options.php';
+require_once get_template_directory() . '/inc/mini-cart.php';
 
 function cg_setup() {
     load_theme_textdomain('cvetochny-gorod', get_template_directory() . '/languages');
@@ -36,6 +37,13 @@ function cg_assets() {
         wp_enqueue_style('cg-woocommerce', get_template_directory_uri().'/assets/css/woocommerce.css', ['cg-style'], $version);
     }
     wp_enqueue_script('cg-main', get_template_directory_uri().'/assets/js/main.js', [], $version, true);
+    if (class_exists('WooCommerce')) {
+        wp_enqueue_script('cg-mini-cart', get_template_directory_uri().'/assets/js/mini-cart.js', ['jquery', 'wc-add-to-cart'], $version, true);
+        wp_localize_script('cg-mini-cart', 'cgMiniCart', [
+            'ajaxUrl' => admin_url('admin-ajax.php'),
+            'nonce' => wp_create_nonce('cg_mini_cart'),
+        ]);
+    }
 }
 add_action('wp_enqueue_scripts','cg_assets');
 
