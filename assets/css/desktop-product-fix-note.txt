@@ -1,0 +1,1 @@
+Desktop layout fix is loaded with a file modification timestamp to bypass stale CSS caches.
