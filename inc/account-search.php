@@ -9,14 +9,32 @@ if (!defined('ABSPATH')) exit;
 
 /** Load search and account styles after the main theme stylesheet. */
 function cg_account_search_assets() {
+    $path = get_template_directory() . '/assets/css/account-search.css';
+    $version = file_exists($path) ? filemtime($path) : wp_get_theme()->get('Version');
+
     wp_enqueue_style(
         'cg-account-search',
         get_template_directory_uri() . '/assets/css/account-search.css',
         ['cg-style'],
-        wp_get_theme()->get('Version')
+        $version
     );
 }
 add_action('wp_enqueue_scripts', 'cg_account_search_assets', 20);
+
+/** Add stable endpoint classes without overriding WooCommerce templates. */
+function cg_account_body_classes($classes) {
+    if (!function_exists('is_account_page') || !is_account_page()) return $classes;
+
+    $classes[] = 'cg-account-page';
+    if (function_exists('is_wc_endpoint_url')) {
+        if (!is_wc_endpoint_url()) $classes[] = 'cg-account-dashboard';
+        foreach (['orders', 'downloads', 'edit-address', 'payment-methods', 'edit-account', 'view-order', 'lost-password'] as $endpoint) {
+            if (is_wc_endpoint_url($endpoint)) $classes[] = 'cg-account-endpoint-' . sanitize_html_class($endpoint);
+        }
+    }
+    return $classes;
+}
+add_filter('body_class', 'cg_account_body_classes');
 
 /** Limit the header search to WooCommerce products. */
 function cg_product_search_form() {
