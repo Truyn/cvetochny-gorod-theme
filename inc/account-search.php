@@ -54,7 +54,6 @@ function cg_account_dashboard_intro() {
     echo '<div><span class="cg-account-welcome__eyebrow">Личный кабинет</span><h2>Здравствуйте, '.esc_html($user->display_name ?: $user->user_login).'!</h2><p>Здесь можно проверить заказы, изменить адрес доставки и сохранить контактные данные.</p></div>';
     echo '<a class="button" href="'.esc_url(cg_catalog_url()).'">Перейти в каталог</a>';
     echo '</section>';
-    echo '<div class="cg-account-benefits"><div><strong>🚚 Быстрая доставка</strong><span>Согласуем удобное время</span></div><div><strong>📷 Фото букета</strong><span>Пришлём перед отправкой</span></div><div><strong>💌 Открытка</strong><span>Добавим пожелание бесплатно</span></div></div>';
 }
 add_action('woocommerce_account_dashboard', 'cg_account_dashboard_intro', 5);
 
