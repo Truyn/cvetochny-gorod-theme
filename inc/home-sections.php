@@ -135,3 +135,34 @@ function cg_get_home_categories() {
     }
     return array_slice($items, 0, 12);
 }
+
+/**
+ * Convert legacy hard-coded category paths into the actual WooCommerce term URL.
+ * This respects both plain query links and pretty permalink settings.
+ */
+function cg_resolve_home_product_category_url($url, $path, $orig_scheme, $blog_id) {
+    if (!is_string($path) || !taxonomy_exists('product_cat')) {
+        return $url;
+    }
+
+    if (!preg_match('#^/?product-category/([^/]+)/?$#', $path, $matches)) {
+        return $url;
+    }
+
+    static $resolving = false;
+    if ($resolving) {
+        return $url;
+    }
+
+    $term = get_term_by('slug', sanitize_title($matches[1]), 'product_cat');
+    if (!$term || is_wp_error($term)) {
+        return $url;
+    }
+
+    $resolving = true;
+    $term_url = get_term_link($term);
+    $resolving = false;
+
+    return is_wp_error($term_url) ? $url : $term_url;
+}
+add_filter('home_url', 'cg_resolve_home_product_category_url', 10, 4);
