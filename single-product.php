@@ -1,8 +1,13 @@
 <?php
 /**
- * Full custom WooCommerce single product template.
+ * The template for displaying a single WooCommerce product.
+ *
+ * This theme override intentionally stays minimal and delegates product
+ * behaviour to WooCommerce's public hooks. Keep the @version header in sync
+ * when WooCommerce changes the upstream template contract.
  *
  * @package Cvetochny_Gorod
+ * @version 1.6.4
  */
 
 if (!defined('ABSPATH')) exit;
@@ -11,7 +16,7 @@ get_header();
 ?>
 <section id="cg-product-page" class="cg-product-page" data-cg-template="single-product-v2">
     <div class="container cg-product-page__container">
-        <?php woocommerce_breadcrumb(); ?>
+        <?php if (function_exists('woocommerce_breadcrumb')) woocommerce_breadcrumb(); ?>
 
         <?php while (have_posts()) : the_post(); ?>
             <?php global $product; ?>
