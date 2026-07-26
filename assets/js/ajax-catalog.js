@@ -19,6 +19,12 @@ document.addEventListener('DOMContentLoaded',()=>{
   const maxLabel=form.querySelector('[data-cg-price-max-label]');
   const slider=form.querySelector('.cg-catalog-price-slider');
   const currency=new Intl.NumberFormat('ru-RU',{style:'currency',currency:'RUB',maximumFractionDigits:0});
+  let submitTimer;
+
+  const submitForm=(delay=0)=>{
+    window.clearTimeout(submitTimer);
+    submitTimer=window.setTimeout(()=>form.requestSubmit(),delay);
+  };
 
   const syncSlider=(changed)=>{
     if(!minRange||!maxRange||!minInput||!maxInput||!slider) return;
@@ -49,5 +55,12 @@ document.addEventListener('DOMContentLoaded',()=>{
 
   minRange?.addEventListener('input',()=>syncSlider(minRange));
   maxRange?.addEventListener('input',()=>syncSlider(maxRange));
+  minRange?.addEventListener('change',()=>submitForm(250));
+  maxRange?.addEventListener('change',()=>submitForm(250));
+
+  form.querySelectorAll('input[type="checkbox"],input[type="radio"]').forEach(input=>{
+    input.addEventListener('change',()=>submitForm(120));
+  });
+
   syncSlider();
 });
