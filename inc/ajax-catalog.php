@@ -26,6 +26,7 @@ function cg_catalog_top_filters() {
     $max_price = cg_catalog_request_value('cg_max_price');
     $in_stock  = cg_catalog_request_value('cg_in_stock');
     $on_sale   = cg_catalog_request_value('cg_on_sale');
+    $shop_id   = function_exists('wc_get_page_id') ? wc_get_page_id('shop') : 0;
     $terms = get_terms([
         'taxonomy'   => 'product_cat',
         'hide_empty' => true,
@@ -48,7 +49,15 @@ function cg_catalog_top_filters() {
     }
     echo '</ul></nav>';
 
-    echo '<form class="cg-filter-form" method="get" action="'.esc_url(cg_catalog_url()).'">';
+    /*
+     * Submit to the site root and preserve the WooCommerce shop page ID.
+     * This is required for plain permalinks such as /?page_id=9: query strings
+     * from a form action are replaced by the form fields during a GET submit.
+     */
+    echo '<form class="cg-filter-form" method="get" action="'.esc_url(home_url('/')).'">';
+    if ($shop_id > 0) {
+        echo '<input type="hidden" name="page_id" value="'.esc_attr($shop_id).'">';
+    }
     echo '<label class="cg-filter-field"><span>Категория</span><select name="cg_category"><option value="">Все категории</option>';
     $all_terms = get_terms(['taxonomy'=>'product_cat','hide_empty'=>true,'orderby'=>'name']);
     if (!is_wp_error($all_terms)) {
