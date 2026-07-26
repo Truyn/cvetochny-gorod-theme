@@ -52,11 +52,7 @@ function cg_assets() {
             $catalog_css = get_template_directory() . '/assets/css/ajax-catalog.css';
             $catalog_js = get_template_directory() . '/assets/js/ajax-catalog.js';
             wp_enqueue_style('cg-ajax-catalog', get_template_directory_uri().'/assets/css/ajax-catalog.css', ['cg-woocommerce'], file_exists($catalog_css) ? filemtime($catalog_css) : $version);
-            wp_enqueue_script('cg-ajax-catalog', get_template_directory_uri().'/assets/js/ajax-catalog.js', ['jquery', 'wc-add-to-cart'], file_exists($catalog_js) ? filemtime($catalog_js) : $version, true);
-            wp_localize_script('cg-ajax-catalog', 'cgAjaxCatalog', [
-                'ajaxUrl' => admin_url('admin-ajax.php'),
-                'nonce' => wp_create_nonce('cg_ajax_catalog'),
-            ]);
+            wp_enqueue_script('cg-ajax-catalog', get_template_directory_uri().'/assets/js/ajax-catalog.js', [], file_exists($catalog_js) ? filemtime($catalog_js) : $version, true);
         }
     }
 }
@@ -64,15 +60,6 @@ add_action('wp_enqueue_scripts','cg_assets');
 
 function cg_widgets() {
     register_sidebar(['name'=>'Подвал: колонка 1','id'=>'footer-1','before_widget'=>'<div class="footer-widget">','after_widget'=>'</div>','before_title'=>'<div class="footer-title">','after_title'=>'</div>']);
-    register_sidebar([
-        'name'=>'Фильтры каталога',
-        'id'=>'shop-filters',
-        'description'=>'Добавьте сюда фильтры WooCommerce: категории, цена, атрибуты и наличие.',
-        'before_widget'=>'<section class="widget %2$s">',
-        'after_widget'=>'</section>',
-        'before_title'=>'<h2 class="widget-title">',
-        'after_title'=>'</h2>'
-    ]);
 }
 add_action('widgets_init','cg_widgets');
 
@@ -105,7 +92,6 @@ function cg_fallback_menu(){ echo '<ul><li><a href="'.esc_url(home_url('/')).'">
 add_filter('loop_shop_columns', fn()=>4);
 add_filter('loop_shop_per_page', fn($n)=>12, 20);
 
-/** Elementor compatibility. */
 function cg_register_elementor_locations($elementor_theme_manager) {
     if (method_exists($elementor_theme_manager, 'register_all_core_location')) {
         $elementor_theme_manager->register_all_core_location();
@@ -134,54 +120,16 @@ function cg_body_classes($classes) {
 add_filter('body_class', 'cg_body_classes');
 
 /** WooCommerce layout. */
-function cg_shop_sidebar() {
-    $current_category = '';
-    if (is_product_category()) {
-        $queried = get_queried_object();
-        if ($queried && !is_wp_error($queried)) $current_category = $queried->slug;
-    }
-
-    echo '<button class="cg-filter-toggle" type="button" aria-expanded="false" aria-controls="cg-shop-sidebar">Фильтры и категории</button>';
-    echo '<aside id="cg-shop-sidebar" class="cg-shop-sidebar" aria-label="Фильтры каталога">';
-    echo '<section class="widget cg-category-navigation"><h2 class="widget-title">Категории</h2><ul>';
-    echo '<li'.($current_category === '' ? ' class="is-current"' : '').'><a href="'.esc_url(cg_catalog_url()).'">Все букеты</a></li>';
-    $terms = get_terms(['taxonomy'=>'product_cat','hide_empty'=>true,'parent'=>0,'orderby'=>'name']);
-    if (!is_wp_error($terms)) {
-        foreach ($terms as $term) {
-            $term_url = get_term_link($term);
-            if (is_wp_error($term_url)) continue;
-            echo '<li'.($current_category === $term->slug ? ' class="is-current"' : '').'><a href="'.esc_url($term_url).'">'.esc_html($term->name).'<span>'.esc_html($term->count).'</span></a></li>';
-        }
-    }
-    echo '</ul></section>';
-    echo '<section class="widget"><h2 class="widget-title">Подбор букета</h2><div class="cg-catalog-filter">';
-    echo '<label>Категория<select name="cg_category"><option value="">Все категории</option>';
-    $all_terms = get_terms(['taxonomy'=>'product_cat','hide_empty'=>true]);
-    if (!is_wp_error($all_terms)) {
-        foreach ($all_terms as $term) {
-            echo '<option value="'.esc_attr($term->slug).'"'.selected($current_category, $term->slug, false).'>'.esc_html($term->name).'</option>';
-        }
-    }
-    echo '</select></label><div class="cg-catalog-filter__prices">';
-    echo '<label>Цена от<input type="number" min="0" step="100" name="cg_min_price" placeholder="0"></label>';
-    echo '<label>Цена до<input type="number" min="0" step="100" name="cg_max_price" placeholder="5000"></label>';
-    echo '</div><button class="button cg-filter-reset" type="button">Сбросить фильтры</button></div></section>';
-    if (is_active_sidebar('shop-filters')) {
-        dynamic_sidebar('shop-filters');
-    }
-    echo '</aside>';
-}
-
 function cg_wc_wrapper_start(){
     echo '<main id="primary" class="site-main"><div class="container content-area cg-woo-wrap">';
     if (is_shop() || is_product_taxonomy()) {
         echo '<div class="cg-shop-shell">';
-        cg_shop_sidebar();
-        echo '<div class="cg-shop-content">';
+        cg_catalog_sidebar();
+        echo '<section class="cg-shop-content" aria-label="Товары каталога">';
     }
 }
 function cg_wc_wrapper_end(){
-    if (is_shop() || is_product_taxonomy()) echo '</div></div>';
+    if (is_shop() || is_product_taxonomy()) echo '</section></div>';
     echo '</div></main>';
 }
 remove_action('woocommerce_before_main_content','woocommerce_output_content_wrapper',10);
@@ -190,7 +138,6 @@ remove_action('woocommerce_sidebar','woocommerce_get_sidebar',10);
 add_action('woocommerce_before_main_content','cg_wc_wrapper_start',10);
 add_action('woocommerce_after_main_content','cg_wc_wrapper_end',10);
 
-/** Remove duplicated outer page title; WooCommerce archive heading remains. */
 add_filter('woocommerce_show_page_title', '__return_false');
 
 function cg_catalog_heading() {
@@ -208,7 +155,6 @@ function cg_shop_toolbar_end(){ echo '</div>'; }
 add_action('woocommerce_before_shop_loop','cg_shop_toolbar_start',15);
 add_action('woocommerce_before_shop_loop','cg_shop_toolbar_end',35);
 
-/** Product card image, badges and compact metadata. */
 function cg_loop_product_media(){
     global $product;
     if (!$product) return;
@@ -234,7 +180,6 @@ function cg_loop_product_meta(){
 }
 add_action('woocommerce_after_shop_loop_item_title','cg_loop_product_meta',7);
 
-/** Admin notice with the recommended setup. */
 function cg_admin_notice() {
     if (!current_user_can('manage_options') || get_option('cg_setup_notice_dismissed')) return;
     echo '<div class="notice notice-info is-dismissible"><p><strong>Цветочный город:</strong> для визуального редактирования установите Elementor и WooCommerce. Для главной страницы выберите шаблон «Elementor — на всю ширину».</p></div>';
