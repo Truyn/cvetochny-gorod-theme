@@ -7,12 +7,36 @@
 
 if (!defined('ABSPATH')) exit;
 
-/** Read a catalog filter value from the current request. */
 function cg_catalog_request_value($key, $default = '') {
     return isset($_GET[$key]) ? sanitize_text_field(wp_unslash($_GET[$key])) : $default;
 }
 
-/** Render a reliable vertical filter panel. Links and form also work without JavaScript. */
+function cg_catalog_price_meta_query($min_price, $max_price) {
+    $min_price = max(0, (float) $min_price);
+    $max_price = max(0, (float) $max_price);
+    if ($min_price <= 0 && $max_price <= 0) return [];
+
+    if (function_exists('wc_get_min_max_price_meta_query')) {
+        return wc_get_min_max_price_meta_query([
+            'min_price' => $min_price > 0 ? $min_price : '',
+            'max_price' => $max_price > 0 ? $max_price : '',
+        ]);
+    }
+
+    $filter = ['key'=>'_price','type'=>'DECIMAL(10,2)'];
+    if ($min_price > 0 && $max_price > 0) {
+        $filter['value'] = [$min_price, $max_price];
+        $filter['compare'] = 'BETWEEN';
+    } elseif ($min_price > 0) {
+        $filter['value'] = $min_price;
+        $filter['compare'] = '>=';
+    } else {
+        $filter['value'] = $max_price;
+        $filter['compare'] = '<=';
+    }
+    return [$filter];
+}
+
 function cg_catalog_top_filters() {
     if (!(is_shop() || is_product_taxonomy())) return;
 
@@ -27,17 +51,11 @@ function cg_catalog_top_filters() {
     $in_stock  = cg_catalog_request_value('cg_in_stock');
     $on_sale   = cg_catalog_request_value('cg_on_sale');
     $shop_id   = function_exists('wc_get_page_id') ? wc_get_page_id('shop') : 0;
-    $terms = get_terms([
-        'taxonomy'   => 'product_cat',
-        'hide_empty' => true,
-        'parent'     => 0,
-        'orderby'    => 'name',
-    ]);
+    $terms = get_terms(['taxonomy'=>'product_cat','hide_empty'=>true,'parent'=>0,'orderby'=>'name']);
 
     echo '<button class="cg-modern-filters__mobile-toggle" type="button" aria-expanded="false" aria-controls="cg-modern-filters">Фильтры и категории</button>';
     echo '<aside id="cg-modern-filters" class="cg-modern-filters" aria-label="Фильтры каталога">';
     echo '<div class="cg-modern-filters__head"><span>Удобный подбор</span><h2>Фильтры</h2></div>';
-
     echo '<nav class="cg-category-navigation" aria-label="Категории товаров"><h3>Категории</h3><ul>';
     echo '<li'.($current === '' ? ' class="is-active"' : '').'><a href="'.esc_url(cg_catalog_url()).'">Все букеты</a></li>';
     if (!is_wp_error($terms)) {
@@ -49,15 +67,8 @@ function cg_catalog_top_filters() {
     }
     echo '</ul></nav>';
 
-    /*
-     * Submit to the site root and preserve the WooCommerce shop page ID.
-     * This is required for plain permalinks such as /?page_id=9: query strings
-     * from a form action are replaced by the form fields during a GET submit.
-     */
     echo '<form class="cg-filter-form" method="get" action="'.esc_url(home_url('/')).'">';
-    if ($shop_id > 0) {
-        echo '<input type="hidden" name="page_id" value="'.esc_attr($shop_id).'">';
-    }
+    if ($shop_id > 0) echo '<input type="hidden" name="page_id" value="'.esc_attr($shop_id).'">';
     echo '<label class="cg-filter-field"><span>Категория</span><select name="cg_category"><option value="">Все категории</option>';
     $all_terms = get_terms(['taxonomy'=>'product_cat','hide_empty'=>true,'orderby'=>'name']);
     if (!is_wp_error($all_terms)) {
@@ -73,12 +84,10 @@ function cg_catalog_top_filters() {
     echo '<label class="cg-filter-check"><input type="checkbox" name="cg_in_stock" value="1"'.checked($in_stock, '1', false).'><span>Только в наличии</span></label>';
     echo '<label class="cg-filter-check"><input type="checkbox" name="cg_on_sale" value="1"'.checked($on_sale, '1', false).'><span>Со скидкой</span></label>';
     echo '<div class="cg-filter-actions"><button class="button cg-filter-apply" type="submit">Применить</button><a class="cg-filter-reset" href="'.esc_url(cg_catalog_url()).'">Сбросить</a></div>';
-    echo '</form>';
-    echo '</aside>';
+    echo '</form></aside>';
 }
 add_action('woocommerce_before_shop_loop', 'cg_catalog_top_filters', 10);
 
-/** Apply the same filters to normal page loads when JavaScript is unavailable. */
 function cg_catalog_apply_get_filters($query) {
     if (is_admin() || !$query->is_main_query() || !(is_shop() || is_product_taxonomy())) return;
 
@@ -87,40 +96,19 @@ function cg_catalog_apply_get_filters($query) {
     $max_price = (float) cg_catalog_request_value('cg_max_price', 0);
     $in_stock  = cg_catalog_request_value('cg_in_stock');
     $on_sale   = cg_catalog_request_value('cg_on_sale');
-
     $tax_query = (array) $query->get('tax_query');
     $meta_query = (array) $query->get('meta_query');
 
-    if ($category) {
-        $tax_query[] = ['taxonomy'=>'product_cat','field'=>'slug','terms'=>$category];
-    }
-    if ($min_price > 0 || $max_price > 0) {
-        $price_filter = ['key'=>'_price','type'=>'NUMERIC'];
-        if ($min_price > 0 && $max_price > 0) {
-            $price_filter['value'] = [$min_price, $max_price];
-            $price_filter['compare'] = 'BETWEEN';
-        } elseif ($min_price > 0) {
-            $price_filter['value'] = $min_price;
-            $price_filter['compare'] = '>=';
-        } else {
-            $price_filter['value'] = $max_price;
-            $price_filter['compare'] = '<=';
-        }
-        $meta_query[] = $price_filter;
-    }
-    if ($in_stock === '1') {
-        $meta_query[] = ['key'=>'_stock_status','value'=>'instock','compare'=>'='];
-    }
-    if ($on_sale === '1') {
-        $query->set('post__in', wc_get_product_ids_on_sale() ?: [0]);
-    }
+    if ($category) $tax_query[] = ['taxonomy'=>'product_cat','field'=>'slug','terms'=>$category];
+    $meta_query = array_merge($meta_query, cg_catalog_price_meta_query($min_price, $max_price));
+    if ($in_stock === '1') $meta_query[] = ['key'=>'_stock_status','value'=>'instock','compare'=>'='];
+    if ($on_sale === '1') $query->set('post__in', wc_get_product_ids_on_sale() ?: [0]);
 
     if ($tax_query) $query->set('tax_query', $tax_query);
     if ($meta_query) $query->set('meta_query', $meta_query);
 }
 add_action('pre_get_posts', 'cg_catalog_apply_get_filters', 20);
 
-/** Render product loop HTML for AJAX responses. */
 function cg_ajax_catalog_render_products($query_args) {
     $query = new WP_Query($query_args);
     ob_start();
@@ -138,7 +126,6 @@ function cg_ajax_catalog_render_products($query_args) {
     return ob_get_clean();
 }
 
-/** AJAX product filtering endpoint. */
 function cg_ajax_catalog_filter() {
     check_ajax_referer('cg_ajax_catalog', 'nonce');
 
@@ -155,13 +142,7 @@ function cg_ajax_catalog_filter() {
         'tax_query'=>WC()->query->get_tax_query(),'meta_query'=>WC()->query->get_meta_query(),
     ];
     if ($category) $args['tax_query'][] = ['taxonomy'=>'product_cat','field'=>'slug','terms'=>$category];
-    if ($min_price > 0 || $max_price > 0) {
-        $price_filter = ['key'=>'_price','type'=>'NUMERIC'];
-        if ($min_price > 0 && $max_price > 0) {$price_filter['value']=[$min_price,$max_price];$price_filter['compare']='BETWEEN';}
-        elseif ($min_price > 0) {$price_filter['value']=$min_price;$price_filter['compare']='>=';}
-        else {$price_filter['value']=$max_price;$price_filter['compare']='<=';}
-        $args['meta_query'][] = $price_filter;
-    }
+    $args['meta_query'] = array_merge($args['meta_query'], cg_catalog_price_meta_query($min_price, $max_price));
     if ($in_stock) $args['meta_query'][] = ['key'=>'_stock_status','value'=>'instock','compare'=>'='];
     if ($on_sale) $args['post__in'] = wc_get_product_ids_on_sale() ?: [0];
 
@@ -189,3 +170,15 @@ function cg_ajax_catalog_filter() {
 }
 add_action('wp_ajax_cg_filter_products', 'cg_ajax_catalog_filter');
 add_action('wp_ajax_nopriv_cg_filter_products', 'cg_ajax_catalog_filter');
+
+function cg_homepage_regression_fixes_assets() {
+    if (!is_front_page()) return;
+    $file = get_template_directory() . '/assets/css/homepage-fixes.css';
+    wp_enqueue_style(
+        'cg-homepage-fixes',
+        get_template_directory_uri() . '/assets/css/homepage-fixes.css',
+        ['cg-homepage'],
+        file_exists($file) ? filemtime($file) : wp_get_theme()->get('Version')
+    );
+}
+add_action('wp_enqueue_scripts', 'cg_homepage_regression_fixes_assets', 30);
