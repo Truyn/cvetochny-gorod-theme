@@ -3,19 +3,26 @@ document.addEventListener('DOMContentLoaded',()=>{
   if(!shell||typeof cgAjaxCatalog==='undefined') return;
 
   const products=()=>shell.querySelector('ul.products');
-  const category=document.querySelector('[name="cg_category"]');
-  const minPrice=document.querySelector('[name="cg_min_price"]');
-  const maxPrice=document.querySelector('[name="cg_max_price"]');
+  const category=document.querySelector('.cg-modern-filters [name="cg_category"]');
+  const minPrice=document.querySelector('.cg-modern-filters [name="cg_min_price"]');
+  const maxPrice=document.querySelector('.cg-modern-filters [name="cg_max_price"]');
+  const inStock=document.querySelector('.cg-modern-filters [name="cg_in_stock"]');
+  const onSale=document.querySelector('.cg-modern-filters [name="cg_on_sale"]');
   const ordering=document.querySelector('.woocommerce-ordering select');
-  const resetButton=document.querySelector('.cg-filter-reset');
-  const sidebar=document.querySelector('#cg-shop-sidebar');
-  const toggle=document.querySelector('.cg-filter-toggle');
+  const reset=document.querySelector('.cg-modern-filters .cg-filter-reset');
+  const toggle=document.querySelector('.cg-modern-filters__toggle');
+  const filterBody=document.querySelector('.cg-modern-filters__body');
+  const chips=[...document.querySelectorAll('.cg-category-chip')];
   let page=1;
   let controller;
 
   const setBusy=(busy)=>{
     shell.classList.toggle('is-loading',busy);
     shell.setAttribute('aria-busy',busy?'true':'false');
+  };
+
+  const syncChips=()=>{
+    chips.forEach(chip=>chip.classList.toggle('is-active',(category?.value||'')===chip.dataset.category));
   };
 
   const load=async()=>{
@@ -30,6 +37,8 @@ document.addEventListener('DOMContentLoaded',()=>{
       category:category?.value||'',
       min_price:minPrice?.value||'',
       max_price:maxPrice?.value||'',
+      in_stock:inStock?.checked?'1':'',
+      on_sale:onSale?.checked?'1':'',
       orderby:ordering?.value||'menu_order'
     });
 
@@ -44,6 +53,7 @@ document.addEventListener('DOMContentLoaded',()=>{
       shell.insertAdjacentHTML('beforeend',json.data.pagination||'');
       const count=document.querySelector('.woocommerce-result-count');
       if(count) count.textContent=`Найдено товаров: ${json.data.found}`;
+      syncChips();
       shell.scrollIntoView({behavior:'smooth',block:'start'});
     }catch(error){
       if(error.name!=='AbortError') window.location.reload();
@@ -56,18 +66,29 @@ document.addEventListener('DOMContentLoaded',()=>{
   category?.addEventListener('change',resetPage);
   minPrice?.addEventListener('change',resetPage);
   maxPrice?.addEventListener('change',resetPage);
+  inStock?.addEventListener('change',resetPage);
+  onSale?.addEventListener('change',resetPage);
   ordering?.addEventListener('change',(event)=>{event.preventDefault();resetPage();});
-  resetButton?.addEventListener('click',()=>{
+
+  chips.forEach(chip=>chip.addEventListener('click',()=>{
+    if(category) category.value=chip.dataset.category||'';
+    resetPage();
+  }));
+
+  reset?.addEventListener('click',()=>{
     if(category) category.value='';
     if(minPrice) minPrice.value='';
     if(maxPrice) maxPrice.value='';
+    if(inStock) inStock.checked=false;
+    if(onSale) onSale.checked=false;
     if(ordering) ordering.value='menu_order';
     resetPage();
   });
+
   toggle?.addEventListener('click',()=>{
-    const open=sidebar?.classList.toggle('is-open');
-    toggle.setAttribute('aria-expanded',open?'true':'false');
-    toggle.textContent=open?'Скрыть фильтры':'Фильтры и категории';
+    const hidden=filterBody?.classList.toggle('is-collapsed');
+    toggle.setAttribute('aria-expanded',hidden?'false':'true');
+    toggle.textContent=hidden?'Показать фильтры':'Скрыть фильтры';
   });
 
   shell.addEventListener('click',(event)=>{
