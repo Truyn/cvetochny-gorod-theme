@@ -3,6 +3,15 @@ document.addEventListener('DOMContentLoaded',()=>{
   const form=document.querySelector('.cg-filter-form');
   if(!shell||!form) return;
 
+  const panel=document.querySelector('#cg-modern-filters');
+  const mobileToggle=document.querySelector('.cg-modern-filters__mobile-toggle');
+  const shopShell=shell.closest('.cg-shop-shell');
+
+  if(shopShell&&panel){
+    shopShell.insertBefore(panel,shell);
+    if(mobileToggle) shopShell.insertBefore(mobileToggle,panel);
+  }
+
   const products=()=>shell.querySelector('ul.products');
   const category=form.querySelector('[name="cg_category"]');
   const minPrice=form.querySelector('[name="cg_min_price"]');
@@ -11,8 +20,6 @@ document.addEventListener('DOMContentLoaded',()=>{
   const onSale=form.querySelector('[name="cg_on_sale"]');
   const ordering=document.querySelector('.woocommerce-ordering select');
   const reset=form.querySelector('.cg-filter-reset');
-  const mobileToggle=document.querySelector('.cg-modern-filters__mobile-toggle');
-  const panel=document.querySelector('#cg-modern-filters');
   let page=1;
   let controller;
 
