@@ -125,14 +125,43 @@ add_action('customize_register', 'cg_home_sections_customize');
 function cg_get_home_categories() {
     $raw = get_theme_mod('cg_categories_items', "Свадебные|svadebnye\nСладкие|sladkie\nАвторские|avtorskie\nLux|lux\nДо 2000|do-2000\nДо 5000|do-5000\nДо 10000|do-10000\nВсе букеты|");
     $items = [];
+
     foreach (preg_split('/\r\n|\r|\n/', $raw) as $line) {
         if (!trim($line)) continue;
+
         $parts = array_map('trim', explode('|', $line, 2));
+        $name = sanitize_text_field($parts[0]);
+        $slug = isset($parts[1]) ? sanitize_title($parts[1]) : '';
+        $url = function_exists('cg_catalog_url') ? cg_catalog_url() : home_url('/');
+        $image = '';
+        $term_id = 0;
+
+        if ($slug && taxonomy_exists('product_cat')) {
+            $term = get_term_by('slug', $slug, 'product_cat');
+            if ($term && !is_wp_error($term)) {
+                $term_id = (int) $term->term_id;
+                $name = $name ?: $term->name;
+                $term_url = get_term_link($term);
+                if (!is_wp_error($term_url)) {
+                    $url = $term_url;
+                }
+
+                $thumbnail_id = (int) get_term_meta($term_id, 'thumbnail_id', true);
+                if ($thumbnail_id) {
+                    $image = wp_get_attachment_image_url($thumbnail_id, 'woocommerce_thumbnail') ?: '';
+                }
+            }
+        }
+
         $items[] = [
-            'name' => sanitize_text_field($parts[0]),
-            'slug' => isset($parts[1]) ? sanitize_title($parts[1]) : '',
+            'name' => $name,
+            'slug' => $slug,
+            'url' => $url,
+            'image' => $image,
+            'term_id' => $term_id,
         ];
     }
+
     return array_slice($items, 0, 12);
 }
 
