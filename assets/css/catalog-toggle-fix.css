@@ -1,0 +1,24 @@
+/* Центрирование значков раскрытия секций фильтра. */
+.cg-custom-catalog .cg-filter-group summary > span{
+    position:relative;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    flex:0 0 30px;
+    width:30px;
+    height:30px;
+    padding:0;
+    line-height:1;
+}
+.cg-custom-catalog .cg-filter-group summary > span::before{
+    position:absolute;
+    inset:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    width:100%;
+    height:100%;
+    margin:0;
+    line-height:1;
+    transform:none;
+}
