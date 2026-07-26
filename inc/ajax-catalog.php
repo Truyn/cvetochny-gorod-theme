@@ -11,6 +11,13 @@ function cg_catalog_get_request($key, $default = '') {
     return isset($_GET[$key]) ? sanitize_text_field(wp_unslash($_GET[$key])) : $default;
 }
 
+function cg_catalog_get_array_request($key) {
+    if (!isset($_GET[$key])) return [];
+    $value = wp_unslash($_GET[$key]);
+    $value = is_array($value) ? $value : [$value];
+    return array_values(array_filter(array_map('sanitize_title', $value)));
+}
+
 function cg_catalog_price_bounds() {
     global $wpdb;
     if (!class_exists('WooCommerce')) return [0, 10000, 100];
@@ -33,7 +40,7 @@ function cg_catalog_current_category_slug() {
 }
 
 function cg_catalog_form_action() {
-    return is_product_category() ? get_term_link(get_queried_object()) : cg_catalog_url();
+    return cg_catalog_url();
 }
 
 function cg_catalog_preserved_query_args() {
@@ -41,6 +48,11 @@ function cg_catalog_preserved_query_args() {
     foreach (['product_cat','min_price','max_price','stock_status','on_sale','cg_orderby'] as $key) {
         $value = cg_catalog_get_request($key);
         if ($value !== '') $args[$key] = $value;
+    }
+    foreach (wc_get_attribute_taxonomies() as $attribute) {
+        $key = 'filter_' . sanitize_title($attribute->attribute_name);
+        $values = cg_catalog_get_array_request($key);
+        if ($values) $args[$key] = $values;
     }
     return $args;
 }
@@ -57,7 +69,7 @@ function cg_catalog_build_query_args($paged = 1) {
         'posts_per_page' => 12,
         'paged' => max(1, (int) $paged),
         'ignore_sticky_posts' => true,
-        'tax_query' => [],
+        'tax_query' => ['relation' => 'AND'],
         'meta_query' => WC()->query->get_meta_query(),
     ];
 
@@ -67,6 +79,20 @@ function cg_catalog_build_query_args($paged = 1) {
             'taxonomy' => 'product_cat',
             'field' => 'slug',
             'terms' => $category,
+        ];
+    }
+
+    foreach (wc_get_attribute_taxonomies() as $attribute) {
+        $taxonomy = wc_attribute_taxonomy_name($attribute->attribute_name);
+        if (!taxonomy_exists($taxonomy)) continue;
+        $key = 'filter_' . sanitize_title($attribute->attribute_name);
+        $values = cg_catalog_get_array_request($key);
+        if (!$values) continue;
+        $args['tax_query'][] = [
+            'taxonomy' => $taxonomy,
+            'field' => 'slug',
+            'terms' => $values,
+            'operator' => 'IN',
         ];
     }
 
@@ -120,8 +146,24 @@ function cg_catalog_build_query_args($paged = 1) {
             $args['orderby'] = ['menu_order' => 'ASC', 'title' => 'ASC'];
     }
 
-    if (empty($args['tax_query'])) unset($args['tax_query']);
+    if (count($args['tax_query']) === 1) unset($args['tax_query']);
     return $args;
+}
+
+function cg_catalog_render_category_options($terms, $current_category, $depth = 0) {
+    foreach ($terms as $term) {
+        if ($term->slug === 'uncategorized') continue;
+        echo '<label class="cg-catalog-category-option'.($current_category === $term->slug ? ' is-active' : '').'">';
+        echo '<input type="radio" name="product_cat" value="'.esc_attr($term->slug).'"'.checked($current_category, $term->slug, false).'>';
+        echo '<span style="--cg-depth:'.esc_attr($depth).'">'.esc_html($term->name).'</span><b>'.esc_html($term->count).'</b></label>';
+        $children = get_terms([
+            'taxonomy' => 'product_cat',
+            'hide_empty' => true,
+            'parent' => $term->term_id,
+            'orderby' => 'name',
+        ]);
+        if (!is_wp_error($children) && $children) cg_catalog_render_category_options($children, $current_category, $depth + 1);
+    }
 }
 
 function cg_catalog_sidebar() {
@@ -132,29 +174,22 @@ function cg_catalog_sidebar() {
 
     $current_category = cg_catalog_current_category_slug();
     $terms = get_terms(['taxonomy'=>'product_cat','hide_empty'=>true,'parent'=>0,'orderby'=>'name']);
+    $action = cg_catalog_form_action();
 
     echo '<button class="cg-catalog-filter-toggle" type="button" aria-expanded="false" aria-controls="cg-catalog-sidebar">Фильтры и категории</button>';
     echo '<aside id="cg-catalog-sidebar" class="cg-catalog-sidebar" aria-label="Фильтры каталога">';
     echo '<div class="cg-catalog-sidebar__heading"><span>Каталог</span><h2>Фильтры</h2></div>';
-    echo '<nav class="cg-catalog-categories" aria-label="Категории товаров"><h3>Категории</h3><ul>';
-    echo '<li'.($current_category === '' ? ' class="is-active"' : '').'><a href="'.esc_url(cg_catalog_url()).'"><span>Все букеты</span></a></li>';
-    if (!is_wp_error($terms)) {
-        foreach ($terms as $term) {
-            $url = get_term_link($term);
-            if (is_wp_error($url)) continue;
-            echo '<li'.($current_category === $term->slug ? ' class="is-active"' : '').'><a href="'.esc_url($url).'"><span>'.esc_html($term->name).'</span><b>'.esc_html($term->count).'</b></a></li>';
-        }
-    }
-    echo '</ul></nav>';
+    echo '<form class="cg-catalog-filter-form" method="get" action="'.esc_url($action).'" data-cg-auto-filter>';
 
-    $action = cg_catalog_form_action();
-    if (is_wp_error($action)) $action = cg_catalog_url();
-    echo '<form class="cg-catalog-filter-form" method="get" action="'.esc_url($action).'">';
-    if (is_shop() && get_option('permalink_structure') === '') {
-        $shop_id = wc_get_page_id('shop');
-        if ($shop_id > 0) echo '<input type="hidden" name="page_id" value="'.esc_attr($shop_id).'">';
+    $shop_id = wc_get_page_id('shop');
+    if ($shop_id > 0 && get_option('permalink_structure') === '') {
+        echo '<input type="hidden" name="page_id" value="'.esc_attr($shop_id).'">';
     }
-    if ($current_category && !is_product_category()) echo '<input type="hidden" name="product_cat" value="'.esc_attr($current_category).'">';
+
+    echo '<section class="cg-catalog-categories" aria-label="Категории товаров"><h3>Категории</h3><div class="cg-catalog-category-list">';
+    echo '<label class="cg-catalog-category-option'.($current_category === '' ? ' is-active' : '').'"><input type="radio" name="product_cat" value=""'.checked($current_category, '', false).'><span>Все букеты</span></label>';
+    if (!is_wp_error($terms)) cg_catalog_render_category_options($terms, $current_category);
+    echo '</div></section>';
 
     echo '<section class="cg-catalog-price-filter"><div class="cg-catalog-filter-title">Цена</div>';
     echo '<div class="cg-catalog-price-values"><span data-cg-price-min-label>'.wp_strip_all_tags(wc_price($selected_min)).'</span><span data-cg-price-max-label>'.wp_strip_all_tags(wc_price($selected_max)).'</span></div>';
@@ -165,8 +200,23 @@ function cg_catalog_sidebar() {
 
     echo '<label class="cg-catalog-check"><input type="checkbox" name="stock_status" value="instock"'.checked(cg_catalog_get_request('stock_status'), 'instock', false).'><span>Только в наличии</span></label>';
     echo '<label class="cg-catalog-check"><input type="checkbox" name="on_sale" value="1"'.checked(cg_catalog_get_request('on_sale'), '1', false).'><span>Со скидкой</span></label>';
+
+    foreach (wc_get_attribute_taxonomies() as $attribute) {
+        $taxonomy = wc_attribute_taxonomy_name($attribute->attribute_name);
+        if (!taxonomy_exists($taxonomy)) continue;
+        $attribute_terms = get_terms(['taxonomy' => $taxonomy, 'hide_empty' => true, 'orderby' => 'name']);
+        if (is_wp_error($attribute_terms) || !$attribute_terms) continue;
+        $key = 'filter_' . sanitize_title($attribute->attribute_name);
+        $selected = cg_catalog_get_array_request($key);
+        echo '<section class="cg-catalog-attribute-filter"><h3>'.esc_html($attribute->attribute_label ?: $attribute->attribute_name).'</h3><div class="cg-catalog-attribute-list">';
+        foreach ($attribute_terms as $term) {
+            echo '<label class="cg-catalog-check"><input type="checkbox" name="'.esc_attr($key).'[]" value="'.esc_attr($term->slug).'"'.checked(in_array($term->slug, $selected, true), true, false).'><span>'.esc_html($term->name).'</span></label>';
+        }
+        echo '</div></section>';
+    }
+
     echo '<input type="hidden" name="cg_orderby" value="'.esc_attr(cg_catalog_get_request('cg_orderby', 'menu_order')).'">';
-    echo '<div class="cg-catalog-filter-actions"><button type="submit" class="button">Показать товары</button><a href="'.esc_url($action).'">Сбросить</a></div>';
+    echo '<div class="cg-catalog-filter-actions"><noscript><button type="submit" class="button">Показать товары</button></noscript><a href="'.esc_url($action).'">Сбросить</a></div>';
     echo '</form></aside>';
 }
 
@@ -177,11 +227,15 @@ function cg_catalog_toolbar($query) {
     echo '<form class="cg-catalog-ordering" method="get" action="'.esc_url(cg_catalog_form_action()).'">';
     foreach (cg_catalog_preserved_query_args() as $key => $value) {
         if ($key === 'cg_orderby') continue;
-        echo '<input type="hidden" name="'.esc_attr($key).'" value="'.esc_attr($value).'">';
+        if (is_array($value)) {
+            foreach ($value as $item) echo '<input type="hidden" name="'.esc_attr($key).'[]" value="'.esc_attr($item).'">';
+        } else {
+            echo '<input type="hidden" name="'.esc_attr($key).'" value="'.esc_attr($value).'">';
+        }
     }
-    if (is_shop() && get_option('permalink_structure') === '') {
-        $shop_id = wc_get_page_id('shop');
-        if ($shop_id > 0) echo '<input type="hidden" name="page_id" value="'.esc_attr($shop_id).'">';
+    $shop_id = wc_get_page_id('shop');
+    if ($shop_id > 0 && get_option('permalink_structure') === '') {
+        echo '<input type="hidden" name="page_id" value="'.esc_attr($shop_id).'">';
     }
     echo '<label><span>Сортировка</span><select name="cg_orderby" onchange="this.form.submit()">';
     $options = [
@@ -201,9 +255,24 @@ function cg_catalog_active_filters() {
     $min = (int) cg_catalog_get_request('min_price', $catalog_min);
     $max = (int) cg_catalog_get_request('max_price', $catalog_max);
     $chips = [];
+    $category = cg_catalog_current_category_slug();
+    if ($category) {
+        $term = get_term_by('slug', $category, 'product_cat');
+        if ($term) $chips[] = ['Категория: '.$term->name, remove_query_arg('product_cat')];
+    }
     if ($min > $catalog_min || $max < $catalog_max) $chips[] = [sprintf('Цена: %s — %s', wp_strip_all_tags(wc_price($min)), wp_strip_all_tags(wc_price($max))), remove_query_arg(['min_price','max_price'])];
     if (cg_catalog_get_request('stock_status') === 'instock') $chips[] = ['В наличии', remove_query_arg('stock_status')];
     if (cg_catalog_get_request('on_sale') === '1') $chips[] = ['Со скидкой', remove_query_arg('on_sale')];
+    foreach (wc_get_attribute_taxonomies() as $attribute) {
+        $taxonomy = wc_attribute_taxonomy_name($attribute->attribute_name);
+        $key = 'filter_' . sanitize_title($attribute->attribute_name);
+        foreach (cg_catalog_get_array_request($key) as $slug) {
+            $term = get_term_by('slug', $slug, $taxonomy);
+            if (!$term) continue;
+            $url = remove_query_arg($key);
+            $chips[] = [($attribute->attribute_label ?: $attribute->attribute_name).': '.$term->name, $url];
+        }
+    }
     if (!$chips) return;
     echo '<div class="cg-active-filters" aria-label="Выбранные фильтры">';
     foreach ($chips as [$label,$url]) echo '<a class="cg-filter-chip" href="'.esc_url($url).'">'.esc_html($label).'<span aria-hidden="true">×</span></a>';
