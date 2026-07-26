@@ -32,7 +32,8 @@ function cg_assets() {
     $version = wp_get_theme()->get('Version');
     wp_enqueue_style('cg-style', get_stylesheet_uri(), [], $version);
     if (is_front_page()) {
-        wp_enqueue_style('cg-homepage', get_template_directory_uri().'/assets/css/homepage.css', ['cg-style'], $version);
+        $homepage_css = get_template_directory() . '/assets/css/homepage.css';
+        wp_enqueue_style('cg-homepage', get_template_directory_uri().'/assets/css/homepage.css', ['cg-style'], file_exists($homepage_css) ? filemtime($homepage_css) : $version);
     }
     if (class_exists('WooCommerce')) {
         wp_enqueue_style('cg-woocommerce', get_template_directory_uri().'/assets/css/woocommerce.css', ['cg-style'], $version);
@@ -134,17 +135,37 @@ add_filter('body_class', 'cg_body_classes');
 
 /** WooCommerce layout. */
 function cg_shop_sidebar() {
-    echo '<button class="cg-filter-toggle" type="button" aria-expanded="false" aria-controls="cg-shop-sidebar">Показать фильтры</button>';
+    $current_category = '';
+    if (is_product_category()) {
+        $queried = get_queried_object();
+        if ($queried && !is_wp_error($queried)) $current_category = $queried->slug;
+    }
+
+    echo '<button class="cg-filter-toggle" type="button" aria-expanded="false" aria-controls="cg-shop-sidebar">Фильтры и категории</button>';
     echo '<aside id="cg-shop-sidebar" class="cg-shop-sidebar" aria-label="Фильтры каталога">';
+    echo '<section class="widget cg-category-navigation"><h2 class="widget-title">Категории</h2><ul>';
+    echo '<li'.($current_category === '' ? ' class="is-current"' : '').'><a href="'.esc_url(cg_catalog_url()).'">Все букеты</a></li>';
+    $terms = get_terms(['taxonomy'=>'product_cat','hide_empty'=>true,'parent'=>0,'orderby'=>'name']);
+    if (!is_wp_error($terms)) {
+        foreach ($terms as $term) {
+            $term_url = get_term_link($term);
+            if (is_wp_error($term_url)) continue;
+            echo '<li'.($current_category === $term->slug ? ' class="is-current"' : '').'><a href="'.esc_url($term_url).'">'.esc_html($term->name).'<span>'.esc_html($term->count).'</span></a></li>';
+        }
+    }
+    echo '</ul></section>';
     echo '<section class="widget"><h2 class="widget-title">Подбор букета</h2><div class="cg-catalog-filter">';
     echo '<label>Категория<select name="cg_category"><option value="">Все категории</option>';
-    foreach (get_terms(['taxonomy'=>'product_cat','hide_empty'=>true]) as $term) {
-        echo '<option value="'.esc_attr($term->slug).'">'.esc_html($term->name).'</option>';
+    $all_terms = get_terms(['taxonomy'=>'product_cat','hide_empty'=>true]);
+    if (!is_wp_error($all_terms)) {
+        foreach ($all_terms as $term) {
+            echo '<option value="'.esc_attr($term->slug).'"'.selected($current_category, $term->slug, false).'>'.esc_html($term->name).'</option>';
+        }
     }
     echo '</select></label><div class="cg-catalog-filter__prices">';
     echo '<label>Цена от<input type="number" min="0" step="100" name="cg_min_price" placeholder="0"></label>';
     echo '<label>Цена до<input type="number" min="0" step="100" name="cg_max_price" placeholder="5000"></label>';
-    echo '</div></div></section>';
+    echo '</div><button class="button cg-filter-reset" type="button">Сбросить фильтры</button></div></section>';
     if (is_active_sidebar('shop-filters')) {
         dynamic_sidebar('shop-filters');
     }
@@ -168,6 +189,19 @@ remove_action('woocommerce_after_main_content','woocommerce_output_content_wrapp
 remove_action('woocommerce_sidebar','woocommerce_get_sidebar',10);
 add_action('woocommerce_before_main_content','cg_wc_wrapper_start',10);
 add_action('woocommerce_after_main_content','cg_wc_wrapper_end',10);
+
+/** Remove duplicated outer page title; WooCommerce archive heading remains. */
+add_filter('woocommerce_show_page_title', '__return_false');
+
+function cg_catalog_heading() {
+    if (!(is_shop() || is_product_taxonomy())) return;
+    $title = is_shop() ? 'Каталог букетов' : single_term_title('', false);
+    $subtitle = is_shop()
+        ? 'Выберите букет по случаю, стилю и бюджету.'
+        : 'Подборка букетов из выбранной категории.';
+    echo '<header class="cg-catalog-heading"><span>Цветочный город</span><h1>'.esc_html($title).'</h1><p>'.esc_html($subtitle).'</p></header>';
+}
+add_action('woocommerce_before_shop_loop', 'cg_catalog_heading', 5);
 
 function cg_shop_toolbar_start(){ echo '<div class="cg-shop-toolbar">'; }
 function cg_shop_toolbar_end(){ echo '</div>'; }
