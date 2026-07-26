@@ -56,11 +56,6 @@ document.addEventListener('DOMContentLoaded',()=>{
   const next=slider.querySelector('.cg-slider__arrow--next');
   let index=0;
   let timer;
-  let touchStartX=0;
-  let touchStartY=0;
-  let touchCurrentX=0;
-  let touchCurrentY=0;
-  let isTouching=false;
 
   const show=(newIndex)=>{
     index=(newIndex+slides.length)%slides.length;
@@ -80,14 +75,6 @@ document.addEventListener('DOMContentLoaded',()=>{
     timer=window.setInterval(()=>show(index+1),6500);
   };
 
-  const resetTouch=()=>{
-    touchStartX=0;
-    touchStartY=0;
-    touchCurrentX=0;
-    touchCurrentY=0;
-    isTouching=false;
-  };
-
   prev?.addEventListener('click',()=>{show(index-1);start();});
   next?.addEventListener('click',()=>{show(index+1);start();});
   dots.forEach((dot,i)=>dot.addEventListener('click',()=>{show(i);start();}));
@@ -95,46 +82,6 @@ document.addEventListener('DOMContentLoaded',()=>{
   slider.addEventListener('mouseleave',start);
   slider.addEventListener('focusin',stop);
   slider.addEventListener('focusout',start);
-
-  slider.addEventListener('touchstart',(event)=>{
-    if(event.touches.length!==1) return;
-    const touch=event.touches[0];
-    touchStartX=touch.clientX;
-    touchStartY=touch.clientY;
-    touchCurrentX=touch.clientX;
-    touchCurrentY=touch.clientY;
-    isTouching=true;
-    stop();
-  },{passive:true});
-
-  slider.addEventListener('touchmove',(event)=>{
-    if(!isTouching||event.touches.length!==1) return;
-    const touch=event.touches[0];
-    touchCurrentX=touch.clientX;
-    touchCurrentY=touch.clientY;
-  },{passive:true});
-
-  slider.addEventListener('touchend',()=>{
-    if(!isTouching){
-      start();
-      return;
-    }
-    const deltaX=touchCurrentX-touchStartX;
-    const deltaY=touchCurrentY-touchStartY;
-    const horizontalSwipe=Math.abs(deltaX)>45&&Math.abs(deltaX)>Math.abs(deltaY)*1.2;
-
-    if(horizontalSwipe){
-      show(deltaX<0?index+1:index-1);
-    }
-
-    resetTouch();
-    start();
-  },{passive:true});
-
-  slider.addEventListener('touchcancel',()=>{
-    resetTouch();
-    start();
-  },{passive:true});
 
   show(0);
   start();
