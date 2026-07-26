@@ -119,27 +119,11 @@ function cg_body_classes($classes) {
 }
 add_filter('body_class', 'cg_body_classes');
 
-/**
- * Keep WooCommerce's wrappers untouched for archive-product.php.
- * The theme archive template owns the catalog shell directly.
- */
+/** The custom archive-product.php owns the whole catalog interface. */
 remove_action('woocommerce_sidebar','woocommerce_get_sidebar',10);
+remove_action('woocommerce_before_shop_loop','woocommerce_catalog_ordering',30);
+remove_action('woocommerce_before_shop_loop','woocommerce_result_count',20);
 add_filter('woocommerce_show_page_title', '__return_false');
-
-function cg_catalog_heading() {
-    if (!(is_shop() || is_product_taxonomy())) return;
-    $title = is_shop() ? 'Каталог букетов' : single_term_title('', false);
-    $subtitle = is_shop()
-        ? 'Выберите букет по случаю, стилю и бюджету.'
-        : 'Подборка букетов из выбранной категории.';
-    echo '<header class="cg-catalog-heading"><span>Цветочный город</span><h1>'.esc_html($title).'</h1><p>'.esc_html($subtitle).'</p></header>';
-}
-add_action('woocommerce_before_shop_loop', 'cg_catalog_heading', 5);
-
-function cg_shop_toolbar_start(){ echo '<div class="cg-shop-toolbar">'; }
-function cg_shop_toolbar_end(){ echo '</div>'; }
-add_action('woocommerce_before_shop_loop','cg_shop_toolbar_start',15);
-add_action('woocommerce_before_shop_loop','cg_shop_toolbar_end',35);
 
 function cg_loop_product_media(){
     global $product;
