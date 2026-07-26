@@ -7,16 +7,25 @@
 
 if (!defined('ABSPATH')) exit;
 
-/** Render a visible modern filter panel above products. */
+/** Read a catalog filter value from the current request. */
+function cg_catalog_request_value($key, $default = '') {
+    return isset($_GET[$key]) ? sanitize_text_field(wp_unslash($_GET[$key])) : $default;
+}
+
+/** Render a reliable vertical filter panel. Links and form also work without JavaScript. */
 function cg_catalog_top_filters() {
     if (!(is_shop() || is_product_taxonomy())) return;
 
-    $current = '';
-    if (is_product_category()) {
+    $current = cg_catalog_request_value('cg_category');
+    if (!$current && is_product_category()) {
         $term = get_queried_object();
         if ($term && !is_wp_error($term)) $current = $term->slug;
     }
 
+    $min_price = cg_catalog_request_value('cg_min_price');
+    $max_price = cg_catalog_request_value('cg_max_price');
+    $in_stock  = cg_catalog_request_value('cg_in_stock');
+    $on_sale   = cg_catalog_request_value('cg_on_sale');
     $terms = get_terms([
         'taxonomy'   => 'product_cat',
         'hide_empty' => true,
@@ -24,20 +33,22 @@ function cg_catalog_top_filters() {
         'orderby'    => 'name',
     ]);
 
-    echo '<section class="cg-modern-filters" aria-label="Фильтры каталога">';
-    echo '<div class="cg-modern-filters__head"><div><span>Удобный подбор</span><h2>Найдите подходящий букет</h2></div><button class="cg-modern-filters__toggle" type="button" aria-expanded="true">Скрыть фильтры</button></div>';
-    echo '<div class="cg-modern-filters__body">';
+    echo '<button class="cg-modern-filters__mobile-toggle" type="button" aria-expanded="false" aria-controls="cg-modern-filters">Фильтры и категории</button>';
+    echo '<aside id="cg-modern-filters" class="cg-modern-filters" aria-label="Фильтры каталога">';
+    echo '<div class="cg-modern-filters__head"><span>Удобный подбор</span><h2>Фильтры</h2></div>';
 
-    echo '<div class="cg-category-chips" aria-label="Категории товаров">';
-    echo '<button type="button" class="cg-category-chip'.($current === '' ? ' is-active' : '').'" data-category="">Все букеты</button>';
+    echo '<nav class="cg-category-navigation" aria-label="Категории товаров"><h3>Категории</h3><ul>';
+    echo '<li'.($current === '' ? ' class="is-active"' : '').'><a href="'.esc_url(cg_catalog_url()).'">Все букеты</a></li>';
     if (!is_wp_error($terms)) {
         foreach ($terms as $term) {
-            echo '<button type="button" class="cg-category-chip'.($current === $term->slug ? ' is-active' : '').'" data-category="'.esc_attr($term->slug).'">'.esc_html($term->name).'<span>'.esc_html($term->count).'</span></button>';
+            $term_url = get_term_link($term);
+            if (is_wp_error($term_url)) continue;
+            echo '<li'.($current === $term->slug ? ' class="is-active"' : '').'><a href="'.esc_url($term_url).'">'.esc_html($term->name).'<span>'.esc_html($term->count).'</span></a></li>';
         }
     }
-    echo '</div>';
+    echo '</ul></nav>';
 
-    echo '<div class="cg-filter-fields">';
+    echo '<form class="cg-filter-form" method="get" action="'.esc_url(cg_catalog_url()).'">';
     echo '<label class="cg-filter-field"><span>Категория</span><select name="cg_category"><option value="">Все категории</option>';
     $all_terms = get_terms(['taxonomy'=>'product_cat','hide_empty'=>true,'orderby'=>'name']);
     if (!is_wp_error($all_terms)) {
@@ -46,21 +57,63 @@ function cg_catalog_top_filters() {
         }
     }
     echo '</select></label>';
-    echo '<label class="cg-filter-field"><span>Цена от</span><input type="number" min="0" step="100" name="cg_min_price" placeholder="0 ₽"></label>';
-    echo '<label class="cg-filter-field"><span>Цена до</span><input type="number" min="0" step="100" name="cg_max_price" placeholder="10 000 ₽"></label>';
-    echo '<label class="cg-filter-check"><input type="checkbox" name="cg_in_stock" value="1"><span>Только в наличии</span></label>';
-    echo '<label class="cg-filter-check"><input type="checkbox" name="cg_on_sale" value="1"><span>Со скидкой</span></label>';
-    echo '<button class="cg-filter-reset" type="button">Сбросить</button>';
+    echo '<div class="cg-filter-prices">';
+    echo '<label class="cg-filter-field"><span>Цена от</span><input type="number" min="0" step="100" name="cg_min_price" value="'.esc_attr($min_price).'" placeholder="0 ₽"></label>';
+    echo '<label class="cg-filter-field"><span>Цена до</span><input type="number" min="0" step="100" name="cg_max_price" value="'.esc_attr($max_price).'" placeholder="10 000 ₽"></label>';
     echo '</div>';
-
-    echo '</div></section>';
+    echo '<label class="cg-filter-check"><input type="checkbox" name="cg_in_stock" value="1"'.checked($in_stock, '1', false).'><span>Только в наличии</span></label>';
+    echo '<label class="cg-filter-check"><input type="checkbox" name="cg_on_sale" value="1"'.checked($on_sale, '1', false).'><span>Со скидкой</span></label>';
+    echo '<div class="cg-filter-actions"><button class="button cg-filter-apply" type="submit">Применить</button><a class="cg-filter-reset" href="'.esc_url(cg_catalog_url()).'">Сбросить</a></div>';
+    echo '</form>';
+    echo '</aside>';
 }
 add_action('woocommerce_before_shop_loop', 'cg_catalog_top_filters', 10);
+
+/** Apply the same filters to normal page loads when JavaScript is unavailable. */
+function cg_catalog_apply_get_filters($query) {
+    if (is_admin() || !$query->is_main_query() || !(is_shop() || is_product_taxonomy())) return;
+
+    $category  = cg_catalog_request_value('cg_category');
+    $min_price = (float) cg_catalog_request_value('cg_min_price', 0);
+    $max_price = (float) cg_catalog_request_value('cg_max_price', 0);
+    $in_stock  = cg_catalog_request_value('cg_in_stock');
+    $on_sale   = cg_catalog_request_value('cg_on_sale');
+
+    $tax_query = (array) $query->get('tax_query');
+    $meta_query = (array) $query->get('meta_query');
+
+    if ($category) {
+        $tax_query[] = ['taxonomy'=>'product_cat','field'=>'slug','terms'=>$category];
+    }
+    if ($min_price > 0 || $max_price > 0) {
+        $price_filter = ['key'=>'_price','type'=>'NUMERIC'];
+        if ($min_price > 0 && $max_price > 0) {
+            $price_filter['value'] = [$min_price, $max_price];
+            $price_filter['compare'] = 'BETWEEN';
+        } elseif ($min_price > 0) {
+            $price_filter['value'] = $min_price;
+            $price_filter['compare'] = '>=';
+        } else {
+            $price_filter['value'] = $max_price;
+            $price_filter['compare'] = '<=';
+        }
+        $meta_query[] = $price_filter;
+    }
+    if ($in_stock === '1') {
+        $meta_query[] = ['key'=>'_stock_status','value'=>'instock','compare'=>'='];
+    }
+    if ($on_sale === '1') {
+        $query->set('post__in', wc_get_product_ids_on_sale() ?: [0]);
+    }
+
+    if ($tax_query) $query->set('tax_query', $tax_query);
+    if ($meta_query) $query->set('meta_query', $meta_query);
+}
+add_action('pre_get_posts', 'cg_catalog_apply_get_filters', 20);
 
 /** Render product loop HTML for AJAX responses. */
 function cg_ajax_catalog_render_products($query_args) {
     $query = new WP_Query($query_args);
-
     ob_start();
     if ($query->have_posts()) {
         woocommerce_product_loop_start();
@@ -73,7 +126,6 @@ function cg_ajax_catalog_render_products($query_args) {
         echo '<div class="cg-catalog-empty"><h3>Ничего не найдено</h3><p>Попробуйте изменить фильтры или выбрать другую категорию.</p></div>';
     }
     wp_reset_postdata();
-
     return ob_get_clean();
 }
 
@@ -90,102 +142,41 @@ function cg_ajax_catalog_filter() {
     $on_sale = !empty($_POST['on_sale']);
 
     $args = [
-        'post_type'      => 'product',
-        'post_status'    => 'publish',
-        'posts_per_page' => 12,
-        'paged'          => $paged,
-        'tax_query'      => WC()->query->get_tax_query(),
-        'meta_query'     => WC()->query->get_meta_query(),
+        'post_type'=>'product','post_status'=>'publish','posts_per_page'=>12,'paged'=>$paged,
+        'tax_query'=>WC()->query->get_tax_query(),'meta_query'=>WC()->query->get_meta_query(),
     ];
-
-    if ($category) {
-        $args['tax_query'][] = [
-            'taxonomy' => 'product_cat',
-            'field'    => 'slug',
-            'terms'    => $category,
-        ];
-    }
-
+    if ($category) $args['tax_query'][] = ['taxonomy'=>'product_cat','field'=>'slug','terms'=>$category];
     if ($min_price > 0 || $max_price > 0) {
-        $price_filter = ['key' => '_price', 'type' => 'NUMERIC'];
-        if ($min_price > 0 && $max_price > 0) {
-            $price_filter['value'] = [$min_price, $max_price];
-            $price_filter['compare'] = 'BETWEEN';
-        } elseif ($min_price > 0) {
-            $price_filter['value'] = $min_price;
-            $price_filter['compare'] = '>=';
-        } else {
-            $price_filter['value'] = $max_price;
-            $price_filter['compare'] = '<=';
-        }
+        $price_filter = ['key'=>'_price','type'=>'NUMERIC'];
+        if ($min_price > 0 && $max_price > 0) {$price_filter['value']=[$min_price,$max_price];$price_filter['compare']='BETWEEN';}
+        elseif ($min_price > 0) {$price_filter['value']=$min_price;$price_filter['compare']='>=';}
+        else {$price_filter['value']=$max_price;$price_filter['compare']='<=';}
         $args['meta_query'][] = $price_filter;
     }
-
-    if ($in_stock) {
-        $args['meta_query'][] = [
-            'key'     => '_stock_status',
-            'value'   => 'instock',
-            'compare' => '=',
-        ];
-    }
-
-    if ($on_sale) {
-        $sale_ids = wc_get_product_ids_on_sale();
-        $args['post__in'] = $sale_ids ?: [0];
-    }
+    if ($in_stock) $args['meta_query'][] = ['key'=>'_stock_status','value'=>'instock','compare'=>'='];
+    if ($on_sale) $args['post__in'] = wc_get_product_ids_on_sale() ?: [0];
 
     switch ($orderby) {
-        case 'price':
-            $args['meta_key'] = '_price';
-            $args['orderby'] = 'meta_value_num';
-            $args['order'] = 'ASC';
-            break;
-        case 'price-desc':
-            $args['meta_key'] = '_price';
-            $args['orderby'] = 'meta_value_num';
-            $args['order'] = 'DESC';
-            break;
-        case 'date':
-            $args['orderby'] = 'date';
-            $args['order'] = 'DESC';
-            break;
-        case 'popularity':
-            $args['meta_key'] = 'total_sales';
-            $args['orderby'] = 'meta_value_num';
-            $args['order'] = 'DESC';
-            break;
-        case 'rating':
-            $args['meta_key'] = '_wc_average_rating';
-            $args['orderby'] = 'meta_value_num';
-            $args['order'] = 'DESC';
-            break;
-        default:
-            $args['orderby'] = ['menu_order' => 'ASC', 'title' => 'ASC'];
+        case 'price': $args['meta_key']='_price';$args['orderby']='meta_value_num';$args['order']='ASC';break;
+        case 'price-desc': $args['meta_key']='_price';$args['orderby']='meta_value_num';$args['order']='DESC';break;
+        case 'date': $args['orderby']='date';$args['order']='DESC';break;
+        case 'popularity': $args['meta_key']='total_sales';$args['orderby']='meta_value_num';$args['order']='DESC';break;
+        case 'rating': $args['meta_key']='_wc_average_rating';$args['orderby']='meta_value_num';$args['order']='DESC';break;
+        default: $args['orderby']=['menu_order'=>'ASC','title'=>'ASC'];
     }
 
     $query = new WP_Query($args);
     $products = cg_ajax_catalog_render_products($args);
-
     ob_start();
     if ($query->max_num_pages > 1) {
-        echo '<div class="cg-ajax-pagination" data-pages="' . esc_attr($query->max_num_pages) . '">';
-        for ($i = 1; $i <= $query->max_num_pages; $i++) {
-            printf(
-                '<button type="button" class="cg-page-button%s" data-page="%d">%d</button>',
-                $i === $paged ? ' is-active' : '',
-                $i,
-                $i
-            );
+        echo '<div class="cg-ajax-pagination" data-pages="'.esc_attr($query->max_num_pages).'">';
+        for ($i=1;$i<=$query->max_num_pages;$i++) {
+            printf('<button type="button" class="cg-page-button%s" data-page="%d">%d</button>',$i===$paged?' is-active':'',$i,$i);
         }
         echo '</div>';
     }
     $pagination = ob_get_clean();
-
-    wp_send_json_success([
-        'products'   => $products,
-        'pagination' => $pagination,
-        'found'      => (int) $query->found_posts,
-    ]);
+    wp_send_json_success(['products'=>$products,'pagination'=>$pagination,'found'=>(int)$query->found_posts]);
 }
 add_action('wp_ajax_cg_filter_products', 'cg_ajax_catalog_filter');
 add_action('wp_ajax_nopriv_cg_filter_products', 'cg_ajax_catalog_filter');
