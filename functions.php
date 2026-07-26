@@ -119,25 +119,11 @@ function cg_body_classes($classes) {
 }
 add_filter('body_class', 'cg_body_classes');
 
-/** WooCommerce layout. */
-function cg_wc_wrapper_start(){
-    echo '<main id="primary" class="site-main"><div class="container content-area cg-woo-wrap">';
-    if (is_shop() || is_product_taxonomy()) {
-        echo '<div class="cg-shop-shell">';
-        cg_catalog_sidebar();
-        echo '<section class="cg-shop-content" aria-label="Товары каталога">';
-    }
-}
-function cg_wc_wrapper_end(){
-    if (is_shop() || is_product_taxonomy()) echo '</section></div>';
-    echo '</div></main>';
-}
-remove_action('woocommerce_before_main_content','woocommerce_output_content_wrapper',10);
-remove_action('woocommerce_after_main_content','woocommerce_output_content_wrapper_end',10);
+/**
+ * Keep WooCommerce's wrappers untouched for archive-product.php.
+ * The theme archive template owns the catalog shell directly.
+ */
 remove_action('woocommerce_sidebar','woocommerce_get_sidebar',10);
-add_action('woocommerce_before_main_content','cg_wc_wrapper_start',10);
-add_action('woocommerce_after_main_content','cg_wc_wrapper_end',10);
-
 add_filter('woocommerce_show_page_title', '__return_false');
 
 function cg_catalog_heading() {
