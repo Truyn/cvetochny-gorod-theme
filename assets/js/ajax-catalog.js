@@ -7,6 +7,9 @@ document.addEventListener('DOMContentLoaded',()=>{
   const minPrice=document.querySelector('[name="cg_min_price"]');
   const maxPrice=document.querySelector('[name="cg_max_price"]');
   const ordering=document.querySelector('.woocommerce-ordering select');
+  const resetButton=document.querySelector('.cg-filter-reset');
+  const sidebar=document.querySelector('#cg-shop-sidebar');
+  const toggle=document.querySelector('.cg-filter-toggle');
   let page=1;
   let controller;
 
@@ -54,6 +57,18 @@ document.addEventListener('DOMContentLoaded',()=>{
   minPrice?.addEventListener('change',resetPage);
   maxPrice?.addEventListener('change',resetPage);
   ordering?.addEventListener('change',(event)=>{event.preventDefault();resetPage();});
+  resetButton?.addEventListener('click',()=>{
+    if(category) category.value='';
+    if(minPrice) minPrice.value='';
+    if(maxPrice) maxPrice.value='';
+    if(ordering) ordering.value='menu_order';
+    resetPage();
+  });
+  toggle?.addEventListener('click',()=>{
+    const open=sidebar?.classList.toggle('is-open');
+    toggle.setAttribute('aria-expanded',open?'true':'false');
+    toggle.textContent=open?'Скрыть фильтры':'Фильтры и категории';
+  });
 
   shell.addEventListener('click',(event)=>{
     const pageButton=event.target.closest('.cg-page-button');
