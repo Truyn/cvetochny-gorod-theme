@@ -15,6 +15,31 @@ $catalog_query = new WP_Query(cg_catalog_build_query_args($paged));
 $title = is_product_category() ? single_term_title('', false) : 'Каталог букетов';
 $subtitle = is_product_category() ? 'Подборка букетов из выбранной категории.' : 'Выберите букет по случаю, стилю и бюджету.';
 ?>
+<style>
+.cg-custom-catalog .cg-filter-group summary > span {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 30px;
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    line-height: 1;
+}
+.cg-custom-catalog .cg-filter-group summary > span::before {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    line-height: 1;
+    transform: none;
+}
+</style>
 <main id="primary" class="site-main cg-custom-catalog" data-cg-catalog-template="server-ajax-v2">
     <div class="container content-area cg-woo-wrap">
         <header class="cg-catalog-heading">
