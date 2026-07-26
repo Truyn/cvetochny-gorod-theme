@@ -124,15 +124,17 @@ $slides = function_exists('cg_get_home_slides') ? cg_get_home_slides() : [];
 
                 <div class="cg-category-grid">
                     <?php foreach ($categories as $category) :
-                        $category_url = !empty($category['slug'])
-                            ? home_url('/product-category/' . $category['slug'] . '/')
-                            : cg_catalog_url();
+                        $category_style = !empty($category['image'])
+                            ? '--cg-category-image:url(' . esc_url($category['image']) . ');'
+                            : '';
                         ?>
-                        <a class="cg-category" href="<?php echo esc_url($category_url); ?>">
-                            <div class="cg-category__text">
+                        <a class="cg-category<?php echo !empty($category['image']) ? ' has-image' : ''; ?>" href="<?php echo esc_url($category['url']); ?>"<?php echo $category_style ? ' style="' . esc_attr($category_style) . '"' : ''; ?>>
+                            <span class="cg-category__media" aria-hidden="true"></span>
+                            <span class="cg-category__overlay" aria-hidden="true"></span>
+                            <span class="cg-category__text">
                                 <h3><?php echo esc_html($category['name']); ?></h3>
                                 <span>Смотреть товары →</span>
-                            </div>
+                            </span>
                         </a>
                     <?php endforeach; ?>
                 </div>
@@ -220,19 +222,19 @@ $slides = function_exists('cg_get_home_slides') ? cg_get_home_slides() : [];
                 <div class="section-head">
                     <div>
                         <div class="eyebrow"><?php echo esc_html(get_theme_mod('cg_instagram_eyebrow', 'Вдохновение')); ?></div>
-                        <h2 class="section-title"><?php echo esc_html(get_theme_mod('cg_instagram_title', 'Цветочный город в Instagram')); ?></h2>
-                        <div class="section-subtitle"><?php echo esc_html(get_theme_mod('cg_instagram_text', 'Новые букеты, детали сборки и идеи для особенных поводов.')); ?></div>
+                        <h2 class="section-title"><?php echo esc_html(get_theme_mod('cg_instagram_title', 'Мы в Instagram')); ?></h2>
                     </div>
                     <?php if ($instagram_url) : ?>
-                        <a class="text-link" href="<?php echo esc_url($instagram_url); ?>" target="_blank" rel="noopener noreferrer">Перейти в Instagram →</a>
+                        <a class="text-link" href="<?php echo esc_url($instagram_url); ?>" target="_blank" rel="noopener">Подписаться →</a>
                     <?php endif; ?>
                 </div>
+
                 <div class="cg-instagram-grid">
                     <?php for ($i = 1; $i <= 6; $i++) :
                         $image = get_theme_mod("cg_instagram_image_{$i}", '');
                         $style = $image ? 'background-image:url(' . esc_url($image) . ');' : '';
                         ?>
-                        <a class="cg-instagram-card cg-instagram-card--<?php echo esc_attr($i); ?>" href="<?php echo esc_url($instagram_url ?: '#'); ?>"<?php echo $instagram_url ? ' target="_blank" rel="noopener noreferrer"' : ''; ?> aria-label="Публикация <?php echo esc_attr($i); ?>">
+                        <a class="cg-instagram-card cg-instagram-card--<?php echo esc_attr($i); ?>" href="<?php echo esc_url($instagram_url ?: '#'); ?>"<?php echo $instagram_url ? ' target="_blank" rel="noopener"' : ''; ?>>
                             <span class="cg-instagram-card__image"<?php echo $style ? ' style="' . esc_attr($style) . '"' : ''; ?>></span>
                             <span class="cg-instagram-card__overlay" aria-hidden="true">
                                 <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1"/></svg>
@@ -245,27 +247,27 @@ $slides = function_exists('cg_get_home_slides') ? cg_get_home_slides() : [];
     <?php endif; ?>
 
     <?php if (get_theme_mod('cg_newsletter_enabled', true)) :
-        $newsletter_shortcode = trim((string) get_theme_mod('cg_newsletter_shortcode', ''));
+        $newsletter_shortcode = get_theme_mod('cg_newsletter_shortcode', '');
         ?>
         <section class="section">
             <div class="container">
-                <div class="newsletter">
+                <div class="newsletter-box">
                     <div>
                         <h2><?php echo esc_html(get_theme_mod('cg_newsletter_title', 'Скидка 10% на первый заказ')); ?></h2>
                         <p><?php echo esc_html(get_theme_mod('cg_newsletter_text', 'Оставьте e-mail и получите промокод.')); ?></p>
                     </div>
-
-                    <?php if ($newsletter_shortcode !== '') : ?>
-                        <?php echo do_shortcode($newsletter_shortcode); ?>
-                    <?php else : ?>
-                        <form action="#" method="post">
-                            <input type="email" placeholder="Ваш e-mail" aria-label="Ваш e-mail">
-                            <button class="button" type="submit">Получить промокод</button>
-                        </form>
-                    <?php endif; ?>
+                    <div>
+                        <?php
+                        if ($newsletter_shortcode && shortcode_exists(trim($newsletter_shortcode, '[] '))) {
+                            echo do_shortcode($newsletter_shortcode);
+                        } else {
+                            echo '<form><input type="email" placeholder="Ваш e-mail" aria-label="Ваш e-mail"><button class="button" type="submit">Получить скидку</button></form>';
+                        }
+                        ?>
+                    </div>
                 </div>
             </div>
         </section>
     <?php endif; ?>
 </main>
-<?php get_footer(); ?>
+<?php get_footer();
