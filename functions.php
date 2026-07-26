@@ -53,6 +53,12 @@ function cg_assets() {
             $catalog_js = get_template_directory() . '/assets/js/ajax-catalog.js';
             wp_enqueue_style('cg-ajax-catalog', get_template_directory_uri().'/assets/css/ajax-catalog.css', ['cg-woocommerce'], file_exists($catalog_css) ? filemtime($catalog_css) : $version);
             wp_enqueue_script('cg-ajax-catalog', get_template_directory_uri().'/assets/js/ajax-catalog.js', [], file_exists($catalog_js) ? filemtime($catalog_js) : $version, true);
+            wp_localize_script('cg-ajax-catalog', 'cgCatalog', [
+                'ajaxUrl' => admin_url('admin-ajax.php'),
+                'nonce' => wp_create_nonce('cg_catalog_filter'),
+                'shopUrl' => cg_catalog_url(),
+                'errorText' => 'Не удалось обновить каталог. Попробуйте ещё раз.',
+            ]);
         }
     }
 }
@@ -93,9 +99,7 @@ add_filter('loop_shop_columns', fn()=>4);
 add_filter('loop_shop_per_page', fn($n)=>12, 20);
 
 function cg_register_elementor_locations($elementor_theme_manager) {
-    if (method_exists($elementor_theme_manager, 'register_all_core_location')) {
-        $elementor_theme_manager->register_all_core_location();
-    }
+    if (method_exists($elementor_theme_manager, 'register_all_core_location')) $elementor_theme_manager->register_all_core_location();
 }
 add_action('elementor/theme/register_locations', 'cg_register_elementor_locations');
 
@@ -119,7 +123,6 @@ function cg_body_classes($classes) {
 }
 add_filter('body_class', 'cg_body_classes');
 
-/** The custom archive-product.php owns the whole catalog interface. */
 remove_action('woocommerce_sidebar','woocommerce_get_sidebar',10);
 remove_action('woocommerce_before_shop_loop','woocommerce_catalog_ordering',30);
 remove_action('woocommerce_before_shop_loop','woocommerce_result_count',20);
