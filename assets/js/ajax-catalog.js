@@ -1,16 +1,7 @@
 document.addEventListener('DOMContentLoaded',()=>{
-  const content=document.querySelector('.cg-shop-content');
   const panel=document.querySelector('#cg-modern-filters');
   const toggle=document.querySelector('.cg-modern-filters__mobile-toggle');
-  const shell=content?.closest('.cg-shop-shell');
-
-  /* The filter panel is rendered by a WooCommerce hook inside the content.
-     Move it to the shell so it becomes a real left column, not a top block. */
-  if(shell&&content&&panel){
-    shell.insertBefore(panel,content);
-    if(toggle) shell.insertBefore(toggle,panel);
-    shell.classList.add('cg-shop-shell--filters-ready');
-  }
+  const form=panel?.querySelector('.cg-filter-form');
 
   toggle?.addEventListener('click',()=>{
     const open=panel?.classList.toggle('is-open');
@@ -18,7 +9,6 @@ document.addEventListener('DOMContentLoaded',()=>{
     toggle.textContent=open?'Скрыть фильтры':'Фильтры и категории';
   });
 
-  const form=panel?.querySelector('.cg-filter-form');
   if(!form) return;
 
   const minRange=form.querySelector('.cg-price-range--min');
@@ -59,9 +49,28 @@ document.addEventListener('DOMContentLoaded',()=>{
   maxRange?.addEventListener('input',()=>syncSlider(maxRange));
   syncSlider();
 
-  /* Deliberately use a normal GET submit. It is more reliable with WooCommerce,
-     keeps pagination/sorting compatible and gives shareable filter URLs. */
-  form.addEventListener('submit',()=>{
-    form.querySelector('.cg-filter-apply')?.setAttribute('aria-busy','true');
+  form.addEventListener('submit',(event)=>{
+    event.preventDefault();
+    syncSlider();
+
+    const params=new URLSearchParams();
+    const pageId=form.querySelector('[name="page_id"]')?.value;
+    const category=form.querySelector('[name="cg_category"]')?.value;
+    const inStock=form.querySelector('[name="cg_in_stock"]')?.checked;
+    const onSale=form.querySelector('[name="cg_on_sale"]')?.checked;
+
+    if(pageId) params.set('page_id',pageId);
+    if(category) params.set('cg_category',category);
+    if(minInput?.value) params.set('cg_min_price',minInput.value);
+    if(maxInput?.value) params.set('cg_max_price',maxInput.value);
+    if(inStock) params.set('cg_in_stock','1');
+    if(onSale) params.set('cg_on_sale','1');
+
+    const orderby=document.querySelector('.woocommerce-ordering select')?.value;
+    if(orderby&&orderby!=='menu_order') params.set('orderby',orderby);
+
+    const button=form.querySelector('.cg-filter-apply');
+    button?.setAttribute('aria-busy','true');
+    window.location.assign(`${window.location.origin}/?${params.toString()}`);
   });
 });
