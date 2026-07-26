@@ -1,175 +1,173 @@
 document.addEventListener('DOMContentLoaded',()=>{
-  const catalogRoot=document.querySelector('[data-cg-catalog-template="custom-v1"],.cg-custom-catalog');
-  if(!catalogRoot) return;
+  const root=document.querySelector('[data-cg-catalog-template="server-ajax-v2"]');
+  const form=root?.querySelector('[data-cg-catalog-form]');
+  const results=root?.querySelector('#cg-catalog-results');
+  if(!root||!form||!results||typeof cgCatalog==='undefined') return;
 
-  let requestController=null;
-  let submitTimer=null;
   const currency=new Intl.NumberFormat('ru-RU',{style:'currency',currency:'RUB',maximumFractionDigits:0});
+  let controller=null;
+  let timer=null;
 
-  const buildUrl=(form)=>{
-    const action=new URL(form.action||window.location.href,window.location.origin);
-    const params=new URLSearchParams();
-    for(const [key,value] of new FormData(form).entries()){
-      if(value==='') continue;
-      params.append(key,String(value));
+  const minRange=form.querySelector('.cg-catalog-range--min');
+  const maxRange=form.querySelector('.cg-catalog-range--max');
+  const minInput=form.querySelector('[name="min_price"]');
+  const maxInput=form.querySelector('[name="max_price"]');
+  const minLabel=form.querySelector('[data-cg-price-min-label]');
+  const maxLabel=form.querySelector('[data-cg-price-max-label]');
+  const slider=form.querySelector('.cg-catalog-price-slider');
+
+  const syncSlider=(changed)=>{
+    if(!minRange||!maxRange||!minInput||!maxInput||!slider) return;
+    const floor=Number(minRange.min);
+    const ceiling=Number(minRange.max);
+    const step=Number(minRange.step)||1;
+    let min=Number(minRange.value);
+    let max=Number(maxRange.value);
+    if(min>max-step){
+      if(changed===minRange) min=Math.max(floor,max-step);
+      else max=Math.min(ceiling,min+step);
     }
-    action.search=params.toString();
-    return action;
+    minRange.value=String(min);
+    maxRange.value=String(max);
+    minInput.value=String(min);
+    maxInput.value=String(max);
+    if(minLabel) minLabel.textContent=currency.format(min);
+    if(maxLabel) maxLabel.textContent=currency.format(max);
+    const span=Math.max(1,ceiling-floor);
+    slider.style.setProperty('--min-pos',`${((min-floor)/span)*100}%`);
+    slider.style.setProperty('--max-pos',`${((max-floor)/span)*100}%`);
+  };
+
+  const serialize=()=>{
+    const data=new FormData(form);
+    const params=new URLSearchParams();
+    for(const [key,value] of data.entries()){
+      if(value!==''&&key!=='page_id') params.append(key,String(value));
+    }
+    return params;
   };
 
   const setLoading=(loading)=>{
-    document.documentElement.classList.toggle('cg-catalog-is-loading',loading);
-    const content=document.querySelector('.cg-shop-content');
-    if(content) content.setAttribute('aria-busy',loading?'true':'false');
+    root.classList.toggle('is-loading',loading);
+    results.setAttribute('aria-busy',loading?'true':'false');
+    form.querySelectorAll('input,button').forEach(el=>{ el.disabled=loading; });
   };
 
-  const replaceCatalog=(html,url)=>{
-    const doc=new DOMParser().parseFromString(html,'text/html');
-    const nextShell=doc.querySelector('.cg-shop-shell');
-    const currentShell=document.querySelector('.cg-shop-shell');
-    if(!nextShell||!currentShell) throw new Error('Catalog shell not found');
-    currentShell.replaceWith(nextShell);
-    window.history.pushState({},'',url);
-    bindCatalog();
+  const updateActiveCategory=()=>{
+    form.querySelectorAll('.cg-catalog-category-option').forEach(label=>{
+      label.classList.toggle('is-active',Boolean(label.querySelector('input:checked')));
+    });
   };
 
-  const applyForm=(form,delay=0)=>{
-    window.clearTimeout(submitTimer);
-    submitTimer=window.setTimeout(async()=>{
-      const url=buildUrl(form);
-      requestController?.abort();
-      requestController=new AbortController();
+  const request=(paged=1,historyMode='push')=>{
+    window.clearTimeout(timer);
+    timer=window.setTimeout(async()=>{
+      controller?.abort();
+      controller=new AbortController();
+      const filters=serialize();
+      const body=new URLSearchParams({
+        action:'cg_catalog_filter',
+        nonce:cgCatalog.nonce,
+        filters:filters.toString(),
+        paged:String(paged)
+      });
       setLoading(true);
       try{
-        const response=await fetch(url.toString(),{
+        const response=await fetch(cgCatalog.ajaxUrl,{
+          method:'POST',
           credentials:'same-origin',
-          headers:{'X-Requested-With':'XMLHttpRequest'},
-          signal:requestController.signal
+          headers:{'Content-Type':'application/x-www-form-urlencoded; charset=UTF-8'},
+          body:body.toString(),
+          signal:controller.signal
         });
-        if(!response.ok) throw new Error(`HTTP ${response.status}`);
-        replaceCatalog(await response.text(),url.toString());
+        const payload=await response.json();
+        if(!response.ok||!payload.success||!payload.data?.html) throw new Error('Invalid AJAX response');
+        results.innerHTML=payload.data.html;
+        const url=payload.data.url||`${cgCatalog.shopUrl}?${filters.toString()}`;
+        window.history[historyMode==='replace'?'replaceState':'pushState']({},'',url);
+        bindResults();
+        updateActiveCategory();
       }catch(error){
-        if(error.name!=='AbortError') window.location.assign(url.toString());
+        if(error.name!=='AbortError'){
+          results.insertAdjacentHTML('afterbegin',`<div class="cg-catalog-error" role="alert">${cgCatalog.errorText}</div>`);
+        }
       }finally{
         setLoading(false);
       }
-    },delay);
+    },0);
   };
 
-  const enhanceAccordion=(section,index)=>{
-    if(section.classList.contains('cg-filter-section')) return section;
-    const heading=section.querySelector(':scope > h3,:scope > .cg-catalog-filter-title');
-    if(!heading) return section;
-
-    const body=document.createElement('div');
-    body.className='cg-filter-section__body';
-    body.dataset.cgFilterBody='';
-    const children=[...section.children].filter(child=>child!==heading);
-    children.forEach(child=>body.appendChild(child));
-
-    const button=document.createElement('button');
-    button.type='button';
-    button.className='cg-filter-section__toggle';
-    button.dataset.cgFilterToggle='';
-    button.setAttribute('aria-expanded',index===0?'true':'false');
-    button.innerHTML=`<span>${heading.textContent.trim()}</span><b aria-hidden="true">⌄</b>`;
-
-    heading.replaceWith(button);
-    section.appendChild(body);
-    section.classList.add('cg-filter-section');
-    if(index===0) section.classList.add('is-open');
-    else body.hidden=true;
-    return section;
+  const schedule=(delay=100)=>{
+    window.clearTimeout(timer);
+    timer=window.setTimeout(()=>request(1),delay);
   };
 
-  const bindAccordion=(section)=>{
-    const button=section.querySelector(':scope > [data-cg-filter-toggle]');
-    const body=section.querySelector(':scope > [data-cg-filter-body]');
-    if(!button||!body||button.dataset.cgBound==='1') return;
-    button.dataset.cgBound='1';
-    button.addEventListener('click',()=>{
-      const open=section.classList.toggle('is-open');
-      button.setAttribute('aria-expanded',open?'true':'false');
-      body.hidden=!open;
+  const applyUrlToForm=(url)=>{
+    const params=new URL(url,window.location.origin).searchParams;
+    form.reset();
+    form.querySelectorAll('input,select').forEach(input=>{
+      if(!input.name) return;
+      const values=params.getAll(input.name);
+      if(input.type==='checkbox'||input.type==='radio') input.checked=values.includes(input.value);
+      else if(values.length) input.value=values[0];
     });
-  };
-
-  const bindCatalog=()=>{
-    const panel=document.querySelector('#cg-catalog-sidebar');
-    const mobileToggle=document.querySelector('.cg-catalog-filter-toggle');
-    const form=panel?.querySelector('.cg-catalog-filter-form');
-
-    if(mobileToggle&&mobileToggle.dataset.cgBound!=='1'){
-      mobileToggle.dataset.cgBound='1';
-      mobileToggle.addEventListener('click',()=>{
-        const open=panel?.classList.toggle('is-open');
-        mobileToggle.setAttribute('aria-expanded',open?'true':'false');
-        mobileToggle.textContent=open?'Скрыть фильтры':'Фильтры и категории';
-      });
-    }
-
-    panel?.querySelectorAll('.cg-catalog-categories,.cg-catalog-attribute-filter').forEach((section,index)=>{
-      bindAccordion(enhanceAccordion(section,index));
-    });
-
-    if(!form) return;
-    const minRange=form.querySelector('.cg-catalog-range--min');
-    const maxRange=form.querySelector('.cg-catalog-range--max');
-    const minInput=form.querySelector('[name="min_price"]');
-    const maxInput=form.querySelector('[name="max_price"]');
-    const minLabel=form.querySelector('[data-cg-price-min-label]');
-    const maxLabel=form.querySelector('[data-cg-price-max-label]');
-    const slider=form.querySelector('.cg-catalog-price-slider');
-
-    const syncSlider=(changed)=>{
-      if(!minRange||!maxRange||!minInput||!maxInput||!slider) return;
-      const floor=Number(minRange.min);
-      const ceiling=Number(minRange.max);
-      const step=Number(minRange.step)||1;
-      let min=Number(minRange.value);
-      let max=Number(maxRange.value);
-      if(min>max-step){
-        if(changed===minRange) min=Math.max(floor,max-step);
-        else max=Math.min(ceiling,min+step);
-      }
-      minRange.value=String(min);
-      maxRange.value=String(max);
-      minInput.value=String(min);
-      maxInput.value=String(max);
-      if(minLabel) minLabel.textContent=currency.format(min);
-      if(maxLabel) maxLabel.textContent=currency.format(max);
-      const span=Math.max(1,ceiling-floor);
-      slider.style.setProperty('--min-pos',`${((min-floor)/span)*100}%`);
-      slider.style.setProperty('--max-pos',`${((max-floor)/span)*100}%`);
-    };
-
-    minRange?.addEventListener('input',()=>syncSlider(minRange));
-    maxRange?.addEventListener('input',()=>syncSlider(maxRange));
-    minRange?.addEventListener('change',()=>applyForm(form,180));
-    maxRange?.addEventListener('change',()=>applyForm(form,180));
-
-    form.querySelectorAll('input[type="checkbox"],input[type="radio"]').forEach(input=>{
-      input.addEventListener('change',()=>applyForm(form,80));
-    });
-
-    form.addEventListener('submit',(event)=>{
-      event.preventDefault();
-      applyForm(form,0);
-    });
-
-    const ordering=document.querySelector('.cg-catalog-ordering');
-    if(ordering&&ordering.dataset.cgBound!=='1'){
-      ordering.dataset.cgBound='1';
-      ordering.addEventListener('submit',(event)=>{
-        event.preventDefault();
-        applyForm(ordering,0);
-      });
-      ordering.querySelector('select')?.addEventListener('change',()=>applyForm(ordering,0));
-    }
-
+    if(minRange&&minInput) minRange.value=minInput.value;
+    if(maxRange&&maxInput) maxRange.value=maxInput.value;
     syncSlider();
+    updateActiveCategory();
   };
 
-  window.addEventListener('popstate',()=>window.location.reload());
-  bindCatalog();
+  const bindResults=()=>{
+    results.querySelector('[data-cg-orderby]')?.addEventListener('change',event=>{
+      const hidden=form.querySelector('[name="cg_orderby"]');
+      if(hidden) hidden.value=event.target.value;
+      request(1);
+    });
+    results.querySelectorAll('[data-cg-filter-link],[data-cg-reset]').forEach(link=>{
+      link.addEventListener('click',event=>{
+        event.preventDefault();
+        applyUrlToForm(link.href);
+        request(1);
+      });
+    });
+    results.querySelectorAll('.woocommerce-pagination a').forEach(link=>{
+      link.addEventListener('click',event=>{
+        event.preventDefault();
+        const page=Number(new URL(link.href,window.location.origin).searchParams.get('paged'))||1;
+        request(page);
+        root.scrollIntoView({behavior:'smooth',block:'start'});
+      });
+    });
+  };
+
+  const mobileToggle=root.querySelector('.cg-catalog-filter-toggle');
+  const sidebar=root.querySelector('#cg-catalog-sidebar');
+  mobileToggle?.addEventListener('click',()=>{
+    const open=sidebar.classList.toggle('is-open');
+    mobileToggle.setAttribute('aria-expanded',open?'true':'false');
+    mobileToggle.textContent=open?'Скрыть фильтры':'Фильтры и категории';
+  });
+
+  minRange?.addEventListener('input',()=>syncSlider(minRange));
+  maxRange?.addEventListener('input',()=>syncSlider(maxRange));
+  minRange?.addEventListener('change',()=>schedule(250));
+  maxRange?.addEventListener('change',()=>schedule(250));
+  form.querySelectorAll('input[type="checkbox"],input[type="radio"]').forEach(input=>{
+    input.addEventListener('change',()=>{ updateActiveCategory(); schedule(80); });
+  });
+  form.addEventListener('submit',event=>{ event.preventDefault(); request(1); });
+  form.querySelector('[data-cg-reset]')?.addEventListener('click',event=>{
+    event.preventDefault();
+    applyUrlToForm(cgCatalog.shopUrl);
+    request(1);
+  });
+
+  window.addEventListener('popstate',()=>{
+    applyUrlToForm(window.location.href);
+    request(Number(new URL(window.location.href).searchParams.get('paged'))||1,'replace');
+  });
+
+  syncSlider();
+  updateActiveCategory();
+  bindResults();
 });
