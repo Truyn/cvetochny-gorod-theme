@@ -2,9 +2,6 @@
 /**
  * Custom WooCommerce product archive.
  *
- * Uses the supported theme override path: woocommerce/archive-product.php.
- * Product data, cart actions and checkout remain powered by WooCommerce APIs.
- *
  * @package Cvetochny_Gorod
  */
 
@@ -14,18 +11,11 @@ defined('WC_VERSION') || exit;
 get_header('shop');
 
 $paged = max(1, (int) get_query_var('paged'), (int) get_query_var('product-page'));
-$query_args = function_exists('cg_catalog_build_query_args')
-    ? cg_catalog_build_query_args($paged)
-    : ['post_type' => 'product', 'post_status' => 'publish', 'paged' => $paged, 'posts_per_page' => 12];
-
-$catalog_query = new WP_Query($query_args);
-
+$catalog_query = new WP_Query(cg_catalog_build_query_args($paged));
 $title = is_product_category() ? single_term_title('', false) : 'Каталог букетов';
-$subtitle = is_product_category()
-    ? 'Подборка букетов из выбранной категории.'
-    : 'Выберите букет по случаю, стилю и бюджету.';
+$subtitle = is_product_category() ? 'Подборка букетов из выбранной категории.' : 'Выберите букет по случаю, стилю и бюджету.';
 ?>
-<main id="primary" class="site-main cg-custom-catalog" data-cg-catalog-template="custom-v1">
+<main id="primary" class="site-main cg-custom-catalog" data-cg-catalog-template="server-ajax-v2">
     <div class="container content-area cg-woo-wrap">
         <header class="cg-catalog-heading">
             <span>Цветочный город</span>
@@ -34,47 +24,9 @@ $subtitle = is_product_category()
         </header>
 
         <div class="cg-shop-shell">
-            <?php if (function_exists('cg_catalog_sidebar')) cg_catalog_sidebar(); ?>
-
-            <section class="cg-shop-content" aria-label="<?php esc_attr_e('Товары каталога', 'cvetochny-gorod'); ?>">
-                <?php if (function_exists('cg_catalog_toolbar')) cg_catalog_toolbar($catalog_query); ?>
-                <?php if (function_exists('cg_catalog_active_filters')) cg_catalog_active_filters(); ?>
-
-                <?php if ($catalog_query->have_posts()) : ?>
-                    <?php
-                    wc_set_loop_prop('total', $catalog_query->found_posts);
-                    wc_set_loop_prop('per_page', $catalog_query->get('posts_per_page'));
-                    wc_set_loop_prop('current_page', $paged);
-                    wc_set_loop_prop('total_pages', $catalog_query->max_num_pages);
-                    ?>
-                    <?php woocommerce_product_loop_start(); ?>
-                        <?php while ($catalog_query->have_posts()) : $catalog_query->the_post(); ?>
-                            <?php wc_get_template_part('content', 'product'); ?>
-                        <?php endwhile; ?>
-                    <?php woocommerce_product_loop_end(); ?>
-
-                    <?php if ($catalog_query->max_num_pages > 1) : ?>
-                        <nav class="woocommerce-pagination" aria-label="<?php esc_attr_e('Навигация по товарам', 'cvetochny-gorod'); ?>">
-                            <?php
-                            echo wp_kses_post(paginate_links([
-                                'base' => str_replace(999999999, '%#%', esc_url(get_pagenum_link(999999999))),
-                                'format' => '?paged=%#%',
-                                'current' => $paged,
-                                'total' => $catalog_query->max_num_pages,
-                                'type' => 'list',
-                                'add_args' => function_exists('cg_catalog_preserved_query_args') ? cg_catalog_preserved_query_args() : [],
-                                'prev_text' => '←',
-                                'next_text' => '→',
-                            ]));
-                            ?>
-                        </nav>
-                    <?php endif; ?>
-                <?php else : ?>
-                    <div class="cg-catalog-empty">
-                        <h2>Ничего не найдено</h2>
-                        <p>Попробуйте изменить фильтры или сбросить выбранные параметры.</p>
-                    </div>
-                <?php endif; ?>
+            <?php cg_catalog_sidebar(); ?>
+            <section id="cg-catalog-results" class="cg-shop-content" aria-label="<?php esc_attr_e('Товары каталога', 'cvetochny-gorod'); ?>" aria-live="polite">
+                <?php cg_catalog_render_results($catalog_query, $paged); ?>
             </section>
         </div>
     </div>
