@@ -4,26 +4,23 @@ document.addEventListener('DOMContentLoaded',()=>{
 
   let requestController=null;
   let submitTimer=null;
-
   const currency=new Intl.NumberFormat('ru-RU',{style:'currency',currency:'RUB',maximumFractionDigits:0});
 
   const buildUrl=(form)=>{
     const action=new URL(form.action||window.location.href,window.location.origin);
     const params=new URLSearchParams();
-    const data=new FormData(form);
-
-    for(const [key,value] of data.entries()){
+    for(const [key,value] of new FormData(form).entries()){
       if(value==='') continue;
       params.append(key,String(value));
     }
-
     action.search=params.toString();
     return action;
   };
 
   const setLoading=(loading)=>{
     document.documentElement.classList.toggle('cg-catalog-is-loading',loading);
-    document.querySelector('.cg-shop-content')?.setAttribute('aria-busy',loading?'true':'false');
+    const content=document.querySelector('.cg-shop-content');
+    if(content) content.setAttribute('aria-busy',loading?'true':'false');
   };
 
   const replaceCatalog=(html,url)=>{
@@ -31,20 +28,18 @@ document.addEventListener('DOMContentLoaded',()=>{
     const nextShell=doc.querySelector('.cg-shop-shell');
     const currentShell=document.querySelector('.cg-shop-shell');
     if(!nextShell||!currentShell) throw new Error('Catalog shell not found');
-
     currentShell.replaceWith(nextShell);
     window.history.pushState({},'',url);
     bindCatalog();
   };
 
-  const applyForm=async(form,delay=0)=>{
+  const applyForm=(form,delay=0)=>{
     window.clearTimeout(submitTimer);
     submitTimer=window.setTimeout(async()=>{
       const url=buildUrl(form);
       requestController?.abort();
       requestController=new AbortController();
       setLoading(true);
-
       try{
         const response=await fetch(url.toString(),{
           credentials:'same-origin',
@@ -61,9 +56,35 @@ document.addEventListener('DOMContentLoaded',()=>{
     },delay);
   };
 
+  const enhanceAccordion=(section,index)=>{
+    if(section.classList.contains('cg-filter-section')) return section;
+    const heading=section.querySelector(':scope > h3,:scope > .cg-catalog-filter-title');
+    if(!heading) return section;
+
+    const body=document.createElement('div');
+    body.className='cg-filter-section__body';
+    body.dataset.cgFilterBody='';
+    const children=[...section.children].filter(child=>child!==heading);
+    children.forEach(child=>body.appendChild(child));
+
+    const button=document.createElement('button');
+    button.type='button';
+    button.className='cg-filter-section__toggle';
+    button.dataset.cgFilterToggle='';
+    button.setAttribute('aria-expanded',index===0?'true':'false');
+    button.innerHTML=`<span>${heading.textContent.trim()}</span><b aria-hidden="true">⌄</b>`;
+
+    heading.replaceWith(button);
+    section.appendChild(body);
+    section.classList.add('cg-filter-section');
+    if(index===0) section.classList.add('is-open');
+    else body.hidden=true;
+    return section;
+  };
+
   const bindAccordion=(section)=>{
-    const button=section.querySelector('[data-cg-filter-toggle]');
-    const body=section.querySelector('[data-cg-filter-body]');
+    const button=section.querySelector(':scope > [data-cg-filter-toggle]');
+    const body=section.querySelector(':scope > [data-cg-filter-body]');
     if(!button||!body||button.dataset.cgBound==='1') return;
     button.dataset.cgBound='1';
     button.addEventListener('click',()=>{
@@ -78,15 +99,20 @@ document.addEventListener('DOMContentLoaded',()=>{
     const mobileToggle=document.querySelector('.cg-catalog-filter-toggle');
     const form=panel?.querySelector('.cg-catalog-filter-form');
 
-    mobileToggle?.addEventListener('click',()=>{
-      const open=panel?.classList.toggle('is-open');
-      mobileToggle.setAttribute('aria-expanded',open?'true':'false');
-      mobileToggle.textContent=open?'Скрыть фильтры':'Фильтры и категории';
-    },{once:true});
+    if(mobileToggle&&mobileToggle.dataset.cgBound!=='1'){
+      mobileToggle.dataset.cgBound='1';
+      mobileToggle.addEventListener('click',()=>{
+        const open=panel?.classList.toggle('is-open');
+        mobileToggle.setAttribute('aria-expanded',open?'true':'false');
+        mobileToggle.textContent=open?'Скрыть фильтры':'Фильтры и категории';
+      });
+    }
 
-    document.querySelectorAll('.cg-filter-section').forEach(bindAccordion);
+    panel?.querySelectorAll('.cg-catalog-categories,.cg-catalog-attribute-filter').forEach((section,index)=>{
+      bindAccordion(enhanceAccordion(section,index));
+    });
+
     if(!form) return;
-
     const minRange=form.querySelector('.cg-catalog-range--min');
     const maxRange=form.querySelector('.cg-catalog-range--max');
     const minInput=form.querySelector('[name="min_price"]');
@@ -102,19 +128,16 @@ document.addEventListener('DOMContentLoaded',()=>{
       const step=Number(minRange.step)||1;
       let min=Number(minRange.value);
       let max=Number(maxRange.value);
-
       if(min>max-step){
         if(changed===minRange) min=Math.max(floor,max-step);
         else max=Math.min(ceiling,min+step);
       }
-
       minRange.value=String(min);
       maxRange.value=String(max);
       minInput.value=String(min);
       maxInput.value=String(max);
       if(minLabel) minLabel.textContent=currency.format(min);
       if(maxLabel) maxLabel.textContent=currency.format(max);
-
       const span=Math.max(1,ceiling-floor);
       slider.style.setProperty('--min-pos',`${((min-floor)/span)*100}%`);
       slider.style.setProperty('--max-pos',`${((max-floor)/span)*100}%`);
@@ -135,11 +158,14 @@ document.addEventListener('DOMContentLoaded',()=>{
     });
 
     const ordering=document.querySelector('.cg-catalog-ordering');
-    ordering?.addEventListener('submit',(event)=>{
-      event.preventDefault();
-      applyForm(ordering,0);
-    });
-    ordering?.querySelector('select')?.addEventListener('change',()=>applyForm(ordering,0));
+    if(ordering&&ordering.dataset.cgBound!=='1'){
+      ordering.dataset.cgBound='1';
+      ordering.addEventListener('submit',(event)=>{
+        event.preventDefault();
+        applyForm(ordering,0);
+      });
+      ordering.querySelector('select')?.addEventListener('change',()=>applyForm(ordering,0));
+    }
 
     syncSlider();
   };
