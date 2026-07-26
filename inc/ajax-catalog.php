@@ -170,3 +170,15 @@ function cg_ajax_catalog_filter() {
 }
 add_action('wp_ajax_cg_filter_products', 'cg_ajax_catalog_filter');
 add_action('wp_ajax_nopriv_cg_filter_products', 'cg_ajax_catalog_filter');
+
+function cg_homepage_regression_fixes_assets() {
+    if (!is_front_page()) return;
+    $file = get_template_directory() . '/assets/css/homepage-fixes.css';
+    wp_enqueue_style(
+        'cg-homepage-fixes',
+        get_template_directory_uri() . '/assets/css/homepage-fixes.css',
+        ['cg-homepage'],
+        file_exists($file) ? filemtime($file) : wp_get_theme()->get('Version')
+    );
+}
+add_action('wp_enqueue_scripts', 'cg_homepage_regression_fixes_assets', 30);
