@@ -36,7 +36,17 @@ function cg_product_order_options_fields() {
 
     echo '<label class="cg-product-option">';
     echo '<span class="cg-product-option__title">Удобный интервал</span>';
-    echo '<select name="cg_delivery_interval"><option value="">Уточнить после заказа</option><option value="09:00–12:00">09:00–12:00</option><option value="12:00–15:00">12:00–15:00</option><option value="15:00–18:00">15:00–18:00</option><option value="18:00–21:00">18:00–21:00</option></select>';
+    echo '<select name="cg_delivery_interval">';
+    echo '<option value="">Уточнить после заказа</option>';
+    echo '<option value="07:00–09:00">07:00–09:00</option>';
+    echo '<option value="09:00–11:00">09:00–11:00</option>';
+    echo '<option value="11:00–13:00">11:00–13:00</option>';
+    echo '<option value="13:00–15:00">13:00–15:00</option>';
+    echo '<option value="15:00–17:00">15:00–17:00</option>';
+    echo '<option value="17:00–19:00">17:00–19:00</option>';
+    echo '<option value="19:00–21:00">19:00–21:00</option>';
+    echo '<option value="21:00–22:00">21:00–22:00</option>';
+    echo '</select>';
     echo '</label>';
 
     echo '</div>';
@@ -50,17 +60,35 @@ function cg_product_order_options_fields() {
 }
 add_action('woocommerce_before_add_to_cart_button', 'cg_product_order_options_fields', 8);
 
-/** Validate user-entered date. */
+/** Validate user-entered date and interval. */
 function cg_validate_product_order_options($passed) {
-    if (empty($_POST['cg_delivery_date'])) return $passed;
+    if (!empty($_POST['cg_delivery_date'])) {
+        $date = sanitize_text_field(wp_unslash($_POST['cg_delivery_date']));
+        $parsed = DateTime::createFromFormat('Y-m-d', $date);
+        $today = new DateTime(wp_date('Y-m-d'));
 
-    $date = sanitize_text_field(wp_unslash($_POST['cg_delivery_date']));
-    $parsed = DateTime::createFromFormat('Y-m-d', $date);
-    $today = new DateTime(wp_date('Y-m-d'));
+        if (!$parsed || $parsed->format('Y-m-d') !== $date || $parsed < $today) {
+            wc_add_notice('Пожалуйста, выберите корректную дату доставки.', 'error');
+            return false;
+        }
+    }
 
-    if (!$parsed || $parsed->format('Y-m-d') !== $date || $parsed < $today) {
-        wc_add_notice('Пожалуйста, выберите корректную дату доставки.', 'error');
-        return false;
+    if (!empty($_POST['cg_delivery_interval'])) {
+        $allowed_intervals = [
+            '07:00–09:00',
+            '09:00–11:00',
+            '11:00–13:00',
+            '13:00–15:00',
+            '15:00–17:00',
+            '17:00–19:00',
+            '19:00–21:00',
+            '21:00–22:00',
+        ];
+        $interval = sanitize_text_field(wp_unslash($_POST['cg_delivery_interval']));
+        if (!in_array($interval, $allowed_intervals, true)) {
+            wc_add_notice('Пожалуйста, выберите доступный интервал доставки.', 'error');
+            return false;
+        }
     }
 
     return $passed;
