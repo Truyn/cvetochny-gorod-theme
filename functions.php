@@ -32,6 +32,10 @@ add_action('after_setup_theme','cg_setup');
 function cg_assets() {
     $version = wp_get_theme()->get('Version');
     wp_enqueue_style('cg-style', get_stylesheet_uri(), [], $version);
+
+    $header_fix_css = get_template_directory() . '/assets/css/header-fix.css';
+    wp_enqueue_style('cg-header-fix', get_template_directory_uri().'/assets/css/header-fix.css', ['cg-style'], file_exists($header_fix_css) ? filemtime($header_fix_css) : $version);
+
     if (is_front_page()) {
         $homepage_css = get_template_directory() . '/assets/css/homepage.css';
         wp_enqueue_style('cg-homepage', get_template_directory_uri().'/assets/css/homepage.css', ['cg-style'], file_exists($homepage_css) ? filemtime($homepage_css) : $version);
