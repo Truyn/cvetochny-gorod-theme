@@ -40,17 +40,19 @@
 
 <header class="site-header">
     <div class="container header-inner">
-        <a class="brand" href="<?php echo esc_url(home_url('/')); ?>">
+        <div class="brand">
             <?php if (has_custom_logo()): ?>
                 <?php the_custom_logo(); ?>
             <?php else: ?>
-                <span class="brand-mark" aria-hidden="true">✿</span>
-                <span>
-                    <span class="brand-title"><?php echo esc_html(get_theme_mod('cg_brand_title', 'Цветочный город')); ?></span>
-                    <span class="brand-subtitle"><?php echo esc_html(get_theme_mod('cg_brand_subtitle', 'магазин цветов')); ?></span>
-                </span>
+                <a class="brand__fallback" href="<?php echo esc_url(home_url('/')); ?>">
+                    <span class="brand-mark" aria-hidden="true">✿</span>
+                    <span>
+                        <span class="brand-title"><?php echo esc_html(get_theme_mod('cg_brand_title', 'Цветочный город')); ?></span>
+                        <span class="brand-subtitle"><?php echo esc_html(get_theme_mod('cg_brand_subtitle', 'магазин цветов')); ?></span>
+                    </span>
+                </a>
             <?php endif; ?>
-        </a>
+        </div>
 
         <nav class="main-navigation" id="site-menu" aria-label="Главное меню">
             <?php wp_nav_menu(['theme_location' => 'primary', 'container' => false, 'fallback_cb' => 'cg_fallback_menu']); ?>
