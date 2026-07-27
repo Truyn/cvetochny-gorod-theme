@@ -18,10 +18,6 @@ function cg_single_product_status() {
     echo $product->is_in_stock()
         ? '<span class="cg-product-status__item cg-product-status__item--stock">В наличии</span>'
         : '<span class="cg-product-status__item cg-product-status__item--out">Нет в наличии</span>';
-
-    if ($product->get_average_rating() > 0) {
-        echo '<a class="cg-product-status__item" href="#reviews">'.esc_html(number_format_i18n($product->get_average_rating(), 1)).' из 5 · отзывы</a>';
-    }
     echo '</div>';
 }
 add_action('woocommerce_single_product_summary', 'cg_single_product_status', 6);
@@ -33,6 +29,9 @@ function cg_product_benefit_icon($name) {
         'photo' => '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h4l2-2h4l2 2h4v12H4z"/><circle cx="12" cy="13" r="4"/></svg>',
         'fresh' => '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21V10"/><path d="M12 14c-5 0-8-3-8-7 5 0 8 3 8 7Z"/><path d="M12 11c0-4 3-7 8-7 0 4-3 7-8 7Z"/></svg>',
         'card' => '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="14" rx="2"/><path d="m7 9 5 4 5-4"/></svg>',
+        'handmade' => '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 12V6a2 2 0 0 1 4 0v5"/><path d="M12 11V5a2 2 0 0 1 4 0v7"/><path d="M16 12V8a2 2 0 0 1 4 0v6c0 5-3 8-8 8H9c-3 0-5-2-5-5v-4a2 2 0 0 1 4 0v2"/></svg>',
+        'payment' => '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 9h18"/><path d="M7 15h4"/></svg>',
+        'replace' => '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h11l-3-3"/><path d="m15 7-3 3"/><path d="M20 17H9l3 3"/><path d="m9 17 3-3"/></svg>',
     ];
 
     return isset($icons[$name]) ? $icons[$name] : '';
@@ -41,10 +40,10 @@ function cg_product_benefit_icon($name) {
 /** Add delivery and quality advantages next to the buy form. */
 function cg_single_product_benefits() {
     $items = [
-        ['delivery', 'Доставка сегодня', 'По Нововоронежу в удобное время'],
-        ['photo', 'Фото перед отправкой', 'Покажем готовый букет до доставки'],
-        ['fresh', 'Свежие цветы', 'Собираем букет непосредственно перед отправкой'],
-        ['card', 'Открытка бесплатно', 'Добавим ваши пожелания к заказу'],
+        ['delivery', 'Доставка в удобное время', 'Согласуем доступный интервал после оформления'],
+        ['photo', 'Фото перед отправкой', 'Покажем готовый букет до передачи курьеру'],
+        ['fresh', 'Гарантия свежести', 'Собираем букет непосредственно перед доставкой'],
+        ['card', 'Открытка бесплатно', 'Добавим ваши слова к заказу'],
     ];
 
     echo '<div class="cg-product-benefits" aria-label="Преимущества заказа">';
@@ -58,23 +57,38 @@ add_action('woocommerce_single_product_summary', 'cg_single_product_benefits', 3
 /** Explain the next steps after adding a bouquet to the cart. */
 function cg_single_product_order_confidence() {
     echo '<div class="cg-order-confidence" aria-label="Как проходит оформление заказа">';
-    echo '<div class="cg-order-confidence__title">Заказ под контролем флориста</div>';
+    echo '<div class="cg-order-confidence__title">Как проходит заказ</div>';
     echo '<div class="cg-order-confidence__steps">';
-    echo '<div class="cg-order-confidence__step">Оформите заказ на сайте</div>';
-    echo '<div class="cg-order-confidence__step">Мы уточним состав и время</div>';
-    echo '<div class="cg-order-confidence__step">Пришлём фото перед доставкой</div>';
+    echo '<div class="cg-order-confidence__step">Вы оформляете заказ</div>';
+    echo '<div class="cg-order-confidence__step">Флорист собирает букет</div>';
+    echo '<div class="cg-order-confidence__step">Мы отправляем фото</div>';
+    echo '<div class="cg-order-confidence__step">Курьер доставляет получателю</div>';
     echo '</div></div>';
 }
 add_action('woocommerce_single_product_summary', 'cg_single_product_order_confidence', 36);
 
-/** Add a reassurance panel after the summary. */
-function cg_single_product_guarantee() {
-    echo '<section class="cg-product-guarantee">';
-    echo '<div><span class="cg-product-guarantee__mark">✓</span><strong>Гарантия качества</strong><p>Если букет при получении не соответствует согласованному виду, мы оперативно решим вопрос.</p></div>';
-    echo '<div><span class="cg-product-guarantee__mark">⌚</span><strong>Уточним время доставки</strong><p>После оформления заказа свяжемся с вами для подтверждения состава, адреса и времени.</p></div>';
+/** Add an honest trust section without reviews, views or artificial counters. */
+function cg_single_product_trust_section() {
+    $items = [
+        ['fresh', 'Гарантия свежести', 'Если при получении букет не соответствует согласованному виду, мы оперативно разберёмся в ситуации.'],
+        ['photo', 'Фото до доставки', 'Перед передачей заказа курьеру покажем готовую композицию.'],
+        ['handmade', 'Ручная сборка', 'Каждый букет собирает флорист специально под ваш заказ.'],
+        ['delivery', 'Согласуем доставку', 'Подтвердим адрес и доступный интервал доставки после оформления.'],
+        ['card', 'Открытка бесплатно', 'Добавим ваши пожелания без дополнительной платы.'],
+        ['payment', 'Оплата через WooCommerce', 'На оформлении заказа показываются только подключённые владельцем магазина способы оплаты.'],
+    ];
+
+    echo '<section class="cg-product-trust" aria-labelledby="cg-product-trust-title">';
+    echo '<div class="cg-product-trust__head"><span class="cg-product-trust__eyebrow">Можно заказать спокойно</span><h2 id="cg-product-trust-title">Почему нам можно доверить букет</h2><p>Без искусственных счётчиков и случайных обещаний — только понятный процесс и реальные условия заказа.</p></div>';
+    echo '<div class="cg-product-trust__grid">';
+    foreach ($items as $item) {
+        echo '<article class="cg-product-trust__item"><span class="cg-product-trust__icon" aria-hidden="true">'.cg_product_benefit_icon($item[0]).'</span><div><h3>'.esc_html($item[1]).'</h3><p>'.esc_html($item[2]).'</p></div></article>';
+    }
+    echo '</div>';
+    echo '<div class="cg-product-seasonal-note"><span class="cg-product-seasonal-note__icon" aria-hidden="true">'.cg_product_benefit_icon('replace').'</span><div><strong>Сезонная замена только после согласования</strong><p>Если какого-то цветка временно нет, мы сначала предложим равноценную замену и согласуем её с вами.</p></div></div>';
     echo '</section>';
 }
-add_action('woocommerce_after_single_product_summary', 'cg_single_product_guarantee', 8);
+add_action('woocommerce_after_single_product_summary', 'cg_single_product_trust_section', 8);
 
 add_filter('woocommerce_product_related_products_heading', function () { return 'Похожие букеты'; });
 add_filter('woocommerce_output_related_products_args', function ($args) { $args['posts_per_page']=4; $args['columns']=4; return $args; });
