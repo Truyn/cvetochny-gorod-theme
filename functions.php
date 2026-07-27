@@ -56,9 +56,11 @@ function cg_assets() {
         if (is_shop() || is_product_taxonomy()) {
             $catalog_css = get_template_directory() . '/assets/css/ajax-catalog.css';
             $catalog_cards_css = get_template_directory() . '/assets/css/catalog-cards-modern.css';
+            $premium_filters_css = get_template_directory() . '/assets/css/premium-filters.css';
             $catalog_js = get_template_directory() . '/assets/js/ajax-catalog.js';
             wp_enqueue_style('cg-ajax-catalog', get_template_directory_uri().'/assets/css/ajax-catalog.css', ['cg-woocommerce'], file_exists($catalog_css) ? filemtime($catalog_css) : $version);
             wp_enqueue_style('cg-catalog-cards-modern', get_template_directory_uri().'/assets/css/catalog-cards-modern.css', ['cg-ajax-catalog'], file_exists($catalog_cards_css) ? filemtime($catalog_cards_css) : $version);
+            wp_enqueue_style('cg-premium-filters', get_template_directory_uri().'/assets/css/premium-filters.css', ['cg-catalog-cards-modern'], file_exists($premium_filters_css) ? filemtime($premium_filters_css) : $version);
             wp_enqueue_script('cg-ajax-catalog', get_template_directory_uri().'/assets/js/ajax-catalog.js', [], file_exists($catalog_js) ? filemtime($catalog_js) : $version, true);
             wp_localize_script('cg-ajax-catalog', 'cgCatalog', [
                 'ajaxUrl' => admin_url('admin-ajax.php'),
