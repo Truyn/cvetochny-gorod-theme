@@ -47,28 +47,21 @@ $slides = function_exists('cg_get_home_slides') ? cg_get_home_slides() : [];
                                 <p><?php echo esc_html($slide['text']); ?></p>
                             <?php endif; ?>
 
-                            <?php if (!empty($slide['button']) && !empty($slide['url'])) : ?>
-                                <div class="hero-actions">
-                                    <a class="button" href="<?php echo esc_url($slide['url']); ?>"><?php echo esc_html($slide['button']); ?></a>
-                                    <?php if ($index === 0) : ?>
-                                        <a class="button button--ghost" href="#popular">Популярные букеты</a>
-                                    <?php endif; ?>
-                                </div>
-                            <?php endif; ?>
+                            <div class="hero-actions">
+                                <?php if (!empty($slide['button']) && !empty($slide['url'])) : ?>
+                                    <a class="button cg-slider__primary" href="<?php echo esc_url($slide['url']); ?>"><?php echo esc_html($slide['button']); ?></a>
+                                <?php endif; ?>
+                                <a class="button button--ghost cg-slider__secondary" href="<?php echo esc_url(cg_catalog_url()); ?>">Заказать букет</a>
+                            </div>
                         </div>
 
-                        <div class="cg-slide__media"<?php echo $media_style ? ' style="' . esc_attr($media_style) . '"' : ''; ?>></div>
+                        <div class="cg-slide__media"<?php echo $media_style ? ' style="' . esc_attr($media_style) . '"' : ''; ?> aria-hidden="true"></div>
                     </div>
                 </div>
             <?php endforeach; ?>
 
             <?php if (count($slides) > 1) : ?>
                 <button class="cg-slider__arrow cg-slider__arrow--next" type="button" aria-label="Следующий слайд">›</button>
-                <div class="cg-slider__nav" aria-label="Навигация по слайдам">
-                    <?php foreach ($slides as $index => $slide) : ?>
-                        <button class="cg-slider__dot<?php echo $index === 0 ? ' is-active' : ''; ?>" type="button" aria-label="Слайд <?php echo esc_attr($index + 1); ?>"></button>
-                    <?php endforeach; ?>
-                </div>
             <?php endif; ?>
         </section>
     <?php endif; ?>
@@ -222,49 +215,27 @@ $slides = function_exists('cg_get_home_slides') ? cg_get_home_slides() : [];
                 <div class="section-head">
                     <div>
                         <div class="eyebrow"><?php echo esc_html(get_theme_mod('cg_instagram_eyebrow', 'Вдохновение')); ?></div>
-                        <h2 class="section-title"><?php echo esc_html(get_theme_mod('cg_instagram_title', 'Мы в Instagram')); ?></h2>
+                        <h2 class="section-title"><?php echo esc_html(get_theme_mod('cg_instagram_title', 'Наши букеты в жизни')); ?></h2>
+                        <div class="section-subtitle"><?php echo esc_html(get_theme_mod('cg_instagram_text', 'Следите за новыми композициями, историями заказов и работой флористов.')); ?></div>
                     </div>
                     <?php if ($instagram_url) : ?>
-                        <a class="text-link" href="<?php echo esc_url($instagram_url); ?>" target="_blank" rel="noopener">Подписаться →</a>
+                        <a class="text-link" href="<?php echo esc_url($instagram_url); ?>" target="_blank" rel="noopener">Мы в соцсетях →</a>
                     <?php endif; ?>
                 </div>
 
                 <div class="cg-instagram-grid">
                     <?php for ($i = 1; $i <= 6; $i++) :
-                        $image = get_theme_mod("cg_instagram_image_{$i}", '');
+                        $image = get_theme_mod('cg_instagram_image_' . $i, '');
                         $style = $image ? 'background-image:url(' . esc_url($image) . ');' : '';
+                        $tag = $instagram_url ? 'a' : 'div';
                         ?>
-                        <a class="cg-instagram-card cg-instagram-card--<?php echo esc_attr($i); ?>" href="<?php echo esc_url($instagram_url ?: '#'); ?>"<?php echo $instagram_url ? ' target="_blank" rel="noopener"' : ''; ?>>
+                        <<?php echo esc_attr($tag); ?> class="cg-instagram-card cg-instagram-card--<?php echo esc_attr($i); ?>"<?php echo $instagram_url ? ' href="' . esc_url($instagram_url) . '" target="_blank" rel="noopener"' : ''; ?>>
                             <span class="cg-instagram-card__image"<?php echo $style ? ' style="' . esc_attr($style) . '"' : ''; ?>></span>
                             <span class="cg-instagram-card__overlay" aria-hidden="true">
                                 <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1"/></svg>
                             </span>
-                        </a>
+                        </<?php echo esc_attr($tag); ?>>
                     <?php endfor; ?>
-                </div>
-            </div>
-        </section>
-    <?php endif; ?>
-
-    <?php if (get_theme_mod('cg_newsletter_enabled', true)) :
-        $newsletter_shortcode = get_theme_mod('cg_newsletter_shortcode', '');
-        ?>
-        <section class="section">
-            <div class="container">
-                <div class="newsletter-box">
-                    <div>
-                        <h2><?php echo esc_html(get_theme_mod('cg_newsletter_title', 'Скидка 10% на первый заказ')); ?></h2>
-                        <p><?php echo esc_html(get_theme_mod('cg_newsletter_text', 'Оставьте e-mail и получите промокод.')); ?></p>
-                    </div>
-                    <div>
-                        <?php
-                        if ($newsletter_shortcode && shortcode_exists(trim($newsletter_shortcode, '[] '))) {
-                            echo do_shortcode($newsletter_shortcode);
-                        } else {
-                            echo '<form><input type="email" placeholder="Ваш e-mail" aria-label="Ваш e-mail"><button class="button" type="submit">Получить скидку</button></form>';
-                        }
-                        ?>
-                    </div>
                 </div>
             </div>
         </section>
