@@ -32,6 +32,10 @@ get_header();
                         </section>
                     </div>
 
+                    <div class="cg-product-detail__options">
+                        <?php do_action('cg_product_options_area'); ?>
+                    </div>
+
                     <div class="cg-product-detail__bottom">
                         <?php do_action('woocommerce_after_single_product_summary'); ?>
                     </div>
