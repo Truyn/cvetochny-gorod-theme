@@ -55,6 +55,18 @@ function cg_single_product_benefits() {
 }
 add_action('woocommerce_single_product_summary', 'cg_single_product_benefits', 35);
 
+/** Explain the next steps after adding a bouquet to the cart. */
+function cg_single_product_order_confidence() {
+    echo '<div class="cg-order-confidence" aria-label="Как проходит оформление заказа">';
+    echo '<div class="cg-order-confidence__title">Заказ под контролем флориста</div>';
+    echo '<div class="cg-order-confidence__steps">';
+    echo '<div class="cg-order-confidence__step">Оформите заказ на сайте</div>';
+    echo '<div class="cg-order-confidence__step">Мы уточним состав и время</div>';
+    echo '<div class="cg-order-confidence__step">Пришлём фото перед доставкой</div>';
+    echo '</div></div>';
+}
+add_action('woocommerce_single_product_summary', 'cg_single_product_order_confidence', 36);
+
 /** Add a reassurance panel after the summary. */
 function cg_single_product_guarantee() {
     echo '<section class="cg-product-guarantee">';
@@ -76,18 +88,26 @@ function cg_product_delivery_tab_content() {
     echo '<h2>Доставка и оплата</h2><p>Доставляем букеты по Нововоронежу и ближайшим районам. Точную стоимость и доступное время подтвердит менеджер после оформления заказа.</p><ul><li>Можно выбрать удобный интервал доставки.</li><li>Перед отправкой пришлём фотографию готового букета.</li><li>Оплата доступна способами, настроенными в WooCommerce.</li></ul>';
 }
 
-/** Load the custom, self-contained single product layout stylesheet. */
+/** Load the custom, self-contained single product layout stylesheets. */
 function cg_enqueue_single_product_layout() {
     if (!is_product()) return;
 
-    $path = get_template_directory() . '/assets/css/single-product-layout.css';
-    $version = file_exists($path) ? filemtime($path) : wp_get_theme()->get('Version');
+    $layout_path = get_template_directory() . '/assets/css/single-product-layout.css';
+    $modern_path = get_template_directory() . '/assets/css/single-product-modern.css';
+    $version = wp_get_theme()->get('Version');
 
     wp_enqueue_style(
         'cg-single-product-layout',
         get_template_directory_uri() . '/assets/css/single-product-layout.css',
         ['cg-product-hotfix'],
-        $version
+        file_exists($layout_path) ? filemtime($layout_path) : $version
+    );
+
+    wp_enqueue_style(
+        'cg-single-product-modern',
+        get_template_directory_uri() . '/assets/css/single-product-modern.css',
+        ['cg-single-product-layout'],
+        file_exists($modern_path) ? filemtime($modern_path) : $version
     );
 }
 add_action('wp_enqueue_scripts', 'cg_enqueue_single_product_layout', 30);
