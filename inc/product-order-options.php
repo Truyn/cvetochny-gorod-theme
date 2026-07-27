@@ -7,25 +7,25 @@
 
 if (!defined('ABSPATH')) exit;
 
-/** Render optional order details above the add-to-cart form. */
+/** Render optional order details below the main product area. */
 function cg_product_order_options_fields() {
     global $product;
     if (!$product instanceof WC_Product || !$product->is_purchasable()) return;
 
     echo '<section class="cg-product-options" aria-labelledby="cg-product-options-title">';
-    echo '<div class="cg-product-options__head"><span>Персонализируйте заказ</span><h3 id="cg-product-options-title">Детали букета и доставки</h3><p>Эти пожелания сохранятся в корзине и будут видны при оформлении заказа.</p></div>';
+    echo '<div class="cg-product-options__head"><span>Персонализируйте заказ</span><h3 id="cg-product-options-title">Детали букета и доставки</h3><p>Заполните только нужные поля. Все пожелания сохранятся в корзине и будут видны при оформлении заказа.</p></div>';
 
     echo '<div class="cg-product-options__grid">';
 
     echo '<label class="cg-product-option cg-product-option--wide">';
     echo '<span class="cg-product-option__title">Текст для бесплатной открытки</span>';
-    echo '<textarea name="cg_card_message" maxlength="300" rows="3" placeholder="Например: С днём рождения! Пусть каждый день будет наполнен радостью."></textarea>';
+    echo '<textarea name="cg_card_message" maxlength="300" rows="4" placeholder="Например: С днём рождения! Пусть каждый день будет наполнен радостью."></textarea>';
     echo '<small>Оставьте поле пустым, если открытка не нужна.</small>';
     echo '</label>';
 
     echo '<label class="cg-product-option cg-product-option--wide">';
     echo '<span class="cg-product-option__title">Пожелания флористу</span>';
-    echo '<textarea name="cg_florist_note" maxlength="400" rows="3" placeholder="Например: сделать букет более нежным, не использовать лилии, добавить больше зелени."></textarea>';
+    echo '<textarea name="cg_florist_note" maxlength="400" rows="4" placeholder="Например: сделать букет более нежным, не использовать лилии, добавить больше зелени."></textarea>';
     echo '<small>Точный состав зависит от наличия цветов; важные замены согласуем.</small>';
     echo '</label>';
 
@@ -58,7 +58,7 @@ function cg_product_order_options_fields() {
 
     echo '</section>';
 }
-add_action('woocommerce_before_add_to_cart_button', 'cg_product_order_options_fields', 8);
+add_action('woocommerce_after_single_product_summary', 'cg_product_order_options_fields', 7);
 
 /** Validate user-entered date and interval. */
 function cg_validate_product_order_options($passed) {
