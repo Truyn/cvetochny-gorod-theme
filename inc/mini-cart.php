@@ -18,7 +18,7 @@ function cg_render_mini_cart_drawer() {
                 <span class="cg-mini-cart__eyebrow">Ваш заказ</span>
                 <h2 id="cg-mini-cart-title">Корзина</h2>
             </div>
-            <button class="cg-mini-cart__close" type="button" data-cg-mini-cart-close aria-label="Закрыть корзину">×</button>
+            <button class="cg-mini-cart__close" type="button" data-cg-mini-cart-close aria-label="Закрыть корзину"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
         </div>
         <div class="cg-mini-cart__body" data-cg-mini-cart-content>
             <?php cg_render_mini_cart_content(); ?>
@@ -62,7 +62,7 @@ function cg_render_mini_cart_content() {
         echo '<button type="button" data-cg-cart-increase aria-label="Увеличить количество">+</button>';
         echo '</div>';
         echo '</div>';
-        echo '<button class="cg-mini-cart__remove" type="button" data-cg-cart-remove aria-label="Удалить товар">×</button>';
+        echo '<button class="cg-mini-cart__remove" type="button" data-cg-cart-remove aria-label="Удалить товар"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>';
         echo '</article>';
     }
     echo '</div>';
@@ -78,7 +78,7 @@ function cg_render_mini_cart_content() {
             ? 'До бесплатной доставки осталось <strong>' . wp_kses_post(wc_price($remaining)) . '</strong>'
             : '<strong>Бесплатная доставка доступна</strong>';
         echo '</div>';
-        echo '<div class="cg-mini-cart__progress" aria-hidden="true"><span style="width:' . esc_attr($progress) . '%"></span></div>';
+        echo '<div class="cg-mini-cart__progress" role="progressbar" aria-label="Прогресс до бесплатной доставки" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' . esc_attr(round($progress)) . '"><span style="width:' . esc_attr($progress) . '%"></span></div>';
         echo '</div>';
     }
 
