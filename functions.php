@@ -2,6 +2,7 @@
 if (!defined('ABSPATH')) exit;
 
 require_once get_template_directory() . '/inc/product-page.php';
+require_once get_template_directory() . '/inc/product-order-options.php';
 require_once get_template_directory() . '/inc/account-search.php';
 require_once get_template_directory() . '/inc/home-slider.php';
 require_once get_template_directory() . '/inc/home-sections.php';
