@@ -53,6 +53,11 @@ function cg_assets() {
             'nonce' => wp_create_nonce('cg_mini_cart'),
         ]);
 
+        if (is_product()) {
+            $conversion_js = get_template_directory() . '/assets/js/product-conversion.js';
+            wp_enqueue_script('cg-product-conversion', get_template_directory_uri().'/assets/js/product-conversion.js', [], file_exists($conversion_js) ? filemtime($conversion_js) : $version, true);
+        }
+
         if (is_shop() || is_product_taxonomy()) {
             $catalog_css = get_template_directory() . '/assets/css/ajax-catalog.css';
             $catalog_cards_css = get_template_directory() . '/assets/css/catalog-cards-modern.css';

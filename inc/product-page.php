@@ -36,6 +36,26 @@ function cg_product_benefit_icon($name) {
     return isset($icons[$name]) ? $icons[$name] : '';
 }
 
+/** Product badges displayed over the gallery. */
+function cg_single_product_gallery_badges() {
+    global $product;
+    if (!$product instanceof WC_Product) return;
+
+    $badges = [];
+    if ($product->is_on_sale()) $badges[] = ['sale', 'Скидка'];
+    $created = $product->get_date_created();
+    if ($created && (time() - $created->getTimestamp()) < DAY_IN_SECONDS * 30) $badges[] = ['new', 'Новинка'];
+    if ($product->is_featured()) $badges[] = ['hit', 'Хит'];
+    if (!$badges) return;
+
+    echo '<div class="cg-product-gallery-badges" aria-label="Метки товара">';
+    foreach ($badges as $badge) {
+        echo '<span class="cg-product-gallery-badge cg-product-gallery-badge--'.esc_attr($badge[0]).'">'.esc_html($badge[1]).'</span>';
+    }
+    echo '</div>';
+}
+add_action('woocommerce_before_single_product_summary', 'cg_single_product_gallery_badges', 18);
+
 /** Add only the quickest purchase assurances next to the buy form. */
 function cg_single_product_benefits() {
     $items = [
@@ -52,6 +72,17 @@ function cg_single_product_benefits() {
     echo '</div>';
 }
 add_action('woocommerce_single_product_summary', 'cg_single_product_benefits', 35);
+
+/** Quick actions under the purchase form. */
+function cg_single_product_actions() {
+    $share_url = rawurlencode(get_permalink());
+    $share_text = rawurlencode(get_the_title());
+    echo '<div class="cg-product-actions" aria-label="Действия с товаром">';
+    echo '<a class="cg-product-action" href="#" data-cg-favorite aria-label="Добавить в избранное"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8Z"/></svg><span>В избранное</span></a>';
+    echo '<a class="cg-product-action" href="https://t.me/share/url?url='.$share_url.'&text='.$share_text.'" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 10.7 6.8-4M8.6 13.3l6.8 4"/></svg><span>Поделиться</span></a>';
+    echo '</div>';
+}
+add_action('woocommerce_single_product_summary', 'cg_single_product_actions', 31);
 
 /** Explain the next steps after adding a bouquet to the cart. */
 function cg_single_product_order_confidence() {
@@ -110,6 +141,7 @@ function cg_enqueue_single_product_layout() {
     $layout_path = get_template_directory() . '/assets/css/single-product-layout.css';
     $modern_path = get_template_directory() . '/assets/css/single-product-modern.css';
     $tabs_path = get_template_directory() . '/assets/css/product-tabs-premium.css';
+    $conversion_path = get_template_directory() . '/assets/css/product-conversion-premium.css';
     $version = wp_get_theme()->get('Version');
 
     wp_enqueue_style(
@@ -131,6 +163,13 @@ function cg_enqueue_single_product_layout() {
         get_template_directory_uri() . '/assets/css/product-tabs-premium.css',
         ['cg-single-product-modern'],
         file_exists($tabs_path) ? filemtime($tabs_path) : $version
+    );
+
+    wp_enqueue_style(
+        'cg-product-conversion-premium',
+        get_template_directory_uri() . '/assets/css/product-conversion-premium.css',
+        ['cg-product-tabs-premium'],
+        file_exists($conversion_path) ? filemtime($conversion_path) : $version
     );
 }
 add_action('wp_enqueue_scripts', 'cg_enqueue_single_product_layout', 30);
