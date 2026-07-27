@@ -21,44 +21,68 @@ document.addEventListener('DOMContentLoaded', function () {
 
   document.querySelectorAll('.single-product form.cart .quantity').forEach(function (quantity) {
     var input = quantity.querySelector('input.qty');
-    if (!input || quantity.querySelector('.cg-qty-btn')) return;
+    if (!input || quantity.querySelector('.cg-quantity-control')) return;
 
-    quantity.classList.add('cg-quantity-ready');
+    var originalInput = input;
+    var control = document.createElement('div');
+    control.className = 'cg-quantity-control';
+    control.setAttribute('role', 'group');
+    control.setAttribute('aria-label', 'Количество товара');
 
     var minus = document.createElement('button');
     minus.type = 'button';
-    minus.className = 'cg-qty-btn cg-qty-btn--minus';
+    minus.className = 'cg-quantity-control__button cg-quantity-control__button--minus';
     minus.setAttribute('aria-label', 'Уменьшить количество');
-    minus.textContent = '−';
+    minus.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 12h12"/></svg>';
+
+    var value = document.createElement('span');
+    value.className = 'cg-quantity-control__value';
+    value.setAttribute('aria-live', 'polite');
 
     var plus = document.createElement('button');
     plus.type = 'button';
-    plus.className = 'cg-qty-btn cg-qty-btn--plus';
+    plus.className = 'cg-quantity-control__button cg-quantity-control__button--plus';
     plus.setAttribute('aria-label', 'Увеличить количество');
-    plus.textContent = '+';
+    plus.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 6v12M6 12h12"/></svg>';
 
-    quantity.insertBefore(minus, input);
-    quantity.appendChild(plus);
+    originalInput.classList.add('cg-quantity-native-input');
+    originalInput.setAttribute('tabindex', '-1');
+    originalInput.setAttribute('aria-hidden', 'true');
 
-    function update(direction) {
-      var min = input.min !== '' ? parseFloat(input.min) : 1;
-      var max = input.max !== '' ? parseFloat(input.max) : Infinity;
-      var increment = input.step !== '' ? parseFloat(input.step) : 1;
-      var value = input.value !== '' ? parseFloat(input.value) : min;
-      var decimals = (String(increment).split('.')[1] || '').length;
-      var next = Math.min(max, Math.max(min, value + direction * increment));
+    control.appendChild(minus);
+    control.appendChild(value);
+    control.appendChild(plus);
+    quantity.appendChild(control);
+    quantity.classList.add('cg-quantity-ready');
 
-      input.value = decimals ? next.toFixed(decimals) : String(Math.round(next));
-      input.dispatchEvent(new Event('input', { bubbles: true }));
-      input.dispatchEvent(new Event('change', { bubbles: true }));
-      minus.disabled = next <= min;
-      plus.disabled = Number.isFinite(max) && next >= max;
+    function normalizeNumber(number, decimals) {
+      return decimals ? number.toFixed(decimals) : String(Math.round(number));
     }
 
-    minus.addEventListener('click', function () { update(-1); });
-    plus.addEventListener('click', function () { update(1); });
-    input.addEventListener('change', function () { update(0); });
-    update(0);
+    function render(direction) {
+      var min = originalInput.min !== '' ? parseFloat(originalInput.min) : 1;
+      var max = originalInput.max !== '' ? parseFloat(originalInput.max) : Infinity;
+      var increment = originalInput.step !== '' ? parseFloat(originalInput.step) : 1;
+      var current = originalInput.value !== '' ? parseFloat(originalInput.value) : min;
+      var decimals = (String(increment).split('.')[1] || '').length;
+      var next = Math.min(max, Math.max(min, current + direction * increment));
+
+      originalInput.value = normalizeNumber(next, decimals);
+      value.textContent = originalInput.value;
+      minus.disabled = next <= min;
+      plus.disabled = Number.isFinite(max) && next >= max;
+
+      if (direction !== 0) {
+        originalInput.dispatchEvent(new Event('input', { bubbles: true }));
+        originalInput.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+    }
+
+    minus.addEventListener('click', function () { render(-1); });
+    plus.addEventListener('click', function () { render(1); });
+    originalInput.addEventListener('input', function () { render(0); });
+    originalInput.addEventListener('change', function () { render(0); });
+    render(0);
   });
 
   document.querySelectorAll('[data-cg-favorite]').forEach(function (button) {
