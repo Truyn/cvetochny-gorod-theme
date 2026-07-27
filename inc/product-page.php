@@ -75,12 +75,28 @@ add_action('woocommerce_single_product_summary', 'cg_single_product_benefits', 3
 
 /** Quick actions under the purchase form. */
 function cg_single_product_actions() {
-    $share_url = rawurlencode(get_permalink());
-    $share_text = rawurlencode(get_the_title());
+    global $product;
+    if (!$product instanceof WC_Product) return;
+
+    $product_id = $product->get_id();
+    $share_url = get_permalink($product_id);
+    $share_text = get_the_title($product_id);
+    $whatsapp = 'https://wa.me/?text=' . rawurlencode($share_text . ' ' . $share_url);
+    $telegram = 'https://t.me/share/url?url=' . rawurlencode($share_url) . '&text=' . rawurlencode($share_text);
+    $vk = 'https://vk.com/share.php?url=' . rawurlencode($share_url) . '&title=' . rawurlencode($share_text);
+    $max = 'https://max.ru/share?url=' . rawurlencode($share_url) . '&text=' . rawurlencode($share_text);
+
     echo '<div class="cg-product-actions" aria-label="Действия с товаром">';
-    echo '<a class="cg-product-action" href="#" data-cg-favorite aria-label="Добавить в избранное"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8Z"/></svg><span>В избранное</span></a>';
-    echo '<a class="cg-product-action" href="https://t.me/share/url?url='.$share_url.'&text='.$share_text.'" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 10.7 6.8-4M8.6 13.3l6.8 4"/></svg><span>Поделиться</span></a>';
-    echo '</div>';
+    echo '<button class="cg-product-action" type="button" data-cg-favorite data-product-id="'.esc_attr($product_id).'" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8Z"/></svg><span>В избранное</span></button>';
+    echo '<div class="cg-share" data-cg-share>';
+    echo '<button class="cg-product-action" type="button" data-cg-share-toggle aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 10.7 6.8-4M8.6 13.3l6.8 4"/></svg><span>Поделиться</span></button>';
+    echo '<div class="cg-share-menu" data-cg-share-menu hidden>';
+    echo '<a href="'.esc_url($whatsapp).'" target="_blank" rel="noopener noreferrer">WhatsApp</a>';
+    echo '<a href="'.esc_url($telegram).'" target="_blank" rel="noopener noreferrer">Telegram</a>';
+    echo '<a href="'.esc_url($max).'" target="_blank" rel="noopener noreferrer">MAX</a>';
+    echo '<a href="'.esc_url($vk).'" target="_blank" rel="noopener noreferrer">ВКонтакте</a>';
+    echo '<button type="button" data-cg-copy-link data-url="'.esc_url($share_url).'">Скопировать ссылку</button>';
+    echo '</div></div></div>';
 }
 add_action('woocommerce_single_product_summary', 'cg_single_product_actions', 31);
 
@@ -116,22 +132,9 @@ function cg_product_description_tab_heading($heading) {
 }
 add_filter('woocommerce_product_description_heading', 'cg_product_description_tab_heading');
 
-/** Premium delivery and payment cards. */
+/** Temporary plain placeholder until final delivery/payment copy is provided. */
 function cg_product_delivery_tab_content() {
-    $items = [
-        ['delivery', 'Доставка', 'Доставляем по Нововоронежу и ближайшим районам. Точную стоимость и время подтверждаем после оформления заказа.'],
-        ['photo', 'Фото перед отправкой', 'Перед передачей курьеру пришлём фотографию готового букета, чтобы вы увидели результат.'],
-        ['payment', 'Оплата', 'Доступны способы оплаты, подключённые в WooCommerce. Менеджер поможет, если потребуется уточнение.'],
-        ['fresh', 'Свежесть', 'Букет собирается непосредственно перед доставкой из свежих цветов, доступных в день заказа.'],
-        ['replace', 'Сезонная замена', 'Если отдельного цветка нет в наличии, предложим равноценную замену и согласуем её с вами.'],
-    ];
-
-    echo '<div class="cg-tab-intro"><span>Сервис магазина</span><h2>Доставка и оплата</h2><p>Всё важное о получении заказа — коротко и без скрытых условий.</p></div>';
-    echo '<div class="cg-tab-card-grid">';
-    foreach ($items as $item) {
-        echo '<article class="cg-tab-card"><span class="cg-tab-card__icon" aria-hidden="true">'.cg_product_benefit_icon($item[0]).'</span><div><h3>'.esc_html($item[1]).'</h3><p>'.esc_html($item[2]).'</p></div></article>';
-    }
-    echo '</div>';
+    echo '<div class="cg-tab-intro cg-tab-intro--plain"><span>Информация</span><h2>Доставка и оплата</h2><p>Здесь будет размещена подробная информация о доставке и способах оплаты.</p></div>';
 }
 
 /** Load the custom, self-contained single product layout stylesheets. */
