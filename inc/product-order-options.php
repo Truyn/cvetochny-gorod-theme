@@ -58,7 +58,7 @@ function cg_product_order_options_fields() {
 
     echo '</section>';
 }
-add_action('woocommerce_after_single_product_summary', 'cg_product_order_options_fields', 7);
+add_action('cg_product_options_area', 'cg_product_order_options_fields');
 
 /** Validate user-entered date and interval. */
 function cg_validate_product_order_options($passed) {
