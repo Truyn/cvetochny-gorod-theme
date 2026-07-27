@@ -9,7 +9,7 @@ if (!defined('ABSPATH')) exit;
 
 require_once get_template_directory() . '/inc/cart-checkout.php';
 
-/** Add a compact product status row below the title. */
+/** Add a compact product status row above the title. */
 function cg_single_product_status() {
     global $product;
     if (!$product instanceof WC_Product) return;
@@ -20,7 +20,7 @@ function cg_single_product_status() {
         : '<span class="cg-product-status__item cg-product-status__item--out">Нет в наличии</span>';
     echo '</div>';
 }
-add_action('woocommerce_single_product_summary', 'cg_single_product_status', 6);
+add_action('woocommerce_single_product_summary', 'cg_single_product_status', 4);
 
 /** Inline SVG icon used by the product advantages. */
 function cg_product_benefit_icon($name) {
