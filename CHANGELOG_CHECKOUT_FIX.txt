@@ -1,0 +1,6 @@
+Premium checkout cleanup:
+- Removed duplicate reassurance block.
+- Improved required checkout fields.
+- Removed country, postcode and company fields.
+- Disabled shipping to different address.
+- Prepared checkout for sender data block integration.
