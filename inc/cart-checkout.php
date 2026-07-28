@@ -38,13 +38,6 @@ add_filter('woocommerce_checkout_fields', function($fields) {
         $fields['billing']['billing_phone']['required'] = true;
     }
 
-    if (isset($fields['billing']['billing_city'])) {
-        $fields['billing']['billing_city']['label'] = 'Населённый пункт';
-        $fields['billing']['billing_city']['placeholder'] = 'Нововоронеж';
-        $fields['billing']['billing_city']['priority'] = 40;
-        $fields['billing']['billing_city']['required'] = true;
-    }
-
     if (isset($fields['billing']['billing_address_1'])) {
         $fields['billing']['billing_address_1']['label'] = 'Адрес доставки';
         $fields['billing']['billing_address_1']['placeholder'] = 'Улица, дом, корпус';
@@ -59,7 +52,7 @@ add_filter('woocommerce_checkout_fields', function($fields) {
         $fields['billing']['billing_address_2']['required'] = false;
     }
 
-    foreach (['billing_email', 'billing_country', 'billing_postcode', 'billing_company', 'billing_state'] as $key) {
+    foreach (['billing_email', 'billing_country', 'billing_postcode', 'billing_company', 'billing_state', 'billing_city'] as $key) {
         unset($fields['billing'][$key]);
     }
 
