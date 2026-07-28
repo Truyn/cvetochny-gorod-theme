@@ -15,7 +15,7 @@ add_filter('default_checkout_shipping_country', function() { return 'RU'; });
 add_filter('woocommerce_ship_to_different_address_checked', '__return_false');
 add_filter('woocommerce_cart_needs_shipping_address', '__return_false');
 
-/** Keep recipient, delivery and sender fields required for a local flower order. */
+/** Keep only fields needed for a local flower order. */
 add_filter('woocommerce_checkout_fields', function($fields) {
     if (isset($fields['billing']['billing_first_name'])) {
         $fields['billing']['billing_first_name']['label'] = 'Имя получателя';
@@ -78,6 +78,7 @@ add_filter('woocommerce_checkout_fields', function($fields) {
         'required' => true,
         'class' => ['cg-checkout-half', 'cg-sender-field'],
         'priority' => 1,
+        'autocomplete' => 'given-name',
     ];
 
     $fields['order']['cg_sender_last_name'] = [
@@ -87,6 +88,7 @@ add_filter('woocommerce_checkout_fields', function($fields) {
         'required' => false,
         'class' => ['cg-checkout-half', 'cg-sender-field'],
         'priority' => 2,
+        'autocomplete' => 'family-name',
     ];
 
     $fields['order']['cg_sender_phone'] = [
@@ -96,6 +98,7 @@ add_filter('woocommerce_checkout_fields', function($fields) {
         'required' => true,
         'class' => ['cg-checkout-half', 'cg-sender-field'],
         'priority' => 3,
+        'autocomplete' => 'tel',
     ];
 
     $fields['order']['cg_sender_email'] = [
@@ -106,15 +109,18 @@ add_filter('woocommerce_checkout_fields', function($fields) {
         'class' => ['cg-checkout-half', 'cg-sender-field'],
         'priority' => 4,
         'validate' => ['email'],
+        'autocomplete' => 'email',
     ];
 
     if (isset($fields['order']['order_comments'])) {
-        $fields['order']['order_comments']['label'] = 'Пожелания к заказу';
-        $fields['order']['order_comments']['placeholder'] = 'Ориентир для курьера и другие пожелания';
+        $fields['order']['order_comments']['label'] = 'Комментарий флористу и курьеру';
+        $fields['order']['order_comments']['placeholder'] = 'Ориентир, код домофона и другие важные детали';
         $fields['order']['order_comments']['priority'] = 30;
     }
 
-    unset($fields['order']['order_comments_upload']);
+    foreach (['cg_hide_price', 'order_comments_upload'] as $key) {
+        unset($fields['order'][$key]);
+    }
 
     return $fields;
 }, 20);
@@ -148,6 +154,26 @@ add_filter('woocommerce_checkout_fields', function($fields) {
     return $fields;
 }, 30);
 
+/** Copy sender email to WooCommerce billing email for order emails and gateways. */
+add_filter('woocommerce_checkout_posted_data', function($data) {
+    if (isset($_POST['cg_sender_email'])) {
+        $data['billing_email'] = sanitize_email(wp_unslash($_POST['cg_sender_email']));
+    }
+    return $data;
+});
+
+/** Explicit validation for sender contacts. */
+function cg_validate_sender_checkout_fields() {
+    $first_name = isset($_POST['cg_sender_first_name']) ? trim(wp_unslash($_POST['cg_sender_first_name'])) : '';
+    $phone = isset($_POST['cg_sender_phone']) ? trim(wp_unslash($_POST['cg_sender_phone'])) : '';
+    $email = isset($_POST['cg_sender_email']) ? sanitize_email(wp_unslash($_POST['cg_sender_email'])) : '';
+
+    if ($first_name === '') wc_add_notice('Укажите имя отправителя.', 'error');
+    if ($phone === '') wc_add_notice('Укажите телефон отправителя.', 'error');
+    if ($email === '' || !is_email($email)) wc_add_notice('Укажите корректный email отправителя.', 'error');
+}
+add_action('woocommerce_checkout_process', 'cg_validate_sender_checkout_fields');
+
 /** Save sender contact details on the order. */
 function cg_save_sender_checkout_fields($order, $data) {
     $fields = [
@@ -163,6 +189,10 @@ function cg_save_sender_checkout_fields($order, $data) {
         $raw_value = wp_unslash($_POST[$request_key]);
         $value = $settings[1] === 'email' ? sanitize_email($raw_value) : sanitize_text_field($raw_value);
         $order->update_meta_data($settings[0], $value);
+    }
+
+    if (isset($_POST['cg_sender_email'])) {
+        $order->set_billing_email(sanitize_email(wp_unslash($_POST['cg_sender_email'])));
     }
 }
 add_action('woocommerce_checkout_create_order', 'cg_save_sender_checkout_fields', 10, 2);
