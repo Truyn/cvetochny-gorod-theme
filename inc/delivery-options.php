@@ -56,17 +56,20 @@ function cg_delivery_checkout_fields($fields) {
 
     $fields['order']['cg_anonymous_delivery'] = [
         'type' => 'checkbox',
-        'label' => 'Анонимная доставка — не сообщать имя отправителя',
+        'label' => 'Анонимная доставка',
+        'description' => 'Получатель не увидит имя отправителя.',
         'required' => false,
-        'class' => ['form-row-wide', 'cg-checkout-checkbox'],
+        'class' => ['form-row-wide', 'cg-checkout-checkbox', 'cg-anonymous-delivery'],
         'priority' => 23,
     ];
 
-    unset($fields['order']['cg_hide_price']);
+    foreach (['cg_hide_price', 'order_comments_upload'] as $key) {
+        unset($fields['order'][$key]);
+    }
 
     return $fields;
 }
-add_filter('woocommerce_checkout_fields', 'cg_delivery_checkout_fields');
+add_filter('woocommerce_checkout_fields', 'cg_delivery_checkout_fields', 25);
 
 function cg_validate_delivery_checkout_fields() {
     if (empty($_POST['cg_delivery_date'])) return;
