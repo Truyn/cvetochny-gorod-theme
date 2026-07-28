@@ -14,40 +14,55 @@ if (!$checkout->is_registration_enabled() && $checkout->is_registration_required
     echo esc_html(apply_filters('woocommerce_checkout_must_be_logged_in_message', __('You must be logged in to checkout.', 'woocommerce')));
     return;
 }
+
+$billing_fields = $checkout->get_checkout_fields('billing');
+$order_fields   = $checkout->get_checkout_fields('order');
+$sender_keys    = ['cg_sender_first_name', 'cg_sender_last_name', 'cg_sender_phone', 'cg_sender_email'];
 ?>
 
 <form name="checkout" method="post" class="checkout woocommerce-checkout cg-classic-checkout" action="<?php echo esc_url(wc_get_checkout_url()); ?>" enctype="multipart/form-data" aria-label="Оформление заказа">
     <div class="cg-classic-checkout__main">
-        <?php if ($checkout->get_checkout_fields()) : ?>
-            <?php do_action('woocommerce_checkout_before_customer_details'); ?>
+        <?php do_action('woocommerce_checkout_before_customer_details'); ?>
 
-            <section class="cg-checkout-card cg-checkout-card--customer">
-                <div class="cg-checkout-card__heading">
-                    <span>1</span>
-                    <div><small>Контакты и адрес</small><h2>Данные получателя</h2></div>
-                </div>
-                <div id="customer_details" class="col2-set">
-                    <div class="col-1"><?php do_action('woocommerce_checkout_billing'); ?></div>
-                    <div class="col-2"><?php do_action('woocommerce_checkout_shipping'); ?></div>
-                </div>
-            </section>
+        <section class="cg-checkout-card cg-checkout-card--recipient">
+            <div class="cg-checkout-card__heading">
+                <span>1</span>
+                <div><small>Кому доставить заказ</small><h2>Данные получателя</h2></div>
+            </div>
+            <div class="cg-checkout-fields-grid cg-checkout-fields-grid--recipient">
+                <?php foreach ($billing_fields as $key => $field) : ?>
+                    <?php woocommerce_form_field($key, $field, $checkout->get_value($key)); ?>
+                <?php endforeach; ?>
+            </div>
+        </section>
 
-            <?php do_action('woocommerce_checkout_after_customer_details'); ?>
-        <?php endif; ?>
+        <section class="cg-checkout-card cg-checkout-card--sender">
+            <div class="cg-checkout-card__heading">
+                <span>2</span>
+                <div><small>С кем связаться по заказу</small><h2>Данные отправителя</h2></div>
+            </div>
+            <div class="cg-checkout-fields-grid cg-checkout-fields-grid--sender">
+                <?php foreach ($sender_keys as $key) : ?>
+                    <?php if (!isset($order_fields[$key])) continue; ?>
+                    <?php woocommerce_form_field($key, $order_fields[$key], $checkout->get_value($key)); ?>
+                <?php endforeach; ?>
+            </div>
+        </section>
+
+        <?php do_action('woocommerce_checkout_after_customer_details'); ?>
 
         <section class="cg-checkout-card cg-checkout-card--notes">
             <div class="cg-checkout-card__heading">
-                <span>2</span>
-                <div><small>Дополнительные сведения</small><h2>Пожелания к заказу</h2></div>
+                <span>3</span>
+                <div><small>Дата, открытка и детали</small><h2>Пожелания к заказу</h2></div>
             </div>
             <?php do_action('woocommerce_before_order_notes', $checkout); ?>
-            <?php if (apply_filters('woocommerce_enable_order_notes_field', 'yes' === get_option('woocommerce_enable_order_comments', 'yes'))) : ?>
-                <div class="woocommerce-additional-fields">
-                    <?php foreach ($checkout->get_checkout_fields('order') as $key => $field) : ?>
-                        <?php woocommerce_form_field($key, $field, $checkout->get_value($key)); ?>
-                    <?php endforeach; ?>
-                </div>
-            <?php endif; ?>
+            <div class="woocommerce-additional-fields cg-checkout-fields-grid cg-checkout-fields-grid--notes">
+                <?php foreach ($order_fields as $key => $field) : ?>
+                    <?php if (in_array($key, $sender_keys, true)) continue; ?>
+                    <?php woocommerce_form_field($key, $field, $checkout->get_value($key)); ?>
+                <?php endforeach; ?>
+            </div>
             <?php do_action('woocommerce_after_order_notes', $checkout); ?>
         </section>
     </div>
@@ -55,8 +70,8 @@ if (!$checkout->is_registration_enabled() && $checkout->is_registration_required
     <aside class="cg-classic-checkout__sidebar">
         <section class="cg-checkout-card cg-checkout-card--summary">
             <div class="cg-checkout-card__heading">
-                <span>3</span>
-                <div><small>Проверьте перед оплатой</small><h2><?php esc_html_e('Your order', 'woocommerce'); ?></h2></div>
+                <span>4</span>
+                <div><small>Проверьте товары и сумму</small><h2>Ваш заказ</h2></div>
             </div>
 
             <?php do_action('woocommerce_checkout_before_order_review_heading'); ?>
