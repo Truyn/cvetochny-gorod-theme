@@ -18,7 +18,7 @@ if (!class_exists('WooCommerce')) {
     <div class="container">
         <header class="cg-premium-checkout-hero">
             <span>Цветочный город</span>
-            <h1><?php the_title(); ?></h1>
+            <h1>Оформление заказа</h1>
             <p>Проверьте состав заказа, укажите данные получателя и выберите удобный способ доставки и оплаты.</p>
             <div class="cg-premium-checkout-steps" aria-label="Этапы оформления заказа">
                 <div><b>1</b><span>Контакты</span></div>
