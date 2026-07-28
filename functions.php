@@ -47,11 +47,9 @@ function cg_assets() {
 
         if (is_checkout() && !is_order_received_page()) {
             $checkout_css = get_template_directory() . '/assets/css/checkout-premium.css';
-            $classic_checkout_css = get_template_directory() . '/assets/css/classic-checkout-template.css';
             $checkout_blocks_js = get_template_directory() . '/assets/js/checkout-blocks.js';
             wp_enqueue_style('cg-checkout-premium', get_template_directory_uri().'/assets/css/checkout-premium.css', ['cg-woocommerce'], file_exists($checkout_css) ? filemtime($checkout_css) : $version);
-            wp_enqueue_style('cg-classic-checkout-template', get_template_directory_uri().'/assets/css/classic-checkout-template.css', ['cg-checkout-premium'], file_exists($classic_checkout_css) ? filemtime($classic_checkout_css) : $version);
-            wp_enqueue_script('cg-checkout-blocks', get_template_directory_uri().'/assets/js/checkout-blocks.js', ['wp-hooks'], file_exists($checkout_blocks_js) ? filemtime($checkout_blocks_js) : $version, true);
+            wp_enqueue_script('cg-checkout-blocks', get_template_directory_uri().'/assets/js/checkout-blocks.js', ['wc-blocks-checkout'], file_exists($checkout_blocks_js) ? filemtime($checkout_blocks_js) : $version, true);
         }
     }
     wp_enqueue_script('cg-main', get_template_directory_uri().'/assets/js/main.js', [], $version, true);
