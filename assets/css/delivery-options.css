@@ -4,16 +4,5 @@
 .woocommerce-checkout .cg-checkout-card__heading,
 .woocommerce-checkout .cg-checkout-card small{display:none}
 
-.woocommerce-checkout .cg-checkout-checkbox{margin:14px 0!important;padding:0!important;border:0;background:transparent}
-.woocommerce-checkout .cg-checkout-checkbox label{display:flex;align-items:center;gap:14px;padding:16px 20px;border:1px solid var(--cg-line);border-radius:20px;background:linear-gradient(135deg,#fff7f8,#fff);cursor:pointer;font-weight:600;transition:.3s ease}
-.woocommerce-checkout .cg-checkout-checkbox label:hover{transform:translateY(-2px);box-shadow:0 10px 30px rgba(214,145,158,.18)}
-.woocommerce-checkout .cg-checkout-checkbox input{appearance:none;width:24px;height:24px;border:2px solid #d6919e;border-radius:50%;position:relative;flex:none;margin:0}
-.woocommerce-checkout .cg-checkout-checkbox input:checked{background:#d6919e}
-.woocommerce-checkout .cg-checkout-checkbox input:checked:after{content:'✓';color:#fff;position:absolute;left:4px;top:-1px;font-size:18px}
-
 .woocommerce-checkout .woocommerce-form-coupon-toggle a{font-size:0;color:var(--cg-accent-dark)}
 .woocommerce-checkout .woocommerce-form-coupon-toggle a:after{content:'Есть промокод?';font-size:16px;font-weight:700}
-
-@media(max-width:640px){
- .woocommerce-checkout .cg-checkout-checkbox label{padding:14px 16px}
-}
