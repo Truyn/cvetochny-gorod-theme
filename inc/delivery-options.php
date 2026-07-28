@@ -1,20 +1,13 @@
 <?php
 /**
  * Delivery options for the WooCommerce checkout.
- *
- * @package Cvetochny_Gorod
  */
 
 if (!defined('ABSPATH')) exit;
 
 function cg_delivery_options_assets() {
     if (!is_checkout()) return;
-    wp_enqueue_style(
-        'cg-delivery-options',
-        get_template_directory_uri() . '/assets/css/delivery-options.css',
-        ['cg-woocommerce'],
-        wp_get_theme()->get('Version')
-    );
+    wp_enqueue_style('cg-delivery-options', get_template_directory_uri() . '/assets/css/delivery-options.css', ['cg-woocommerce'], wp_get_theme()->get('Version'));
 }
 add_action('wp_enqueue_scripts', 'cg_delivery_options_assets', 20);
 
@@ -34,14 +27,7 @@ function cg_delivery_checkout_fields($fields) {
         'required' => true,
         'class' => ['cg-checkout-half', 'cg-checkout-field'],
         'priority' => 21,
-        'options' => [
-            '' => 'Выберите интервал',
-            '09:00–12:00' => '09:00–12:00',
-            '12:00–15:00' => '12:00–15:00',
-            '15:00–18:00' => '15:00–18:00',
-            '18:00–21:00' => '18:00–21:00',
-            'По согласованию' => 'По согласованию с менеджером',
-        ],
+        'options' => ['', '09:00–12:00' => '09:00–12:00', '12:00–15:00' => '12:00–15:00', '15:00–18:00' => '15:00–18:00', '18:00–21:00' => '18:00–21:00', 'По согласованию' => 'По согласованию с менеджером'],
     ];
 
     $fields['order']['cg_card_message'] = [
@@ -51,28 +37,38 @@ function cg_delivery_checkout_fields($fields) {
         'required' => false,
         'class' => ['form-row-wide', 'cg-checkout-field'],
         'priority' => 22,
-        'custom_attributes' => ['maxlength' => 300],
     ];
 
     $fields['order']['cg_anonymous_delivery'] = [
         'type' => 'checkbox',
-        'label' => 'Анонимная доставка — не сообщать имя отправителя',
+        'label' => 'Хочу анонимную доставку',
         'required' => false,
         'class' => ['form-row-wide', 'cg-checkout-checkbox'],
         'priority' => 23,
     ];
 
     unset($fields['order']['cg_hide_price']);
-
     return $fields;
 }
 add_filter('woocommerce_checkout_fields', 'cg_delivery_checkout_fields');
 
-function cg_validate_delivery_checkout_fields() {
-    if (empty($_POST['cg_delivery_date'])) return;
+function cg_remove_optional_labels($fields) {
+    foreach ($fields as $group => $items) {
+        foreach ($items as $key => $field) {
+            if (isset($fields[$group][$key]['label'])) {
+                $fields[$group][$key]['label'] = str_replace([' (необязательно)', ' (необязательно)'], '', $fields[$group][$key]['label']);
+            }
+            if (isset($fields[$group][$key]['placeholder'])) {
+                $fields[$group][$key]['placeholder'] = str_replace([' (необязательно)', ' (не обязательно)'], '', $fields[$group][$key]['placeholder']);
+            }
+        }
+    }
+    return $fields;
+}
+add_filter('woocommerce_checkout_fields', 'cg_remove_optional_labels', 50);
 
-    $delivery_date = sanitize_text_field(wp_unslash($_POST['cg_delivery_date']));
-    if ($delivery_date < wp_date('Y-m-d')) {
+function cg_validate_delivery_checkout_fields() {
+    if (!empty($_POST['cg_delivery_date']) && sanitize_text_field(wp_unslash($_POST['cg_delivery_date'])) < wp_date('Y-m-d')) {
         wc_add_notice('Дата доставки не может быть в прошлом.', 'error');
     }
 }
@@ -80,46 +76,15 @@ add_action('woocommerce_checkout_process', 'cg_validate_delivery_checkout_fields
 
 function cg_save_delivery_checkout_fields($order, $data) {
     foreach (['cg_delivery_date', 'cg_delivery_time', 'cg_card_message'] as $field) {
-        if (!isset($_POST[$field])) continue;
-        $value = $field === 'cg_card_message'
-            ? sanitize_textarea_field(wp_unslash($_POST[$field]))
-            : sanitize_text_field(wp_unslash($_POST[$field]));
-        $order->update_meta_data('_' . $field, $value);
+        if (isset($_POST[$field])) $order->update_meta_data('_' . $field, sanitize_text_field(wp_unslash($_POST[$field])));
     }
-
     $order->update_meta_data('_cg_anonymous_delivery', isset($_POST['cg_anonymous_delivery']) ? 'yes' : 'no');
 }
 add_action('woocommerce_checkout_create_order', 'cg_save_delivery_checkout_fields', 10, 2);
 
-function cg_admin_delivery_order_meta($order) {
-    $date = $order->get_meta('_cg_delivery_date');
-    $time = $order->get_meta('_cg_delivery_time');
-    $message = $order->get_meta('_cg_card_message');
-    $anonymous = $order->get_meta('_cg_anonymous_delivery');
-
-    echo '<div class="cg-order-delivery-meta"><h3>Доставка букета</h3>';
-    if ($date) echo '<p><strong>Дата:</strong> ' . esc_html(wp_date('d.m.Y', strtotime($date))) . '</p>';
-    if ($time) echo '<p><strong>Интервал:</strong> ' . esc_html($time) . '</p>';
-    if ($message) echo '<p><strong>Открытка:</strong><br>' . nl2br(esc_html($message)) . '</p>';
-    echo '<p><strong>Анонимно:</strong> ' . ($anonymous === 'yes' ? 'Да' : 'Нет') . '</p>';
-    echo '</div>';
+function cg_change_coupon_text() {
+    wc_print_notice('', 'notice');
 }
-add_action('woocommerce_admin_order_data_after_shipping_address', 'cg_admin_delivery_order_meta');
-
-function cg_delivery_email_meta_fields($fields, $sent_to_admin, $order) {
-    $date = $order->get_meta('_cg_delivery_date');
-    $time = $order->get_meta('_cg_delivery_time');
-    $message = $order->get_meta('_cg_card_message');
-
-    if ($date) $fields['cg_delivery_date'] = ['label' => 'Дата доставки', 'value' => wp_date('d.m.Y', strtotime($date))];
-    if ($time) $fields['cg_delivery_time'] = ['label' => 'Интервал доставки', 'value' => $time];
-    if ($message) $fields['cg_card_message'] = ['label' => 'Текст открытки', 'value' => $message];
-
-    $fields['cg_anonymous_delivery'] = [
-        'label' => 'Анонимная доставка',
-        'value' => $order->get_meta('_cg_anonymous_delivery') === 'yes' ? 'Да' : 'Нет',
-    ];
-
-    return $fields;
-}
-add_filter('woocommerce_email_order_meta_fields', 'cg_delivery_email_meta_fields', 10, 3);
+add_filter('woocommerce_checkout_coupon_message', function() {
+    return 'Есть промокод? <a href="#" class="showcoupon">Нажмите, чтобы ввести</a>';
+});
