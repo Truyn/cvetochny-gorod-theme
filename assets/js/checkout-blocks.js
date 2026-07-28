@@ -1,47 +1,41 @@
-document.addEventListener('DOMContentLoaded', function () {
-  function formatOrderOptions(itemData) {
-    if (!Array.isArray(itemData) || !itemData.length) return '';
+(function () {
+  var checkout = window.wc && window.wc.blocksCheckout;
+  if (!checkout || typeof checkout.registerCheckoutFilters !== 'function') return;
 
-    var allowed = [
-      'Текст открытки',
-      'Пожелания флористу',
-      'Дата доставки',
-      'Интервал доставки',
-      'Анонимная доставка',
-      'Позвонить заранее'
-    ];
+  function escapeHtml(value) {
+    return String(value == null ? '' : value)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
 
-    var rows = itemData.filter(function (item) {
-      return item && allowed.indexOf(item.key) !== -1 && item.value;
-    });
+  function getOptions(extensions) {
+    if (!extensions || !extensions['cvetochny-gorod']) return [];
+    var data = extensions['cvetochny-gorod'].order_options;
+    return Array.isArray(data) ? data : [];
+  }
 
-    if (!rows.length) return '';
+  function renderOptions(extensions) {
+    var options = getOptions(extensions);
+    if (!options.length) return '';
 
-    return '<dl class="cg-block-order-options">' + rows.map(function (item) {
-      return '<div><dt>' + String(item.key) + '</dt><dd>' + String(item.value) + '</dd></div>';
+    return '<dl class="cg-block-order-options">' + options.map(function (item) {
+      if (!item || !item.key || !item.value) return '';
+      return '<div><dt>' + escapeHtml(item.key) + '</dt><dd>' + escapeHtml(item.value) + '</dd></div>';
     }).join('') + '</dl>';
   }
 
-  function render() {
-    document.querySelectorAll('.wc-block-components-order-summary-item').forEach(function (item) {
-      if (item.querySelector('.cg-block-order-options')) return;
-
-      var dataNode = item.querySelector('[data-cg-order-options]');
-      if (!dataNode) return;
-
-      try {
-        var data = JSON.parse(dataNode.getAttribute('data-cg-order-options') || '[]');
-        var html = formatOrderOptions(data);
-        if (!html) return;
-
-        var target = item.querySelector('.wc-block-components-product-metadata') || item.querySelector('.wc-block-components-order-summary-item__description');
-        if (target) target.insertAdjacentHTML('beforeend', html);
-      } catch (error) {
-        return;
-      }
-    });
-  }
-
-  render();
-  new MutationObserver(render).observe(document.body, { childList: true, subtree: true });
-});
+  checkout.registerCheckoutFilters('cvetochny-gorod', {
+    itemName: function (defaultValue) {
+      return defaultValue;
+    },
+    cartItemClass: function (defaultValue, extensions) {
+      return getOptions(extensions).length ? (defaultValue + ' cg-cart-item-has-options').trim() : defaultValue;
+    },
+    itemNameAfter: function (defaultValue, extensions) {
+      return defaultValue + renderOptions(extensions);
+    }
+  });
+}());
