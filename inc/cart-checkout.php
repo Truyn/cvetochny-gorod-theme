@@ -10,7 +10,6 @@ function cg_cart_reassurance(){
 }
 add_action('woocommerce_after_cart_table','cg_cart_reassurance',20);
 
-/* Disable old duplicate reassurance block in checkout. */
 function cg_checkout_reassurance(){ }
 add_action('woocommerce_review_order_after_order_total','cg_checkout_reassurance',20);
 
@@ -50,6 +49,13 @@ add_filter('woocommerce_checkout_fields', function($fields){
         $fields['order']['order_comments']['label']='Пожелания к заказу';
     }
     unset($fields['order']['order_comments_upload']);
+
+    $fields['order']['cg_sender_name']=[
+        'type'=>'text','label'=>'Имя отправителя','required'=>true,'priority'=>80,'class'=>['form-row-wide']
+    ];
+    $fields['order']['cg_sender_phone']=[
+        'type'=>'tel','label'=>'Телефон отправителя','required'=>true,'priority'=>90,'class'=>['form-row-wide']
+    ];
     return $fields;
 },20);
 
