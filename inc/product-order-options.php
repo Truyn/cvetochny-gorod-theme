@@ -121,9 +121,9 @@ function cg_add_product_order_options_to_cart($cart_item_data) {
 }
 add_filter('woocommerce_add_cart_item_data', 'cg_add_product_order_options_to_cart', 10, 1);
 
-/** Show options in cart and checkout. */
-function cg_display_product_order_options($item_data, $cart_item) {
-    if (empty($cart_item['cg_order_options'])) return $item_data;
+/** Build the public item data used by classic templates and WooCommerce Blocks. */
+function cg_get_product_order_options_item_data($cart_item) {
+    if (empty($cart_item['cg_order_options'])) return [];
 
     $labels = [
         'card_message' => 'Текст открытки',
@@ -134,20 +134,63 @@ function cg_display_product_order_options($item_data, $cart_item) {
         'call_recipient' => 'Позвонить заранее',
     ];
 
+    $item_data = [];
     foreach ($labels as $key => $label) {
-        if (!empty($cart_item['cg_order_options'][$key])) {
-            $value = $cart_item['cg_order_options'][$key];
-            if ($key === 'delivery_date') {
-                $timestamp = strtotime($value);
-                if ($timestamp) $value = wp_date('d.m.Y', $timestamp);
-            }
-            $item_data[] = ['key' => $label, 'value' => wp_kses_post(nl2br(esc_html($value)))];
+        if (empty($cart_item['cg_order_options'][$key])) continue;
+
+        $value = $cart_item['cg_order_options'][$key];
+        if ($key === 'delivery_date') {
+            $timestamp = strtotime($value);
+            if ($timestamp) $value = wp_date('d.m.Y', $timestamp);
         }
+
+        $item_data[] = [
+            'key' => $label,
+            'value' => wp_kses_post(nl2br(esc_html($value))),
+        ];
     }
 
     return $item_data;
 }
+
+/** Show options in classic cart and checkout templates. */
+function cg_display_product_order_options($item_data, $cart_item) {
+    return array_merge($item_data, cg_get_product_order_options_item_data($cart_item));
+}
 add_filter('woocommerce_get_item_data', 'cg_display_product_order_options', 10, 2);
+
+/** Expose the same data to the Cart and Checkout blocks through the Store API. */
+function cg_register_product_order_options_store_api() {
+    if (!function_exists('woocommerce_store_api_register_endpoint_data') || !class_exists('Automattic\\WooCommerce\\StoreApi\\Schemas\\V1\\CartItemSchema')) return;
+
+    woocommerce_store_api_register_endpoint_data([
+        'endpoint' => Automattic\WooCommerce\StoreApi\Schemas\V1\CartItemSchema::IDENTIFIER,
+        'namespace' => 'cvetochny-gorod',
+        'data_callback' => function($cart_item) {
+            return [
+                'order_options' => cg_get_product_order_options_item_data($cart_item),
+            ];
+        },
+        'schema_callback' => function() {
+            return [
+                'order_options' => [
+                    'description' => 'Детали букета и доставки.',
+                    'type' => 'array',
+                    'readonly' => true,
+                    'items' => [
+                        'type' => 'object',
+                        'properties' => [
+                            'key' => ['type' => 'string'],
+                            'value' => ['type' => 'string'],
+                        ],
+                    ],
+                ],
+            ];
+        },
+        'schema_type' => ARRAY_A,
+    ]);
+}
+add_action('woocommerce_blocks_loaded', 'cg_register_product_order_options_store_api');
 
 /** Persist options on the WooCommerce order item. */
 function cg_save_product_order_options_to_order($item, $cart_item_key, $values) {
