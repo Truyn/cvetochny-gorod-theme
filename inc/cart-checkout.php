@@ -11,17 +11,6 @@ function cg_cart_reassurance(){
 }
 add_action('woocommerce_after_cart_table','cg_cart_reassurance',20);
 
-function cg_checkout_intro(){
-    echo '<section class="cg-checkout-intro" aria-label="Этапы оформления заказа">';
-    echo '<div class="cg-checkout-intro__copy"><span>Безопасное оформление</span><strong>Остался последний шаг</strong><p>Укажите контакты, данные доставки и проверьте заказ. После оформления флорист свяжется с вами для подтверждения.</p></div>';
-    echo '<div class="cg-checkout-steps" aria-hidden="true">';
-    echo '<div class="cg-checkout-step"><b>1</b>Контакты</div>';
-    echo '<div class="cg-checkout-step"><b>2</b>Доставка</div>';
-    echo '<div class="cg-checkout-step"><b>3</b>Оплата</div>';
-    echo '</div></section>';
-}
-add_action('woocommerce_before_checkout_form','cg_checkout_intro',8);
-
 function cg_checkout_reassurance(){
     echo '<aside class="cg-checkout-reassurance" aria-label="Преимущества оформления">';
     echo '<div><strong>Подтверждение заказа</strong><span>Флорист проверит детали и свяжется с вами.</span></div>';
@@ -31,16 +20,26 @@ function cg_checkout_reassurance(){
 }
 add_action('woocommerce_review_order_after_order_total','cg_checkout_reassurance',20);
 
+/** Russia is the only checkout country for the store. */
+add_filter('default_checkout_billing_country', function(){ return 'RU'; });
+add_filter('default_checkout_shipping_country', function(){ return 'RU'; });
+add_filter('woocommerce_ship_to_different_address_checked', '__return_false');
+add_filter('woocommerce_cart_needs_shipping_address', '__return_false');
+
+/** Keep only the fields needed for local flower delivery. */
 add_filter('woocommerce_checkout_fields', function($fields){
     if (isset($fields['billing']['billing_first_name'])) {
-        $fields['billing']['billing_first_name']['placeholder']='Ваше имя';
+        $fields['billing']['billing_first_name']['label']='Имя получателя';
+        $fields['billing']['billing_first_name']['placeholder']='Имя получателя';
         $fields['billing']['billing_first_name']['priority']=10;
     }
     if (isset($fields['billing']['billing_last_name'])) {
-        $fields['billing']['billing_last_name']['placeholder']='Фамилия';
+        $fields['billing']['billing_last_name']['placeholder']='Фамилия (необязательно)';
+        $fields['billing']['billing_last_name']['required']=false;
         $fields['billing']['billing_last_name']['priority']=20;
     }
     if (isset($fields['billing']['billing_phone'])) {
+        $fields['billing']['billing_phone']['label']='Телефон';
         $fields['billing']['billing_phone']['placeholder']='+7 (___) ___-__-__';
         $fields['billing']['billing_phone']['priority']=30;
     }
@@ -48,15 +47,39 @@ add_filter('woocommerce_checkout_fields', function($fields){
         $fields['billing']['billing_email']['placeholder']='mail@example.ru';
         $fields['billing']['billing_email']['priority']=40;
     }
-    if (isset($fields['billing']['billing_city'])) $fields['billing']['billing_city']['placeholder']='Город доставки';
-    if (isset($fields['billing']['billing_address_1'])) $fields['billing']['billing_address_1']['placeholder']='Улица, дом, корпус';
-    if (isset($fields['billing']['billing_address_2'])) $fields['billing']['billing_address_2']['placeholder']='Квартира, подъезд, этаж';
+    if (isset($fields['billing']['billing_city'])) {
+        $fields['billing']['billing_city']['label']='Населённый пункт';
+        $fields['billing']['billing_city']['placeholder']='Нововоронеж';
+        $fields['billing']['billing_city']['priority']=50;
+    }
+    if (isset($fields['billing']['billing_address_1'])) {
+        $fields['billing']['billing_address_1']['label']='Адрес доставки';
+        $fields['billing']['billing_address_1']['placeholder']='Улица, дом, корпус';
+        $fields['billing']['billing_address_1']['priority']=60;
+    }
+    if (isset($fields['billing']['billing_address_2'])) {
+        $fields['billing']['billing_address_2']['placeholder']='Квартира, подъезд, этаж';
+        $fields['billing']['billing_address_2']['priority']=70;
+    }
+    if (isset($fields['billing']['billing_state'])) {
+        $fields['billing']['billing_state']['required']=false;
+        $fields['billing']['billing_state']['label']='Область / район (необязательно)';
+        $fields['billing']['billing_state']['priority']=80;
+    }
+
+    foreach (['billing_country','billing_postcode','billing_company'] as $key) {
+        unset($fields['billing'][$key]);
+    }
+
+    $fields['shipping'] = [];
+
     if (isset($fields['order']['order_comments'])) {
         $fields['order']['order_comments']['label']='Пожелания к заказу';
-        $fields['order']['order_comments']['placeholder']='Текст открытки, ориентир для курьера и другие пожелания';
+        $fields['order']['order_comments']['placeholder']='Ориентир для курьера и другие пожелания';
     }
+
     return $fields;
-});
+}, 20);
 
 add_filter('woocommerce_checkout_fields', function($fields){
     foreach (['billing','shipping','order'] as $group) {
