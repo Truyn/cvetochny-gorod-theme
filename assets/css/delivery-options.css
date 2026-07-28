@@ -1,29 +1,19 @@
-/* Дополнительные параметры доставки на странице оформления заказа */
-.woocommerce-checkout .woocommerce-additional-fields{margin-top:24px;padding:26px;border:1px solid var(--cg-line);border-radius:18px;background:#fffdfa}
-.woocommerce-checkout .woocommerce-additional-fields>h3{margin:0 0 18px;font:500 28px/1.15 Georgia,serif}
-.woocommerce-checkout .cg-checkout-field label{font-weight:600;color:var(--cg-text)}
-.woocommerce-checkout .cg-checkout-field input,
-.woocommerce-checkout .cg-checkout-field select,
-.woocommerce-checkout .cg-checkout-field textarea{width:100%;border:1px solid #ded3d0;border-radius:14px;background:#fff;padding:14px 16px;min-height:52px;font:inherit;color:var(--cg-text);transition:.25s ease}
-.woocommerce-checkout .cg-checkout-field input:focus,
-.woocommerce-checkout .cg-checkout-field select:focus,
-.woocommerce-checkout .cg-checkout-field textarea:focus{border-color:var(--cg-accent-dark);box-shadow:0 0 0 4px rgba(214,145,158,.16);outline:none}
-.woocommerce-checkout .cg-checkout-field textarea{min-height:110px;resize:vertical}
+/* Checkout cleanup: Цветочный город */
+.woocommerce-checkout .woocommerce-additional-fields>h3{display:none}
 
-/* Анонимная доставка — фирменная интерактивная кнопка */
-.woocommerce-checkout .cg-checkout-checkbox{margin:14px 0 0!important;padding:0!important;border:0;background:transparent}
-.woocommerce-checkout .cg-checkout-checkbox label{display:flex;align-items:center;gap:12px;position:relative;padding:16px 20px;border:1px solid var(--cg-line);border-radius:18px;background:#fff8f8;cursor:pointer;font-weight:600;transition:.25s ease}
-.woocommerce-checkout .cg-checkout-checkbox label:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(80,40,40,.08)}
-.woocommerce-checkout .cg-checkout-checkbox input{appearance:none;width:22px;height:22px;border:2px solid #d9a1ad;border-radius:50%;margin:0;position:relative;flex:none}
-.woocommerce-checkout .cg-checkout-checkbox input:checked{background:#d6919e;border-color:#d6919e}
-.woocommerce-checkout .cg-checkout-checkbox input:checked:after{content:'✓';color:#fff;position:absolute;left:3px;top:-2px;font-size:16px}
+.woocommerce-checkout .cg-checkout-card__heading,
+.woocommerce-checkout .cg-checkout-card small{display:none}
 
-/* Промокод */
-.woocommerce-checkout .woocommerce-form-coupon-toggle a{color:var(--cg-accent-dark);font-weight:700;text-decoration:none}
-.woocommerce-checkout .woocommerce-form-coupon-toggle a:hover{text-decoration:underline}
+.woocommerce-checkout .cg-checkout-checkbox{margin:14px 0!important;padding:0!important;border:0;background:transparent}
+.woocommerce-checkout .cg-checkout-checkbox label{display:flex;align-items:center;gap:14px;padding:16px 20px;border:1px solid var(--cg-line);border-radius:20px;background:linear-gradient(135deg,#fff7f8,#fff);cursor:pointer;font-weight:600;transition:.3s ease}
+.woocommerce-checkout .cg-checkout-checkbox label:hover{transform:translateY(-2px);box-shadow:0 10px 30px rgba(214,145,158,.18)}
+.woocommerce-checkout .cg-checkout-checkbox input{appearance:none;width:24px;height:24px;border:2px solid #d6919e;border-radius:50%;position:relative;flex:none;margin:0}
+.woocommerce-checkout .cg-checkout-checkbox input:checked{background:#d6919e}
+.woocommerce-checkout .cg-checkout-checkbox input:checked:after{content:'✓';color:#fff;position:absolute;left:4px;top:-1px;font-size:18px}
 
-.cg-order-delivery-meta{margin-top:18px;padding:16px;border-left:3px solid var(--cg-accent);background:#fff8f6}
-.cg-order-delivery-meta h3{margin:0 0 10px}
-.cg-order-delivery-meta p{margin:5px 0}
+.woocommerce-checkout .woocommerce-form-coupon-toggle a{font-size:0;color:var(--cg-accent-dark)}
+.woocommerce-checkout .woocommerce-form-coupon-toggle a:after{content:'Есть промокод?';font-size:16px;font-weight:700}
 
-@media(max-width:640px){.woocommerce-checkout .woocommerce-additional-fields{padding:20px 16px}.woocommerce-checkout .woocommerce-additional-fields>h3{font-size:25px}.woocommerce-checkout .form-row-first.cg-checkout-field,.woocommerce-checkout .form-row-last.cg-checkout-field{float:none;width:100%}}
+@media(max-width:640px){
+ .woocommerce-checkout .cg-checkout-checkbox label{padding:14px 16px}
+}
