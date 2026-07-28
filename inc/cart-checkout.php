@@ -26,7 +26,7 @@ add_filter('woocommerce_checkout_fields', function($fields) {
 
     if (isset($fields['billing']['billing_last_name'])) {
         $fields['billing']['billing_last_name']['label'] = 'Фамилия получателя';
-        $fields['billing']['billing_last_name']['placeholder'] = 'Фамилия (необязательно)';
+        $fields['billing']['billing_last_name']['placeholder'] = 'Фамилия';
         $fields['billing']['billing_last_name']['priority'] = 20;
         $fields['billing']['billing_last_name']['required'] = false;
     }
@@ -54,18 +54,12 @@ add_filter('woocommerce_checkout_fields', function($fields) {
 
     if (isset($fields['billing']['billing_address_2'])) {
         $fields['billing']['billing_address_2']['label'] = 'Квартира, подъезд, этаж';
-        $fields['billing']['billing_address_2']['placeholder'] = 'Квартира, подъезд, этаж (необязательно)';
+        $fields['billing']['billing_address_2']['placeholder'] = 'Квартира, подъезд, этаж';
         $fields['billing']['billing_address_2']['priority'] = 60;
         $fields['billing']['billing_address_2']['required'] = false;
     }
 
-    if (isset($fields['billing']['billing_state'])) {
-        $fields['billing']['billing_state']['label'] = 'Область / район';
-        $fields['billing']['billing_state']['priority'] = 70;
-        $fields['billing']['billing_state']['required'] = false;
-    }
-
-    foreach (['billing_email', 'billing_country', 'billing_postcode', 'billing_company'] as $key) {
+    foreach (['billing_email', 'billing_country', 'billing_postcode', 'billing_company', 'billing_state'] as $key) {
         unset($fields['billing'][$key]);
     }
 
@@ -84,7 +78,7 @@ add_filter('woocommerce_checkout_fields', function($fields) {
     $fields['order']['cg_sender_last_name'] = [
         'type' => 'text',
         'label' => 'Фамилия отправителя',
-        'placeholder' => 'Фамилия (необязательно)',
+        'placeholder' => 'Фамилия',
         'required' => false,
         'class' => ['cg-checkout-half', 'cg-sender-field'],
         'priority' => 2,

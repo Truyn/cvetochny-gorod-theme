@@ -32,9 +32,10 @@ $delivery_keys = [
     'cg_delivery_date',
     'cg_delivery_time',
     'cg_card_message',
-    'cg_anonymous_delivery',
     'order_comments',
 ];
+
+$anonymous_checked = !empty($checkout->get_value('cg_anonymous_delivery'));
 ?>
 
 <form name="checkout" method="post" class="checkout woocommerce-checkout cg-classic-checkout" action="<?php echo esc_url(wc_get_checkout_url()); ?>" enctype="multipart/form-data" aria-label="Оформление заказа">
@@ -87,9 +88,28 @@ $delivery_keys = [
                 <?php endforeach; ?>
 
                 <?php foreach ($order_fields as $key => $field) : ?>
-                    <?php if (in_array($key, array_merge($sender_keys, $delivery_keys, ['cg_hide_price', 'order_comments_upload']), true)) continue; ?>
+                    <?php if (in_array($key, array_merge($sender_keys, $delivery_keys, ['cg_anonymous_delivery', 'cg_hide_price', 'order_comments_upload']), true)) continue; ?>
                     <?php woocommerce_form_field($key, $field, $checkout->get_value($key)); ?>
                 <?php endforeach; ?>
+
+                <label class="cg-anonymous-toggle" for="cg_anonymous_delivery">
+                    <input
+                        class="cg-anonymous-toggle__input"
+                        type="checkbox"
+                        name="cg_anonymous_delivery"
+                        id="cg_anonymous_delivery"
+                        value="1"
+                        aria-describedby="cg_anonymous_delivery_help"
+                        <?php checked($anonymous_checked); ?>
+                    >
+                    <span class="cg-anonymous-toggle__switch" aria-hidden="true">
+                        <span class="cg-anonymous-toggle__thumb"></span>
+                    </span>
+                    <span class="cg-anonymous-toggle__content">
+                        <strong>Анонимная доставка</strong>
+                        <small id="cg_anonymous_delivery_help">Получатель не увидит имя отправителя. Контактные данные останутся только у магазина.</small>
+                    </span>
+                </label>
             </div>
         </section>
     </div>
