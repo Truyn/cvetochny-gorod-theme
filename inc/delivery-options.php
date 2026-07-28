@@ -60,7 +60,7 @@ function cg_delivery_checkout_fields($fields) {
         'description' => 'Получатель не увидит имя отправителя.',
         'required' => false,
         'class' => ['form-row-wide', 'cg-checkout-checkbox', 'cg-anonymous-delivery'],
-        'priority' => 23,
+        'priority' => 99,
     ];
 
     foreach (['cg_hide_price', 'order_comments_upload'] as $key) {
