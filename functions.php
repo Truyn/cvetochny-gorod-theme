@@ -8,6 +8,7 @@ require_once get_template_directory() . '/inc/home-slider.php';
 require_once get_template_directory() . '/inc/home-sections.php';
 require_once get_template_directory() . '/inc/site-customizer.php';
 require_once get_template_directory() . '/inc/delivery-options.php';
+require_once get_template_directory() . '/inc/delivery-checkout-enhancements.php';
 require_once get_template_directory() . '/inc/mini-cart.php';
 require_once get_template_directory() . '/inc/ajax-catalog.php';
 
