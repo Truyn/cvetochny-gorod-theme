@@ -67,18 +67,29 @@ function cg_render_mini_cart_content() {
     }
     echo '</div>';
 
-    $threshold = (float) get_theme_mod('cg_free_delivery_threshold', 5000);
+    $threshold = function_exists('cg_get_novovoronezh_free_delivery_threshold')
+        ? (float) cg_get_novovoronezh_free_delivery_threshold()
+        : 10000;
     $subtotal = (float) WC()->cart->get_subtotal();
+
     if ($threshold > 0) {
         $remaining = max(0, $threshold - $subtotal);
-        $progress = min(100, ($subtotal / $threshold) * 100);
-        echo '<div class="cg-mini-cart__delivery">';
+        $progress = min(100, max(0, ($subtotal / $threshold) * 100));
+        $progress_rounded = (int) round($progress);
+        $delivery_class = $remaining <= 0 ? ' is-complete' : '';
+
+        echo '<div class="cg-mini-cart__delivery' . esc_attr($delivery_class) . '">';
+        echo '<div class="cg-mini-cart__delivery-head">';
+        echo '<span>Бесплатная доставка по Нововоронежу</span>';
+        echo '<strong>' . esc_html($progress_rounded) . '%</strong>';
+        echo '</div>';
         echo '<div class="cg-mini-cart__delivery-text">';
         echo $remaining > 0
             ? 'До бесплатной доставки осталось <strong>' . wp_kses_post(wc_price($remaining)) . '</strong>'
-            : '<strong>Бесплатная доставка доступна</strong>';
+            : '<strong>Бесплатная доставка по Нововоронежу доступна</strong>';
         echo '</div>';
-        echo '<div class="cg-mini-cart__progress" role="progressbar" aria-label="Прогресс до бесплатной доставки" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' . esc_attr(round($progress)) . '"><span style="width:' . esc_attr($progress) . '%"></span></div>';
+        echo '<div class="cg-mini-cart__progress" role="progressbar" aria-label="Прогресс до бесплатной доставки по Нововоронежу" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' . esc_attr($progress_rounded) . '"><span style="width:' . esc_attr($progress) . '%"></span></div>';
+        echo '<small class="cg-mini-cart__delivery-note">Для других населённых пунктов доставка оплачивается независимо от суммы заказа.</small>';
         echo '</div>';
     }
 
