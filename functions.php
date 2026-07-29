@@ -11,6 +11,28 @@ require_once get_template_directory() . '/inc/delivery-options.php';
 require_once get_template_directory() . '/inc/mini-cart.php';
 require_once get_template_directory() . '/inc/ajax-catalog.php';
 
+/**
+ * The theme checkout customizations are built on WooCommerce classic hooks.
+ * Replace Cart and Checkout blocks on the assigned WooCommerce pages before
+ * WordPress renders blocks and shortcodes, so the custom templates always run.
+ */
+function cg_force_classic_woocommerce_pages($content) {
+    if (is_admin() || !is_main_query() || !in_the_loop() || !class_exists('WooCommerce')) {
+        return $content;
+    }
+
+    if (is_cart()) {
+        return '[woocommerce_cart]';
+    }
+
+    if (is_checkout() && !is_order_received_page()) {
+        return '[woocommerce_checkout]';
+    }
+
+    return $content;
+}
+add_filter('the_content', 'cg_force_classic_woocommerce_pages', 8);
+
 function cg_setup() {
     load_theme_textdomain('cvetochny-gorod', get_template_directory() . '/languages');
     add_theme_support('title-tag');
@@ -50,9 +72,7 @@ function cg_assets() {
             wp_enqueue_style('cg-premium-checkout-page', get_template_directory_uri().'/assets/css/premium-checkout-page.css', ['cg-woocommerce'], file_exists($premium_checkout_page_css) ? filemtime($premium_checkout_page_css) : $version);
         } elseif (is_checkout() && !is_order_received_page()) {
             $checkout_css = get_template_directory() . '/assets/css/checkout-premium.css';
-            $checkout_blocks_js = get_template_directory() . '/assets/js/checkout-blocks.js';
             wp_enqueue_style('cg-checkout-premium', get_template_directory_uri().'/assets/css/checkout-premium.css', ['cg-woocommerce'], file_exists($checkout_css) ? filemtime($checkout_css) : $version);
-            wp_enqueue_script('cg-checkout-blocks', get_template_directory_uri().'/assets/js/checkout-blocks.js', ['wc-blocks-checkout'], file_exists($checkout_blocks_js) ? filemtime($checkout_blocks_js) : $version, true);
         }
     }
     wp_enqueue_script('cg-main', get_template_directory_uri().'/assets/js/main.js', [], $version, true);
