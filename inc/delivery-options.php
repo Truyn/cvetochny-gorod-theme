@@ -15,6 +15,11 @@ function cg_is_delivery_checkout_screen() {
     return is_checkout() || is_page_template('page-templates/premium-checkout.php');
 }
 
+/** Delivery pricing is also required on the cart page. */
+function cg_is_delivery_pricing_screen() {
+    return cg_is_delivery_checkout_screen() || is_cart();
+}
+
 /**
  * Delivery settlements and prices.
  *
@@ -188,20 +193,20 @@ function cg_resolve_delivery_city($zone_key, $custom_city = '') {
     return '';
 }
 
-/** Save selected zone in the session before WooCommerce recalculates totals. */
-function cg_capture_delivery_zone_session($posted_data) {
-    if (!function_exists('WC') || !WC()->session) return;
+/** Store a validated delivery selection and invalidate cached shipping rates. */
+function cg_store_delivery_zone_session($zone_key, $custom_city = '') {
+    if (!function_exists('WC') || !WC()->session) return '';
 
-    parse_str($posted_data, $data);
-
-    $zone_key = isset($data['cg_delivery_zone']) ? sanitize_key($data['cg_delivery_zone']) : '';
-    $custom_city = isset($data['cg_delivery_custom_city'])
-        ? sanitize_text_field(wp_unslash($data['cg_delivery_custom_city']))
-        : '';
-
+    $zone_key = sanitize_key($zone_key);
+    $custom_city = sanitize_text_field($custom_city);
     $zones = cg_get_delivery_zones();
+
     if ($zone_key !== 'other' && !isset($zones[$zone_key])) {
         $zone_key = '';
+    }
+
+    if ($zone_key !== 'other') {
+        $custom_city = '';
     }
 
     WC()->session->set('cg_delivery_zone', $zone_key);
@@ -212,14 +217,54 @@ function cg_capture_delivery_zone_session($posted_data) {
             WC()->session->__unset('shipping_for_package_' . $package_index);
         }
     }
+
+    return $zone_key;
+}
+
+/** Save selected zone in the session before WooCommerce recalculates checkout totals. */
+function cg_capture_delivery_zone_session($posted_data) {
+    parse_str($posted_data, $data);
+
+    $zone_key = isset($data['cg_delivery_zone']) ? $data['cg_delivery_zone'] : '';
+    $custom_city = isset($data['cg_delivery_custom_city'])
+        ? wp_unslash($data['cg_delivery_custom_city'])
+        : '';
+
+    cg_store_delivery_zone_session($zone_key, $custom_city);
 }
 add_action('woocommerce_checkout_update_order_review', 'cg_capture_delivery_zone_session');
+
+/** Update the cart delivery selection and return freshly rendered totals. */
+function cg_ajax_set_delivery_zone() {
+    check_ajax_referer('cg_cart_delivery_zone', 'security');
+
+    if (!function_exists('WC') || !WC()->session || !WC()->cart) {
+        wp_send_json_error(['message' => 'Корзина недоступна. Обновите страницу и попробуйте ещё раз.'], 400);
+    }
+
+    $zone_key = isset($_POST['zone']) ? wp_unslash($_POST['zone']) : '';
+    $custom_city = isset($_POST['custom_city']) ? wp_unslash($_POST['custom_city']) : '';
+    $zone_key = cg_store_delivery_zone_session($zone_key, $custom_city);
+
+    WC()->cart->calculate_shipping();
+    WC()->cart->calculate_totals();
+
+    ob_start();
+    woocommerce_cart_totals();
+    $cart_totals = ob_get_clean();
+
+    wp_send_json_success([
+        'cartTotals' => $cart_totals,
+        'zone' => $zone_key,
+    ]);
+}
+add_action('wc_ajax_cg_set_delivery_zone', 'cg_ajax_set_delivery_zone');
 
 /** Replace configured shipping methods with one delivery rate based on the selected settlement. */
 function cg_delivery_zone_package_rates($rates, $package) {
     if (is_admin() && !wp_doing_ajax()) return $rates;
     if (!function_exists('WC') || !WC()->session) return $rates;
-    if (!cg_is_delivery_checkout_screen() && !wp_doing_ajax()) return $rates;
+    if (!cg_is_delivery_pricing_screen() && !wp_doing_ajax()) return $rates;
 
     $zone_key = (string) WC()->session->get('cg_delivery_zone', '');
     $zones = cg_get_delivery_zones();
