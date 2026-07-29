@@ -8,6 +8,14 @@
 if (!defined('ABSPATH')) exit;
 
 /**
+ * The store can use either the regular WooCommerce checkout page or the
+ * dedicated Premium Checkout page template.
+ */
+function cg_is_delivery_checkout_screen() {
+    return is_checkout() || is_page_template('page-templates/premium-checkout.php');
+}
+
+/**
  * Delivery settlements and prices.
  *
  * Add new settlements here using a unique key, visible label and price.
@@ -42,22 +50,30 @@ function cg_delivery_zone_options() {
 }
 
 function cg_delivery_options_assets() {
-    if (!is_checkout()) return;
+    if (!cg_is_delivery_checkout_screen()) return;
 
-    $version = wp_get_theme()->get('Version');
+    $theme_version = wp_get_theme()->get('Version');
+    $style_path = get_template_directory() . '/assets/css/delivery-options.css';
+    $script_path = get_template_directory() . '/assets/js/checkout-delivery-zones.js';
+    $dependencies = ['jquery'];
+
+    if (wp_script_is('wc-checkout', 'registered')) {
+        wp_enqueue_script('wc-checkout');
+        $dependencies[] = 'wc-checkout';
+    }
 
     wp_enqueue_style(
         'cg-delivery-options',
         get_template_directory_uri() . '/assets/css/delivery-options.css',
         ['cg-woocommerce'],
-        $version
+        file_exists($style_path) ? filemtime($style_path) : $theme_version
     );
 
     wp_enqueue_script(
         'cg-delivery-zones',
         get_template_directory_uri() . '/assets/js/checkout-delivery-zones.js',
-        ['jquery', 'wc-checkout'],
-        $version,
+        $dependencies,
+        file_exists($script_path) ? filemtime($script_path) : $theme_version,
         true
     );
 
@@ -84,6 +100,9 @@ function cg_delivery_checkout_fields($fields) {
     $current_zone = (function_exists('WC') && WC()->session)
         ? (string) WC()->session->get('cg_delivery_zone', '')
         : '';
+    $current_custom_city = (function_exists('WC') && WC()->session)
+        ? (string) WC()->session->get('cg_delivery_custom_city', '')
+        : '';
 
     $custom_city_classes = ['form-row-wide', 'cg-checkout-field', 'cg-delivery-custom-city'];
     if ($current_zone !== 'other') {
@@ -97,6 +116,7 @@ function cg_delivery_checkout_fields($fields) {
         'class' => ['form-row-wide', 'cg-checkout-field', 'cg-delivery-zone-field'],
         'input_class' => ['cg-delivery-zone-select'],
         'priority' => 10,
+        'default' => $current_zone,
         'options' => cg_delivery_zone_options(),
     ];
 
@@ -107,6 +127,7 @@ function cg_delivery_checkout_fields($fields) {
         'required' => false,
         'class' => $custom_city_classes,
         'priority' => 11,
+        'default' => $current_custom_city,
         'autocomplete' => 'address-level2',
     ];
 
@@ -198,7 +219,7 @@ add_action('woocommerce_checkout_update_order_review', 'cg_capture_delivery_zone
 function cg_delivery_zone_package_rates($rates, $package) {
     if (is_admin() && !wp_doing_ajax()) return $rates;
     if (!function_exists('WC') || !WC()->session) return $rates;
-    if (!is_checkout() && !wp_doing_ajax()) return $rates;
+    if (!cg_is_delivery_checkout_screen() && !wp_doing_ajax()) return $rates;
 
     $zone_key = (string) WC()->session->get('cg_delivery_zone', '');
     $zones = cg_get_delivery_zones();
