@@ -21,21 +21,89 @@ function cg_is_delivery_pricing_screen() {
 }
 
 /**
- * Delivery settlements and prices.
+ * Read a simple fixed price from a WooCommerce flat-rate method.
  *
- * Add new settlements here using a unique key, visible label and price.
+ * Formula-based costs are intentionally skipped because their displayed price
+ * cannot be known before WooCommerce calculates a concrete cart package.
+ */
+function cg_delivery_parse_flat_rate_cost($raw_cost) {
+    $raw_cost = html_entity_decode(wp_strip_all_tags((string) $raw_cost), ENT_QUOTES, 'UTF-8');
+    $raw_cost = str_replace(["\xc2\xa0", ' '], '', trim($raw_cost));
+    $raw_cost = str_replace(',', '.', $raw_cost);
+
+    if ($raw_cost === '' || !preg_match('/^\d+(?:\.\d+)?$/', $raw_cost)) {
+        return null;
+    }
+
+    return max(0, (float) $raw_cost);
+}
+
+/**
+ * Delivery settlements and prices are managed in WooCommerce shipping zones.
+ *
+ * Every enabled "Flat rate" instance with a simple numeric cost becomes one
+ * option in the cart and checkout selectors. The instance ID is used as a
+ * stable key, so renaming a method in the admin area does not break selection.
  */
 function cg_get_delivery_zones() {
-    return apply_filters('cg_delivery_zones', [
-        'novovoronezh' => [
-            'label' => 'Нововоронеж',
-            'price' => 350,
-        ],
-        'olen-kolodez' => [
-            'label' => 'Олень-Колодезь',
-            'price' => 500,
-        ],
-    ]);
+    static $delivery_zones = null;
+
+    if ($delivery_zones !== null) {
+        return apply_filters('cg_delivery_zones', $delivery_zones);
+    }
+
+    $delivery_zones = [];
+
+    if (!class_exists('WC_Shipping_Zones') || !class_exists('WC_Shipping_Zone')) {
+        return apply_filters('cg_delivery_zones', $delivery_zones);
+    }
+
+    $zone_ids = [];
+    foreach (WC_Shipping_Zones::get_zones() as $zone_key => $zone_data) {
+        $zone_ids[] = isset($zone_data['zone_id']) ? absint($zone_data['zone_id']) : absint($zone_key);
+    }
+
+    // Zone 0 is "Locations not covered by your other zones".
+    $zone_ids[] = 0;
+    $zone_ids = array_values(array_unique($zone_ids));
+
+    foreach ($zone_ids as $zone_id) {
+        $zone = new WC_Shipping_Zone($zone_id);
+        $methods = $zone->get_shipping_methods(true);
+
+        foreach ($methods as $method) {
+            $method_id = isset($method->id) ? (string) $method->id : '';
+            if ($method_id !== 'flat_rate') continue;
+
+            $instance_id = method_exists($method, 'get_instance_id')
+                ? absint($method->get_instance_id())
+                : (isset($method->instance_id) ? absint($method->instance_id) : 0);
+
+            if ($instance_id < 1) continue;
+
+            $price = cg_delivery_parse_flat_rate_cost($method->get_option('cost', ''));
+            if ($price === null) continue;
+
+            $label = trim((string) $method->get_option('title', ''));
+            if ($label === '' && method_exists($method, 'get_title')) {
+                $label = trim((string) $method->get_title());
+            }
+            if ($label === '') {
+                $label = 'Доставка';
+            }
+
+            $key = 'flat-rate-' . $instance_id;
+            $delivery_zones[$key] = [
+                'label' => $label,
+                'price' => $price,
+                'method_id' => 'flat_rate',
+                'instance_id' => $instance_id,
+                'shipping_zone_id' => $zone_id,
+            ];
+        }
+    }
+
+    return apply_filters('cg_delivery_zones', $delivery_zones);
 }
 
 function cg_delivery_zone_options() {
@@ -260,7 +328,7 @@ function cg_ajax_set_delivery_zone() {
 }
 add_action('wc_ajax_cg_set_delivery_zone', 'cg_ajax_set_delivery_zone');
 
-/** Replace configured shipping methods with one delivery rate based on the selected settlement. */
+/** Replace configured rates with the selected WooCommerce flat-rate instance. */
 function cg_delivery_zone_package_rates($rates, $package) {
     if (is_admin() && !wp_doing_ajax()) return $rates;
     if (!function_exists('WC') || !WC()->session) return $rates;
@@ -270,10 +338,14 @@ function cg_delivery_zone_package_rates($rates, $package) {
     $zones = cg_get_delivery_zones();
     $cost = 0;
     $label = 'Доставка — выберите населённый пункт';
+    $method_id = 'cg_delivery_zone';
+    $instance_id = 0;
 
     if (isset($zones[$zone_key])) {
         $cost = (float) $zones[$zone_key]['price'];
-        $label = 'Доставка — ' . $zones[$zone_key]['label'];
+        $label = (string) $zones[$zone_key]['label'];
+        $method_id = (string) $zones[$zone_key]['method_id'];
+        $instance_id = absint($zones[$zone_key]['instance_id']);
     } elseif ($zone_key === 'other') {
         $label = 'Доставка — стоимость уточняется';
     }
@@ -283,7 +355,8 @@ function cg_delivery_zone_package_rates($rates, $package) {
         $label,
         $cost,
         [],
-        'cg_delivery_zone'
+        $method_id,
+        $instance_id
     );
 
     return ['cg_delivery_zone' => $rate];
@@ -376,6 +449,9 @@ function cg_save_delivery_checkout_fields($order, $data) {
     if (isset($zones[$zone_key])) {
         $order->update_meta_data('_cg_delivery_price', (float) $zones[$zone_key]['price']);
         $order->update_meta_data('_cg_delivery_price_status', 'fixed');
+        $order->update_meta_data('_cg_delivery_method_title', (string) $zones[$zone_key]['label']);
+        $order->update_meta_data('_cg_delivery_method_instance_id', absint($zones[$zone_key]['instance_id']));
+        $order->update_meta_data('_cg_delivery_shipping_zone_id', absint($zones[$zone_key]['shipping_zone_id']));
     } else {
         $order->update_meta_data('_cg_delivery_price', 0);
         $order->update_meta_data('_cg_delivery_price_status', 'to_confirm');
