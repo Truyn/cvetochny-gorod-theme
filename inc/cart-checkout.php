@@ -1,14 +1,81 @@
 <?php
 if (!defined('ABSPATH')) exit;
 
+/** Load the dedicated cart presentation only on the cart page. */
+function cg_cart_assets() {
+    if (!is_cart()) return;
+
+    $version = wp_get_theme()->get('Version');
+    $cart_css = get_template_directory() . '/assets/css/cart-premium.css';
+    $cart_js = get_template_directory() . '/assets/js/cart-premium.js';
+
+    wp_enqueue_style(
+        'cg-cart-premium',
+        get_template_directory_uri() . '/assets/css/cart-premium.css',
+        ['cg-woocommerce'],
+        file_exists($cart_css) ? filemtime($cart_css) : $version
+    );
+
+    wp_enqueue_script(
+        'cg-cart-premium',
+        get_template_directory_uri() . '/assets/js/cart-premium.js',
+        ['jquery', 'wc-cart'],
+        file_exists($cart_js) ? filemtime($cart_js) : $version,
+        true
+    );
+}
+add_action('wp_enqueue_scripts', 'cg_cart_assets', 30);
+
+/** Premium cart heading and a compact order progress indicator. */
+function cg_cart_intro() {
+    $count = function_exists('WC') && WC()->cart ? WC()->cart->get_cart_contents_count() : 0;
+
+    echo '<section class="cg-cart-intro" aria-labelledby="cg-cart-title">';
+    echo '<div class="cg-cart-intro__copy">';
+    echo '<span class="cg-cart-intro__eyebrow">Ваш заказ</span>';
+    echo '<h1 id="cg-cart-title">Корзина</h1>';
+    echo '<p>Проверьте состав заказа и количество. Населённый пункт, дату и время доставки выберете на следующем шаге.</p>';
+    echo '<strong class="cg-cart-intro__count">Товаров в корзине: ' . esc_html($count) . '</strong>';
+    echo '</div>';
+    echo '<div class="cg-cart-progress" aria-label="Этапы оформления заказа">';
+    echo '<span class="is-active"><b>1</b>Корзина</span>';
+    echo '<span><b>2</b>Оформление</span>';
+    echo '<span><b>3</b>Готово</span>';
+    echo '</div>';
+    echo '</section>';
+}
+add_action('woocommerce_before_cart', 'cg_cart_intro', 5);
+add_action('woocommerce_cart_is_empty', 'cg_cart_intro', 5);
+
 function cg_cart_reassurance() {
     echo '<aside class="cg-order-reassurance" aria-label="Преимущества заказа">';
-    echo '<div><strong>🚚 Доставка по Нововоронежу</strong><span>Согласуем удобное время после оформления.</span></div>';
+    echo '<div><strong>🚚 Удобная доставка</strong><span>Выберите населённый пункт и увидите стоимость при оформлении.</span></div>';
     echo '<div><strong>📷 Фото перед отправкой</strong><span>Покажем готовый букет до передачи курьеру.</span></div>';
-    echo '<div><strong>💐 Свежие цветы</strong><span>Собираем букет непосредственно перед доставкой.</span></div>';
+    echo '<div><strong>💐 Свежая сборка</strong><span>Собираем букет непосредственно перед доставкой.</span></div>';
     echo '</aside>';
 }
-add_action('woocommerce_after_cart_table', 'cg_cart_reassurance', 20);
+add_action('woocommerce_after_cart', 'cg_cart_reassurance', 20);
+
+/** Explanatory note shown immediately above the main checkout button. */
+function cg_cart_checkout_note() {
+    echo '<div class="cg-cart-checkout-note">';
+    echo '<strong>Доставка рассчитывается дальше</strong>';
+    echo '<span>На следующем шаге выберите населённый пункт — стоимость автоматически появится в итоговой сумме.</span>';
+    echo '</div>';
+}
+add_action('woocommerce_proceed_to_checkout', 'cg_cart_checkout_note', 5);
+
+/** Replace the standard English-oriented CTA with a clear local-store action. */
+remove_action('woocommerce_proceed_to_checkout', 'woocommerce_button_proceed_to_checkout', 20);
+function cg_cart_checkout_button() {
+    echo '<a href="' . esc_url(wc_get_checkout_url()) . '" class="checkout-button button alt wc-forward cg-cart-checkout-button">Перейти к оформлению</a>';
+}
+add_action('woocommerce_proceed_to_checkout', 'cg_cart_checkout_button', 20);
+
+function cg_cart_continue_shopping() {
+    echo '<a class="cg-cart-continue" href="' . esc_url(cg_catalog_url()) . '">← Продолжить покупки</a>';
+}
+add_action('woocommerce_proceed_to_checkout', 'cg_cart_continue_shopping', 30);
 
 add_filter('default_checkout_billing_country', function() { return 'RU'; });
 add_filter('default_checkout_shipping_country', function() { return 'RU'; });
