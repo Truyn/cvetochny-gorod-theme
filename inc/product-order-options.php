@@ -1,127 +1,20 @@
 <?php
 /**
- * Product order options: card text, florist note and delivery preferences.
+ * Backward compatibility for order options saved by older product pages.
+ *
+ * New orders collect card text, delivery date/time and florist comments only
+ * on the checkout page. This avoids duplicate fields and prevents customers
+ * from entering the same information twice.
  *
  * @package Cvetochny_Gorod
  */
 
 if (!defined('ABSPATH')) exit;
 
-/** Render optional order details below the main product area. */
-function cg_product_order_options_fields() {
-    global $product;
-    if (!$product instanceof WC_Product || !$product->is_purchasable()) return;
-
-    echo '<section class="cg-product-options" aria-labelledby="cg-product-options-title">';
-    echo '<div class="cg-product-options__head"><span>Персонализируйте заказ</span><h3 id="cg-product-options-title">Детали букета и доставки</h3><p>Заполните только нужные поля. Все пожелания сохранятся в корзине и будут видны при оформлении заказа.</p></div>';
-
-    echo '<div class="cg-product-options__grid">';
-
-    echo '<label class="cg-product-option cg-product-option--wide">';
-    echo '<span class="cg-product-option__title">Текст для бесплатной открытки</span>';
-    echo '<textarea name="cg_card_message" maxlength="300" rows="4" placeholder="Например: С днём рождения! Пусть каждый день будет наполнен радостью."></textarea>';
-    echo '<small>Оставьте поле пустым, если открытка не нужна.</small>';
-    echo '</label>';
-
-    echo '<label class="cg-product-option cg-product-option--wide">';
-    echo '<span class="cg-product-option__title">Пожелания флористу</span>';
-    echo '<textarea name="cg_florist_note" maxlength="400" rows="4" placeholder="Например: сделать букет более нежным, не использовать лилии, добавить больше зелени."></textarea>';
-    echo '<small>Точный состав зависит от наличия цветов; важные замены согласуем.</small>';
-    echo '</label>';
-
-    echo '<label class="cg-product-option">';
-    echo '<span class="cg-product-option__title">Желаемая дата доставки</span>';
-    echo '<input type="date" name="cg_delivery_date" min="'.esc_attr(wp_date('Y-m-d')).'">';
-    echo '</label>';
-
-    echo '<label class="cg-product-option">';
-    echo '<span class="cg-product-option__title">Удобный интервал</span>';
-    echo '<select name="cg_delivery_interval">';
-    echo '<option value="">Уточнить после заказа</option>';
-    echo '<option value="07:00–09:00">07:00–09:00</option>';
-    echo '<option value="09:00–11:00">09:00–11:00</option>';
-    echo '<option value="11:00–13:00">11:00–13:00</option>';
-    echo '<option value="13:00–15:00">13:00–15:00</option>';
-    echo '<option value="15:00–17:00">15:00–17:00</option>';
-    echo '<option value="17:00–19:00">17:00–19:00</option>';
-    echo '<option value="19:00–21:00">19:00–21:00</option>';
-    echo '<option value="21:00–22:00">21:00–22:00</option>';
-    echo '</select>';
-    echo '</label>';
-
-    echo '</div>';
-
-    echo '<div class="cg-product-options__toggles">';
-    echo '<label><input type="checkbox" name="cg_anonymous_delivery" value="yes"><span><strong>Анонимная доставка</strong><small>Не сообщать получателю имя отправителя.</small></span></label>';
-    echo '<label><input type="checkbox" name="cg_call_recipient" value="yes"><span><strong>Позвонить получателю заранее</strong><small>Курьер уточнит удобство получения перед приездом.</small></span></label>';
-    echo '</div>';
-
-    echo '</section>';
-}
-add_action('cg_product_options_area', 'cg_product_order_options_fields');
-
-/** Validate user-entered date and interval. */
-function cg_validate_product_order_options($passed) {
-    if (!empty($_POST['cg_delivery_date'])) {
-        $date = sanitize_text_field(wp_unslash($_POST['cg_delivery_date']));
-        $parsed = DateTime::createFromFormat('Y-m-d', $date);
-        $today = new DateTime(wp_date('Y-m-d'));
-
-        if (!$parsed || $parsed->format('Y-m-d') !== $date || $parsed < $today) {
-            wc_add_notice('Пожалуйста, выберите корректную дату доставки.', 'error');
-            return false;
-        }
-    }
-
-    if (!empty($_POST['cg_delivery_interval'])) {
-        $allowed_intervals = [
-            '07:00–09:00',
-            '09:00–11:00',
-            '11:00–13:00',
-            '13:00–15:00',
-            '15:00–17:00',
-            '17:00–19:00',
-            '19:00–21:00',
-            '21:00–22:00',
-        ];
-        $interval = sanitize_text_field(wp_unslash($_POST['cg_delivery_interval']));
-        if (!in_array($interval, $allowed_intervals, true)) {
-            wc_add_notice('Пожалуйста, выберите доступный интервал доставки.', 'error');
-            return false;
-        }
-    }
-
-    return $passed;
-}
-add_filter('woocommerce_add_to_cart_validation', 'cg_validate_product_order_options', 10, 1);
-
-/** Store the options in the cart item. */
-function cg_add_product_order_options_to_cart($cart_item_data) {
-    $text_fields = [
-        'cg_card_message' => 'card_message',
-        'cg_florist_note' => 'florist_note',
-        'cg_delivery_date' => 'delivery_date',
-        'cg_delivery_interval' => 'delivery_interval',
-    ];
-
-    foreach ($text_fields as $request_key => $cart_key) {
-        if (!empty($_POST[$request_key])) {
-            $cart_item_data['cg_order_options'][$cart_key] = sanitize_textarea_field(wp_unslash($_POST[$request_key]));
-        }
-    }
-
-    if (!empty($_POST['cg_anonymous_delivery'])) $cart_item_data['cg_order_options']['anonymous_delivery'] = 'Да';
-    if (!empty($_POST['cg_call_recipient'])) $cart_item_data['cg_order_options']['call_recipient'] = 'Да';
-
-    if (!empty($cart_item_data['cg_order_options'])) {
-        $cart_item_data['cg_order_options_key'] = wp_generate_uuid4();
-    }
-
-    return $cart_item_data;
-}
-add_filter('woocommerce_add_cart_item_data', 'cg_add_product_order_options_to_cart', 10, 1);
-
-/** Build the public item data used by classic templates and WooCommerce Blocks. */
+/**
+ * Build public item data for carts created before product-page fields were
+ * removed. New cart items no longer receive `cg_order_options` data.
+ */
 function cg_get_product_order_options_item_data($cart_item) {
     if (empty($cart_item['cg_order_options'])) return [];
 
@@ -153,13 +46,13 @@ function cg_get_product_order_options_item_data($cart_item) {
     return $item_data;
 }
 
-/** Show options in classic cart and checkout templates. */
+/** Show legacy options in classic cart and checkout templates. */
 function cg_display_product_order_options($item_data, $cart_item) {
     return array_merge($item_data, cg_get_product_order_options_item_data($cart_item));
 }
 add_filter('woocommerce_get_item_data', 'cg_display_product_order_options', 10, 2);
 
-/** Expose the same data to the Cart and Checkout blocks through the Store API. */
+/** Expose legacy options to Cart and Checkout blocks through the Store API. */
 function cg_register_product_order_options_store_api() {
     if (!function_exists('woocommerce_store_api_register_endpoint_data') || !class_exists('Automattic\\WooCommerce\\StoreApi\\Schemas\\V1\\CartItemSchema')) return;
 
@@ -174,7 +67,7 @@ function cg_register_product_order_options_store_api() {
         'schema_callback' => function() {
             return [
                 'order_options' => [
-                    'description' => 'Детали букета и доставки.',
+                    'description' => 'Ранее сохранённые детали букета и доставки.',
                     'type' => 'array',
                     'readonly' => true,
                     'items' => [
@@ -192,7 +85,7 @@ function cg_register_product_order_options_store_api() {
 }
 add_action('woocommerce_blocks_loaded', 'cg_register_product_order_options_store_api');
 
-/** Persist options on the WooCommerce order item. */
+/** Preserve legacy options on an order if they are already present in cart. */
 function cg_save_product_order_options_to_order($item, $cart_item_key, $values) {
     if (empty($values['cg_order_options'])) return;
 
