@@ -12,26 +12,55 @@ require_once get_template_directory() . '/inc/mini-cart.php';
 require_once get_template_directory() . '/inc/ajax-catalog.php';
 
 /**
- * The theme checkout customizations are built on WooCommerce classic hooks.
- * Replace Cart and Checkout blocks on the assigned WooCommerce pages before
- * WordPress renders blocks and shortcodes, so the custom templates always run.
+ * The theme cart and checkout are built on classic WooCommerce hooks.
+ * Replace the assigned page content with the corresponding shortcode.
  */
 function cg_force_classic_woocommerce_pages($content) {
-    if (is_admin() || !is_main_query() || !in_the_loop() || !class_exists('WooCommerce')) {
+    if (is_admin() || !class_exists('WooCommerce')) {
         return $content;
     }
 
-    if (is_cart()) {
+    global $post;
+    if (!$post instanceof WP_Post) {
+        return $content;
+    }
+
+    $post_id = (int) $post->ID;
+
+    if (is_cart() && $post_id === (int) wc_get_page_id('cart')) {
         return '[woocommerce_cart]';
     }
 
-    if (is_checkout() && !is_order_received_page()) {
+    if (is_checkout() && !is_order_received_page() && $post_id === (int) wc_get_page_id('checkout')) {
         return '[woocommerce_checkout]';
     }
 
     return $content;
 }
 add_filter('the_content', 'cg_force_classic_woocommerce_pages', 8);
+
+/**
+ * WooCommerce Cart and Checkout blocks may bypass the normal page-content
+ * conditions. Replace the actual block output as a reliable fallback.
+ */
+function cg_render_classic_woocommerce_block($block_content, $block) {
+    if (is_admin() || !class_exists('WooCommerce')) {
+        return $block_content;
+    }
+
+    $block_name = isset($block['blockName']) ? (string) $block['blockName'] : '';
+
+    if ($block_name === 'woocommerce/cart' && is_cart()) {
+        return do_shortcode('[woocommerce_cart]');
+    }
+
+    if ($block_name === 'woocommerce/checkout' && is_checkout() && !is_order_received_page()) {
+        return do_shortcode('[woocommerce_checkout]');
+    }
+
+    return $block_content;
+}
+add_filter('render_block', 'cg_render_classic_woocommerce_block', 20, 2);
 
 function cg_setup() {
     load_theme_textdomain('cvetochny-gorod', get_template_directory() . '/languages');
