@@ -1,8 +1,27 @@
-/* Checkout cleanup: Цветочный город */
+/* Checkout delivery selector: Цветочный город */
 .woocommerce-checkout .woocommerce-additional-fields>h3{display:none}
-
-.woocommerce-checkout .cg-checkout-card__heading,
-.woocommerce-checkout .cg-checkout-card small{display:none}
-
 .woocommerce-checkout .woocommerce-form-coupon-toggle a{font-size:0;color:var(--cg-accent-dark)}
 .woocommerce-checkout .woocommerce-form-coupon-toggle a:after{content:'Есть промокод?';font-size:16px;font-weight:700}
+
+.woocommerce-checkout .cg-checkout-delivery-selector{grid-column:1/-1;display:grid;gap:14px;margin:0 0 4px;padding:20px;border:1px solid #eadfdb;border-radius:18px;background:linear-gradient(135deg,#fffaf8,#fff);box-shadow:0 10px 28px rgba(67,43,43,.05)}
+.woocommerce-checkout .cg-checkout-delivery-selector__head{display:grid;gap:4px}
+.woocommerce-checkout .cg-checkout-delivery-selector__eyebrow{color:var(--cg-accent-dark,#8b514b);font-size:10px;font-weight:900;letter-spacing:.13em;text-transform:uppercase}
+.woocommerce-checkout .cg-checkout-delivery-selector__head h3{margin:0!important;font:600 22px/1.2 Georgia,serif!important;color:#3e302d!important}
+.woocommerce-checkout .cg-checkout-delivery-selector__head p{margin:0;color:#83716c;font-size:12px;line-height:1.5}
+.woocommerce-checkout .cg-checkout-delivery-selector .form-row{float:none!important;width:100%!important;margin:0!important;padding:0!important}
+.woocommerce-checkout .cg-checkout-delivery-selector .form-row label{display:block;margin:0 0 7px;color:#4a3f3c;font-size:12px;font-weight:800}
+.woocommerce-checkout .cg-checkout-delivery-selector select,.woocommerce-checkout .cg-checkout-delivery-selector input{display:block;width:100%!important;min-height:52px!important;margin:0!important;padding:0 15px!important;border:1px solid #e4d8d4!important;border-radius:14px!important;background:#fffdfa!important;color:#352b29!important;box-sizing:border-box!important;box-shadow:none!important}
+.woocommerce-checkout .cg-checkout-delivery-selector select:focus,.woocommerce-checkout .cg-checkout-delivery-selector input:focus{outline:0!important;border-color:#d0a19a!important;background:#fff!important;box-shadow:0 0 0 4px rgba(183,117,109,.11)!important}
+.woocommerce-checkout .cg-delivery-custom-city.is-hidden{display:none!important}
+.woocommerce-checkout .cg-delivery-zone-note{margin:0;padding:12px 14px;border:1px solid #eadfdb;border-radius:13px;background:#fffaf8;font-size:12px;font-weight:600;line-height:1.5;color:#715e59}
+.woocommerce-checkout .cg-delivery-zone-note.is-priced{border-color:#d8e5dc;background:#f5fbf7;color:#3f6650}
+.woocommerce-checkout .cg-delivery-zone-note.is-custom{border-color:#ead7ae;background:#fffaf0;color:#785f2e}
+.woocommerce-checkout .cg-delivery-zone-note.is-free{border-color:#bcd9c4;background:#edf8f0;color:#2f6040}
+
+/* Fallback placement for third-party classic checkout templates. */
+.woocommerce-checkout form.checkout>.cg-checkout-delivery-selector,.woocommerce-checkout #order_review_heading+.cg-checkout-delivery-selector{margin-bottom:20px}
+
+@media(max-width:640px){
+    .woocommerce-checkout .cg-checkout-delivery-selector{padding:16px;border-radius:16px}
+    .woocommerce-checkout .cg-checkout-delivery-selector__head h3{font-size:20px!important}
+}
