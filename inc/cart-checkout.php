@@ -23,6 +23,16 @@ function cg_cart_assets() {
         file_exists($cart_js) ? filemtime($cart_js) : $version,
         true
     );
+
+    $ajax_url = class_exists('WC_AJAX')
+        ? WC_AJAX::get_endpoint('cg_set_delivery_zone')
+        : add_query_arg('wc-ajax', 'cg_set_delivery_zone', home_url('/'));
+
+    wp_localize_script('cg-cart-premium', 'cgCartDelivery', [
+        'ajaxUrl' => $ajax_url,
+        'nonce' => wp_create_nonce('cg_cart_delivery_zone'),
+        'errorText' => 'Не удалось обновить стоимость доставки. Попробуйте ещё раз.',
+    ]);
 }
 add_action('wp_enqueue_scripts', 'cg_cart_assets', 30);
 
@@ -34,7 +44,7 @@ function cg_cart_intro() {
     echo '<div class="cg-cart-intro__copy">';
     echo '<span class="cg-cart-intro__eyebrow">Ваш заказ</span>';
     echo '<h1 id="cg-cart-title">Корзина</h1>';
-    echo '<p>Проверьте состав заказа и количество. Населённый пункт, дату и время доставки выберете на следующем шаге.</p>';
+    echo '<p>Проверьте товары и сразу выберите населённый пункт — стоимость доставки появится в итоговой сумме.</p>';
     echo '<strong class="cg-cart-intro__count">Товаров в корзине: ' . esc_html($count) . '</strong>';
     echo '</div>';
     echo '<div class="cg-cart-progress" aria-label="Этапы оформления заказа">';
@@ -49,18 +59,91 @@ add_action('woocommerce_cart_is_empty', 'cg_cart_intro', 5);
 
 function cg_cart_reassurance() {
     echo '<aside class="cg-order-reassurance" aria-label="Преимущества заказа">';
-    echo '<div><strong>🚚 Удобная доставка</strong><span>Выберите населённый пункт и увидите стоимость при оформлении.</span></div>';
+    echo '<div><strong>🚚 Понятная стоимость доставки</strong><span>Цена пересчитывается сразу после выбора населённого пункта.</span></div>';
     echo '<div><strong>📷 Фото перед отправкой</strong><span>Покажем готовый букет до передачи курьеру.</span></div>';
     echo '<div><strong>💐 Свежая сборка</strong><span>Собираем букет непосредственно перед доставкой.</span></div>';
     echo '</aside>';
 }
 add_action('woocommerce_after_cart', 'cg_cart_reassurance', 20);
 
+/** Human-readable delivery state used by the selector and checkout note. */
+function cg_cart_delivery_state($zone_key, $custom_city = '') {
+    $zones = function_exists('cg_get_delivery_zones') ? cg_get_delivery_zones() : [];
+
+    if (isset($zones[$zone_key])) {
+        return [
+            'class' => 'is-priced',
+            'title' => $zones[$zone_key]['label'] . ' — ' . number_format_i18n((float) $zones[$zone_key]['price'], 0) . ' ₽',
+            'text' => 'Стоимость добавлена в итог заказа. Выбор сохранится при переходе к оформлению.',
+        ];
+    }
+
+    if ($zone_key === 'other') {
+        return [
+            'class' => 'is-custom',
+            'title' => $custom_city !== '' ? $custom_city : 'Другой населённый пункт',
+            'text' => 'Стоимость доставки уточним после оформления заказа.',
+        ];
+    }
+
+    return [
+        'class' => '',
+        'title' => 'Выберите населённый пункт',
+        'text' => 'Стоимость доставки сразу появится в итоговой сумме.',
+    ];
+}
+
+/** Delivery selector placed inside the cart totals card. */
+function cg_cart_delivery_selector() {
+    if (!function_exists('cg_delivery_zone_options')) return;
+
+    $zone_key = (function_exists('WC') && WC()->session)
+        ? (string) WC()->session->get('cg_delivery_zone', '')
+        : '';
+    $custom_city = (function_exists('WC') && WC()->session)
+        ? (string) WC()->session->get('cg_delivery_custom_city', '')
+        : '';
+    $state = cg_cart_delivery_state($zone_key, $custom_city);
+
+    echo '<section class="cg-cart-delivery" aria-labelledby="cg-cart-delivery-title">';
+    echo '<span class="cg-cart-delivery__eyebrow">Доставка</span>';
+    echo '<h3 id="cg-cart-delivery-title">Куда доставить заказ?</h3>';
+    echo '<label for="cg_cart_delivery_zone">Населённый пункт</label>';
+    echo '<select id="cg_cart_delivery_zone" class="cg-cart-delivery__select">';
+
+    foreach (cg_delivery_zone_options() as $value => $label) {
+        echo '<option value="' . esc_attr($value) . '" ' . selected($zone_key, $value, false) . '>' . esc_html($label) . '</option>';
+    }
+
+    echo '</select>';
+
+    $custom_class = $zone_key === 'other' ? '' : ' is-hidden';
+    echo '<div class="cg-cart-delivery__custom' . esc_attr($custom_class) . '">';
+    echo '<label for="cg_cart_delivery_custom_city">Ваш населённый пункт</label>';
+    echo '<input type="text" id="cg_cart_delivery_custom_city" value="' . esc_attr($custom_city) . '" placeholder="Введите название населённого пункта">';
+    echo '</div>';
+
+    echo '<div class="cg-cart-delivery__status ' . esc_attr($state['class']) . '" aria-live="polite">';
+    echo '<strong>' . esc_html($state['title']) . '</strong>';
+    echo '<span>' . esc_html($state['text']) . '</span>';
+    echo '</div>';
+    echo '</section>';
+}
+add_action('woocommerce_before_cart_totals', 'cg_cart_delivery_selector', 5);
+
 /** Explanatory note shown immediately above the main checkout button. */
 function cg_cart_checkout_note() {
-    echo '<div class="cg-cart-checkout-note">';
-    echo '<strong>Доставка рассчитывается дальше</strong>';
-    echo '<span>На следующем шаге выберите населённый пункт — стоимость автоматически появится в итоговой сумме.</span>';
+    $zone_key = (function_exists('WC') && WC()->session)
+        ? (string) WC()->session->get('cg_delivery_zone', '')
+        : '';
+    $custom_city = (function_exists('WC') && WC()->session)
+        ? (string) WC()->session->get('cg_delivery_custom_city', '')
+        : '';
+    $state = cg_cart_delivery_state($zone_key, $custom_city);
+
+    echo '<div class="cg-cart-checkout-note ' . esc_attr($state['class']) . '">';
+    echo '<strong>' . esc_html($state['title']) . '</strong>';
+    echo '<span>' . esc_html($state['text']) . '</span>';
     echo '</div>';
 }
 add_action('woocommerce_proceed_to_checkout', 'cg_cart_checkout_note', 5);
