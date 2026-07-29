@@ -1,8 +1,17 @@
 (function ($) {
     'use strict';
 
+    var checkoutUpdateTimer = null;
+
     function getConfig() {
         return window.cgDeliveryZones || { zones: {}, messages: {} };
+    }
+
+    function requestCheckoutUpdate() {
+        window.clearTimeout(checkoutUpdateTimer);
+        checkoutUpdateTimer = window.setTimeout(function () {
+            $(document.body).trigger('update_checkout');
+        }, 120);
     }
 
     function updateDeliveryZoneUi() {
@@ -46,10 +55,18 @@
 
     $(document.body).on('change', '#cg_delivery_zone', function () {
         updateDeliveryZoneUi();
-        $(document.body).trigger('update_checkout');
+        requestCheckoutUpdate();
     });
 
-    $(document.body).on('updated_checkout', updateDeliveryZoneUi);
+    $(document.body).on('change', '#cg_delivery_custom_city', function () {
+        if ($('#cg_delivery_zone').val() === 'other') {
+            requestCheckoutUpdate();
+        }
+    });
 
-    $(updateDeliveryZoneUi);
+    $(document.body).on('init_checkout updated_checkout', updateDeliveryZoneUi);
+
+    $(function () {
+        updateDeliveryZoneUi();
+    });
 })(jQuery);
