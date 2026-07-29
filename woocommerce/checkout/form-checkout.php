@@ -29,8 +29,6 @@ $sender_keys = [
 ];
 
 $delivery_keys = [
-    'cg_delivery_zone',
-    'cg_delivery_custom_city',
     'cg_delivery_date',
     'cg_delivery_time',
     'cg_card_message',
@@ -81,19 +79,17 @@ $delivery_keys = [
                 </div>
             </div>
             <div class="cg-checkout-fields-grid cg-checkout-delivery-fields">
+                <?php if (function_exists('cg_render_checkout_delivery_selector')) : ?>
+                    <?php cg_render_checkout_delivery_selector(); ?>
+                <?php endif; ?>
+
                 <?php foreach ($delivery_keys as $key) : ?>
                     <?php if (!isset($order_fields[$key])) continue; ?>
                     <?php woocommerce_form_field($key, $order_fields[$key], $checkout->get_value($key)); ?>
-
-                    <?php if ($key === 'cg_delivery_zone') : ?>
-                        <div class="cg-delivery-zone-note" id="cg_delivery_zone_note" aria-live="polite">
-                            Выберите населённый пункт — стоимость доставки сразу появится в заказе.
-                        </div>
-                    <?php endif; ?>
                 <?php endforeach; ?>
 
                 <?php foreach ($order_fields as $key => $field) : ?>
-                    <?php if (in_array($key, array_merge($sender_keys, $delivery_keys, ['cg_anonymous_delivery', 'cg_hide_price', 'order_comments_upload']), true)) continue; ?>
+                    <?php if (in_array($key, array_merge($sender_keys, $delivery_keys, ['cg_delivery_zone', 'cg_delivery_custom_city', 'cg_anonymous_delivery', 'cg_hide_price', 'order_comments_upload']), true)) continue; ?>
                     <?php woocommerce_form_field($key, $field, $checkout->get_value($key)); ?>
                 <?php endforeach; ?>
             </div>
