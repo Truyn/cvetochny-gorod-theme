@@ -3,6 +3,17 @@ document.addEventListener('DOMContentLoaded',()=>{
   const menu=document.querySelector('.main-navigation');
   const searchButton=document.querySelector('.search-toggle');
   const searchPanel=document.querySelector('.header-search');
+  const desktopMenuQuery=window.matchMedia('(min-width: 901px)');
+
+  const closeMobileMenu=()=>{
+    menu?.classList.remove('is-open');
+    menuButton?.classList.remove('is-active');
+    menuButton?.setAttribute('aria-expanded','false');
+  };
+
+  const resetMenuForDesktop=()=>{
+    if(desktopMenuQuery.matches) closeMobileMenu();
+  };
 
   if(menuButton&&menu){
     menuButton.addEventListener('click',()=>{
@@ -14,6 +25,18 @@ document.addEventListener('DOMContentLoaded',()=>{
         searchButton?.setAttribute('aria-expanded','false');
       }
     });
+
+    menu.addEventListener('click',(event)=>{
+      if(!desktopMenuQuery.matches&&event.target.closest('a')) closeMobileMenu();
+    });
+
+    if(typeof desktopMenuQuery.addEventListener==='function'){
+      desktopMenuQuery.addEventListener('change',resetMenuForDesktop);
+    }else if(typeof desktopMenuQuery.addListener==='function'){
+      desktopMenuQuery.addListener(resetMenuForDesktop);
+    }
+
+    resetMenuForDesktop();
   }
 
   if(searchButton&&searchPanel){
@@ -21,12 +44,7 @@ document.addEventListener('DOMContentLoaded',()=>{
       const open=searchPanel.hidden;
       searchPanel.hidden=!open;
       searchButton.setAttribute('aria-expanded',open?'true':'false');
-      if(open){
-        menu?.classList.remove('is-open');
-        menuButton?.classList.remove('is-active');
-        menuButton?.setAttribute('aria-expanded','false');
-        window.setTimeout(()=>searchPanel.querySelector('input[type="search"]')?.focus(),50);
-      }
+      if(open) closeMobileMenu();
     });
 
     document.addEventListener('keydown',(event)=>{
