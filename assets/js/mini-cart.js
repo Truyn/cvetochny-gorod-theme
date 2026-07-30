@@ -79,7 +79,14 @@
     }
 
     if(event.target.closest('[data-cg-cart-decrease]')){
-      const next=Math.max(1,Number(input.value||1)-1);
+      const current=Math.max(1,Number(input?.value||1));
+
+      if(current<=1){
+        request('cg_remove_cart_item',key);
+        return;
+      }
+
+      const next=current-1;
       input.value=next;
       request('cg_update_cart_item',key,next);
       return;
@@ -96,9 +103,16 @@
     const input=event.target.closest('[data-cg-cart-quantity]');
     if(!input) return;
     const item=input.closest('[data-cart-item-key]');
-    const quantity=Math.max(1,Number(input.value||1));
-    input.value=quantity;
-    request('cg_update_cart_item',item.dataset.cartItemKey,quantity);
+    const quantity=Number(input.value||0);
+
+    if(quantity<=0){
+      request('cg_remove_cart_item',item.dataset.cartItemKey);
+      return;
+    }
+
+    const normalized=Math.max(1,quantity);
+    input.value=normalized;
+    request('cg_update_cart_item',item.dataset.cartItemKey,normalized);
   });
 
   document.addEventListener('keydown',(event)=>{
