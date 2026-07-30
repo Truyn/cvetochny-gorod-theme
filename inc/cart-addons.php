@@ -156,7 +156,8 @@ function cg_cart_addon_category_label($product_id) {
     $terms = get_the_terms($product_id, 'product_cat');
     if (is_wp_error($terms) || empty($terms)) return 'К подарку';
 
-    return (string) reset($terms)->name;
+    $term = reset($terms);
+    return $term instanceof WP_Term ? (string) $term->name : 'К подарку';
 }
 
 /** Render the additional-products block before the cart totals. */
@@ -167,7 +168,7 @@ function cg_render_cart_addons() {
         if (current_user_can('manage_woocommerce')) {
             echo '<section class="cg-cart-addons cg-cart-addons--setup" aria-label="Настройка дополнительных товаров">';
             echo '<strong>Дополнительные товары пока не настроены</strong>';
-            echo '<span>В карточке товара откройте «Сопутствующие» и включите «Дополнение к букету» либо назначьте товар как сопутствующий для букета.</span>';
+            echo '<span>В карточке товара откройте вкладку «Связанные товары» и включите «Дополнение к букету» либо назначьте товар сопутствующим для конкретного букета.</span>';
             echo '</section>';
         }
         return;
@@ -202,6 +203,9 @@ function cg_render_cart_addons() {
     echo '</section>';
 }
 add_action('woocommerce_before_cart_collaterals', 'cg_render_cart_addons', 8);
+
+/** Replace the standard WooCommerce cross-sell grid with the custom block. */
+remove_action('woocommerce_cart_collaterals', 'woocommerce_cross_sell_display', 10);
 
 /** Add one selected addition and return refreshed header/mini-cart fragments. */
 function cg_ajax_add_cart_addon() {
