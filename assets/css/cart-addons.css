@@ -1,0 +1,57 @@
+/* Дополнительные товары в корзине — Цветочный город. */
+.cg-cart-addons{grid-column:1/-1;min-width:0;margin:30px 0 8px;padding:28px;border:1px solid #eadfdb;border-radius:26px;background:radial-gradient(circle at 96% 4%,rgba(235,188,181,.24),transparent 27%),linear-gradient(145deg,#fff,#fff9f6);box-shadow:0 18px 46px rgba(67,43,43,.07);box-sizing:border-box}
+.cg-cart-addons__heading{display:flex;align-items:flex-start;justify-content:space-between;gap:28px;margin-bottom:22px}
+.cg-cart-addons__heading>div{min-width:0}
+.cg-cart-addons__eyebrow{display:block;margin-bottom:7px;color:var(--cg-accent-dark,#8b514b);font-size:10px;font-weight:900;letter-spacing:.14em;text-transform:uppercase}
+.cg-cart-addons__heading h2{margin:0 0 9px!important;color:#3d302d;font:600 clamp(28px,3vw,38px)/1.08 Georgia,serif!important}
+.cg-cart-addons__heading p{max-width:700px;margin:0;color:#83716c;font-size:14px;line-height:1.6}
+.cg-cart-addons__hint{flex:0 0 auto;padding:8px 12px;border:1px solid #e2c7c1;border-radius:999px;background:rgba(255,255,255,.82);color:#8b5d57;font-size:10px;font-weight:850;letter-spacing:.04em;white-space:nowrap}
+.cg-cart-addons__grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.cg-cart-addon{position:relative;display:grid;grid-template-columns:98px minmax(0,1fr);min-width:0;overflow:hidden;border:1px solid #eadfdb;border-radius:19px;background:#fff;box-shadow:0 10px 26px rgba(67,43,43,.05);transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease,opacity .18s ease}
+.cg-cart-addon:hover{transform:translateY(-2px);border-color:#dcbab4;box-shadow:0 15px 32px rgba(67,43,43,.09)}
+.cg-cart-addon.is-adding{pointer-events:none;opacity:.65}
+.cg-cart-addon.is-added{border-color:#a8cfb1;background:#f8fff9}
+.cg-cart-addon__image{display:block;min-height:138px;overflow:hidden;background:#f7eeeb}
+.cg-cart-addon__image img{display:block;width:100%;height:100%;object-fit:cover;transition:transform .32s ease}
+.cg-cart-addon:hover .cg-cart-addon__image img{transform:scale(1.035)}
+.cg-cart-addon__body{display:flex;flex-direction:column;min-width:0;padding:16px 15px 14px}
+.cg-cart-addon__category{overflow:hidden;margin-bottom:6px;color:#a08b85;font-size:9px;font-weight:850;letter-spacing:.08em;text-overflow:ellipsis;text-transform:uppercase;white-space:nowrap}
+.cg-cart-addon__name{display:-webkit-box;overflow:hidden;-webkit-box-orient:vertical;-webkit-line-clamp:2;color:#493936;text-decoration:none;font:600 16px/1.25 Georgia,serif}
+.cg-cart-addon__name:hover{color:var(--cg-accent-dark,#8b514b)}
+.cg-cart-addon__footer{display:flex;align-items:flex-end;justify-content:space-between;gap:10px;margin-top:auto;padding-top:13px}
+.cg-cart-addon__price{display:flex;align-items:baseline;gap:5px;min-width:0;color:#40322f;font-size:15px;font-weight:850;white-space:nowrap}
+.cg-cart-addon__price del{font-size:9px;opacity:.46;font-weight:500}
+.cg-cart-addon__price ins{text-decoration:none}
+.cg-cart-addon__button{display:inline-flex;align-items:center;justify-content:center;gap:6px;flex:0 0 auto;min-height:36px;padding:0 11px;border:1px solid #d9afa8;border-radius:999px;background:#fff7f4;color:#854f49;text-decoration:none;font-size:10px;font-weight:900;transition:background .16s ease,color .16s ease,transform .16s ease}
+.cg-cart-addon__button:hover{background:var(--cg-accent,#b7756d);color:#fff;transform:translateY(-1px)}
+.cg-cart-addon__button b{display:grid;place-items:center;width:17px;height:17px;border-radius:50%;background:rgba(183,117,109,.14);font-size:15px;line-height:1}
+.cg-cart-addon__button:hover b{background:rgba(255,255,255,.2)}
+.cg-cart-addon.is-added .cg-cart-addon__button{border-color:#8fbd9a;background:#edf8ef;color:#397147}
+.cg-cart-addon.is-added .cg-cart-addon__button b{background:#d8eedc}
+.cg-cart-addons__status{min-height:0;margin-top:0;color:#8e4b47;font-size:12px;font-weight:750}
+.cg-cart-addons__status:not(:empty){margin-top:14px;padding:11px 13px;border:1px solid #eccdc8;border-radius:12px;background:#fff4f1}
+.cg-cart-addons--setup{display:flex;align-items:flex-start;gap:12px;padding:18px 20px;border-style:dashed;border-radius:18px;background:#fffaf7;color:#79635d}
+.cg-cart-addons--setup strong{flex:0 0 auto;color:#704a44;font-size:13px}
+.cg-cart-addons--setup span{font-size:12px;line-height:1.55}
+
+@media(max-width:1080px){
+    .cg-cart-addons__grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:760px){
+    .cg-cart-addons{margin-top:22px;padding:21px 17px;border-radius:21px}
+    .cg-cart-addons__heading{display:grid;gap:13px;margin-bottom:18px}
+    .cg-cart-addons__hint{justify-self:start}
+    .cg-cart-addons__grid{grid-template-columns:1fr}
+    .cg-cart-addon{grid-template-columns:94px minmax(0,1fr)}
+    .cg-cart-addon__image{min-height:126px}
+    .cg-cart-addons--setup{display:grid}
+}
+@media(max-width:390px){
+    .cg-cart-addon{grid-template-columns:82px minmax(0,1fr)}
+    .cg-cart-addon__body{padding:13px 12px}
+    .cg-cart-addon__footer{align-items:flex-start;flex-direction:column}
+    .cg-cart-addon__button{width:100%;box-sizing:border-box}
+}
+@media(prefers-reduced-motion:reduce){
+    .cg-cart-addon,.cg-cart-addon__image img,.cg-cart-addon__button{transition:none}
+}
