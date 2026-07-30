@@ -80,7 +80,7 @@
 .woocommerce-cart .cart_totals table.shop_table td{text-align:right;color:#3f312e;font-weight:800}
 .woocommerce-cart .cart_totals .order-total th,.woocommerce-cart .cart_totals .order-total td{padding-top:18px!important;font-size:19px!important;color:#352b29!important}
 .woocommerce-cart .cart_totals .woocommerce-shipping-methods{margin:0!important;padding:0!important;list-style:none!important}
-.woocommerce-cart .cart_totals .woocommerce-shipping-destination,.woocommerce-cart .cart_totals .shipping-calculator-button{font-size:12px;color:#85736e}
+.woocommerce-cart .cart_totals .woocommerce-shipping-destination,.woocommerce-cart .cart_totals .shipping-calculator-button,.woocommerce-cart .cart_totals .shipping-calculator-form{display:none!important}
 .woocommerce-cart .wc-proceed-to-checkout{padding:0!important}
 .woocommerce-cart .cg-cart-checkout-note{display:grid;gap:4px;margin:18px 0 12px;padding:13px 14px;border:1px solid #e4d7d2;border-radius:13px;background:#fff8f5;color:#6c554f}
 .woocommerce-cart .cg-cart-checkout-note.is-priced{border-color:#d3e4d8;background:#f3faf5;color:#3f654d}
