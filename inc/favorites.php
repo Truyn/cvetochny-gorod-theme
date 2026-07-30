@@ -7,16 +7,31 @@
 
 if (!defined('ABSPATH')) exit;
 
-/** Public URL used by the header and empty states. */
+/**
+ * Public URL used by the header and empty states.
+ *
+ * A query-string URL works even when Apache rewrite rules or WordPress pretty
+ * permalinks are unavailable. The friendly /izbrannoe/ route remains registered
+ * as an optional alias.
+ */
 function cg_favorites_url() {
-    return home_url('/izbrannoe/');
+    return add_query_arg('cg_favorites_page', '1', home_url('/'));
 }
 
-/** Register a stable virtual page, so no manual WordPress page is required. */
+/** Whether the current request is the favorites screen. */
+function cg_is_favorites_page() {
+    if ((int) get_query_var('cg_favorites_page') === 1) {
+        return true;
+    }
+
+    return isset($_GET['cg_favorites_page']) && absint(wp_unslash($_GET['cg_favorites_page'])) === 1;
+}
+
+/** Register a friendly alias when pretty permalinks are available. */
 function cg_register_favorites_route() {
     add_rewrite_rule('^izbrannoe/?$', 'index.php?cg_favorites_page=1', 'top');
 
-    $route_version = '1';
+    $route_version = '2';
     if (get_option('cg_favorites_route_version') !== $route_version) {
         flush_rewrite_rules(false);
         update_option('cg_favorites_route_version', $route_version, false);
@@ -29,9 +44,21 @@ add_filter('query_vars', function($vars) {
     return $vars;
 });
 
-/** Use the dedicated theme template for /izbrannoe/. */
+/** Keep WordPress from redirecting the query-string fallback to the homepage. */
+add_filter('redirect_canonical', function($redirect_url) {
+    return cg_is_favorites_page() ? false : $redirect_url;
+});
+
+add_action('template_redirect', function() {
+    if (!cg_is_favorites_page()) return;
+
+    status_header(200);
+    nocache_headers();
+});
+
+/** Use the dedicated theme template for both supported favorites URLs. */
 function cg_favorites_template($template) {
-    if ((int) get_query_var('cg_favorites_page') !== 1) return $template;
+    if (!cg_is_favorites_page()) return $template;
 
     $favorites_template = get_template_directory() . '/page-templates/favorites.php';
     return file_exists($favorites_template) ? $favorites_template : $template;
@@ -39,14 +66,14 @@ function cg_favorites_template($template) {
 add_filter('template_include', 'cg_favorites_template', 50);
 
 add_filter('pre_get_document_title', function($title) {
-    if ((int) get_query_var('cg_favorites_page') === 1) {
+    if (cg_is_favorites_page()) {
         return 'Избранное — ' . get_bloginfo('name');
     }
     return $title;
 });
 
 add_filter('body_class', function($classes) {
-    if ((int) get_query_var('cg_favorites_page') === 1) {
+    if (cg_is_favorites_page()) {
         $classes[] = 'cg-favorites-page';
     }
     return $classes;
