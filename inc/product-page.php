@@ -8,6 +8,7 @@
 if (!defined('ABSPATH')) exit;
 
 require_once get_template_directory() . '/inc/cart-checkout.php';
+require_once get_template_directory() . '/inc/favorites.php';
 
 /** Add a compact product status row above the title. */
 function cg_single_product_status() {
