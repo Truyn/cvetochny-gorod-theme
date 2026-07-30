@@ -58,7 +58,7 @@ function cg_render_mini_cart_content() {
         echo '<div class="cg-mini-cart__price">' . wp_kses_post($price) . '</div>';
         echo '<div class="cg-mini-cart__controls">';
         echo '<button type="button" data-cg-cart-decrease aria-label="Уменьшить количество">−</button>';
-        echo '<input type="number" min="1" step="1" value="' . esc_attr($quantity) . '" inputmode="numeric" data-cg-cart-quantity aria-label="Количество">';
+        echo '<input type="number" min="0" step="1" value="' . esc_attr($quantity) . '" inputmode="numeric" data-cg-cart-quantity aria-label="Количество">';
         echo '<button type="button" data-cg-cart-increase aria-label="Увеличить количество">+</button>';
         echo '</div>';
         echo '</div>';
@@ -122,14 +122,22 @@ function cg_mini_cart_ajax_response() {
     ]);
 }
 
-/** Update item quantity through AJAX. */
+/** Update item quantity through AJAX. Quantity zero removes the item. */
 function cg_ajax_update_cart_item() {
     check_ajax_referer('cg_mini_cart', 'nonce');
     $key = isset($_POST['cart_item_key']) ? wc_clean(wp_unslash($_POST['cart_item_key'])) : '';
-    $quantity = isset($_POST['quantity']) ? max(1, absint($_POST['quantity'])) : 1;
+    $quantity = isset($_POST['quantity']) ? absint($_POST['quantity']) : 1;
 
     if (!$key || !WC()->cart->get_cart_item($key)) {
         wp_send_json_error(['message' => 'Товар не найден в корзине.'], 404);
+    }
+
+    if ($quantity < 1) {
+        if (!WC()->cart->remove_cart_item($key)) {
+            wp_send_json_error(['message' => 'Не удалось удалить товар.'], 400);
+        }
+
+        cg_mini_cart_ajax_response();
     }
 
     WC()->cart->set_quantity($key, $quantity, true);
