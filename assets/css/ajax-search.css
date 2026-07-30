@@ -1,0 +1,51 @@
+/* AJAX-поиск товаров в шапке. */
+.cg-live-search{position:relative;width:min(100%,620px);margin:0 auto}
+.cg-live-search .cg-product-search{width:100%;max-width:none;margin:0}
+.cg-live-search__panel{position:absolute;z-index:120;top:calc(100% + 10px);left:0;right:0;overflow:hidden;border:1px solid #eadfdb;border-radius:20px;background:#fff;box-shadow:0 22px 55px rgba(58,39,38,.16)}
+.cg-live-search__panel[hidden]{display:none!important}
+.cg-live-search__items{display:grid;max-height:min(62vh,520px);overflow:auto;overscroll-behavior:contain}
+.cg-live-search__item{display:grid;grid-template-columns:72px minmax(0,1fr) auto;align-items:center;gap:14px;min-width:0;padding:12px 16px;border-bottom:1px solid #f0e6e2;color:#433431;text-decoration:none;transition:background .16s ease,transform .16s ease}
+.cg-live-search__item:last-child{border-bottom:0}
+.cg-live-search__item:hover,.cg-live-search__item.is-active{background:#fff6f2;transform:translateX(2px)}
+.cg-live-search__image{display:block;width:72px;height:72px;overflow:hidden;border-radius:14px;background:#f8efec}
+.cg-live-search__image img{display:block;width:100%;height:100%;object-fit:cover}
+.cg-live-search__content{display:grid;gap:7px;min-width:0}
+.cg-live-search__content strong{display:-webkit-box;overflow:hidden;-webkit-box-orient:vertical;-webkit-line-clamp:2;color:#443532;font:600 17px/1.25 Georgia,serif}
+.cg-live-search__meta{display:flex;align-items:center;gap:8px;min-width:0;color:#96837e;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.04em}
+.cg-live-search__stock{flex:0 0 auto;padding:4px 7px;border-radius:999px;background:#eef8f0;color:#3b754b}
+.cg-live-search__stock.is-out-of-stock{background:#fff0ed;color:#97524d}
+.cg-live-search__category{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-transform:none;letter-spacing:0;font-weight:650}
+.cg-live-search__category a{color:inherit;pointer-events:none;text-decoration:none}
+.cg-live-search__price{display:flex;align-items:baseline;gap:5px;justify-content:flex-end;white-space:nowrap;color:#3e302d;font-size:15px;font-weight:850}
+.cg-live-search__price del{font-size:10px;opacity:.45;font-weight:500}
+.cg-live-search__price ins{text-decoration:none}
+.cg-live-search__all{display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:52px;padding:0 18px;border-top:1px solid #eadfdb;background:linear-gradient(135deg,#fff9f6,#fff3ef);color:#7f4f49;text-decoration:none;font-size:13px;font-weight:850}
+.cg-live-search__all:hover{background:#ffefea;color:#643d38}
+.cg-live-search__all span{font-size:18px}
+.cg-live-search__status{display:flex;align-items:center;justify-content:center;min-height:112px;padding:22px;text-align:center;color:#7d6a65;font-size:13px;font-weight:750}
+.cg-live-search__status.is-loading:before{content:"";width:20px;height:20px;margin-right:10px;border:2px solid #ead9d4;border-top-color:var(--cg-accent,#b7756d);border-radius:50%;animation:cg-live-search-spin .7s linear infinite}
+.cg-live-search__status.is-empty{color:#8b7772;background:#fffaf8}
+.cg-live-search__status.is-error{color:#9a4e48;background:#fff5f3}
+@keyframes cg-live-search-spin{to{transform:rotate(360deg)}}
+
+@media(max-width:760px){
+    .header-search .container{width:calc(100% - 24px)}
+    .cg-live-search{width:100%}
+    .cg-live-search__panel{top:calc(100% + 8px);border-radius:17px}
+    .cg-live-search__item{grid-template-columns:60px minmax(0,1fr);gap:11px;padding:11px 12px}
+    .cg-live-search__image{width:60px;height:60px;border-radius:12px}
+    .cg-live-search__price{grid-column:2;justify-content:flex-start;margin-top:-3px;font-size:14px}
+    .cg-live-search__content strong{font-size:15px}
+    .cg-live-search__category{display:none}
+}
+
+@media(max-width:430px){
+    .cg-live-search__meta{font-size:9px}
+    .cg-live-search__item{grid-template-columns:54px minmax(0,1fr)}
+    .cg-live-search__image{width:54px;height:54px}
+}
+
+@media(prefers-reduced-motion:reduce){
+    .cg-live-search__item{transition:none}
+    .cg-live-search__status.is-loading:before{animation:none}
+}
