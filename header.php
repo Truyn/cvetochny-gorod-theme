@@ -63,9 +63,9 @@
                 <button class="icon-button search-toggle" type="button" aria-controls="header-search" aria-expanded="false" aria-label="Открыть поиск">
                     <svg class="cg-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.7"/><path d="m15.8 15.8 4.2 4.2"/></svg>
                 </button>
-                <a class="icon-button cg-favorites-link" href="<?php echo esc_url(home_url('/izbrannoe/')); ?>" aria-label="Избранное">
+                <a class="icon-button cg-favorites-link" href="<?php echo esc_url(function_exists('cg_favorites_url') ? cg_favorites_url() : home_url('/izbrannoe/')); ?>" aria-label="Избранное">
                     <svg class="cg-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.3 5.5a5 5 0 0 0-7.1 0L12 6.7l-1.2-1.2a5 5 0 0 0-7.1 7.1L12 20.7l8.3-8.1a5 5 0 0 0 0-7.1Z"/></svg>
-                    <span class="cg-favorites-count" data-cg-favorites-count>0</span>
+                    <span class="cg-favorites-count" data-cg-favorites-count hidden>0</span>
                 </a>
                 <button class="icon-button" type="button" data-cg-mini-cart-open aria-controls="cg-mini-cart" aria-label="Открыть корзину">
                     <svg class="cg-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5.5 8.5h13l-.7 11h-11.6l-.7-11Z"/><path d="M9 8.5V7a3 3 0 0 1 6 0v1.5"/></svg>
