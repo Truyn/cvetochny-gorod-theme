@@ -46,8 +46,9 @@
 
     function syncCounter() {
         document.querySelectorAll('[data-cg-favorites-count]').forEach(function (counter) {
-            counter.textContent = String(favorites.length);
-            counter.hidden = favorites.length === 0;
+            var value = String(favorites.length);
+            if (counter.textContent !== value) counter.textContent = value;
+            if (counter.hidden !== (favorites.length === 0)) counter.hidden = favorites.length === 0;
         });
     }
 
@@ -63,9 +64,11 @@
         var text = active ? removeText : addText;
 
         button.classList.toggle('is-active', active);
-        button.setAttribute('aria-pressed', active ? 'true' : 'false');
-        button.setAttribute('aria-label', text);
-        if (label) label.textContent = text;
+        if (button.getAttribute('aria-pressed') !== (active ? 'true' : 'false')) {
+            button.setAttribute('aria-pressed', active ? 'true' : 'false');
+        }
+        if (button.getAttribute('aria-label') !== text) button.setAttribute('aria-label', text);
+        if (label && label.textContent !== text) label.textContent = text;
     }
 
     function syncInterface(root) {
@@ -73,7 +76,8 @@
         (root || document).querySelectorAll('[data-cg-favorite]').forEach(syncButton);
 
         var summary = document.querySelector('[data-cg-favorites-summary]');
-        if (summary) summary.textContent = pluralSummary(favorites.length);
+        var summaryText = pluralSummary(favorites.length);
+        if (summary && summary.textContent !== summaryText) summary.textContent = summaryText;
     }
 
     function showEmptyState() {
@@ -198,9 +202,9 @@
         if (!button) return;
 
         event.preventDefault();
-        event.stopPropagation();
+        event.stopImmediatePropagation();
         toggleFavorite(button.getAttribute('data-product-id'));
-    });
+    }, true);
 
     window.addEventListener('storage', function (event) {
         if (event.key !== storageKey) return;
