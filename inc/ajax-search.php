@@ -151,7 +151,8 @@ function cg_ajax_search_product_item($product, $index) {
     if (!$product instanceof WC_Product) return;
 
     $product_id = $product->get_id();
-    $categories = wc_get_product_category_list($product_id, ', ');
+    $category_names = wp_get_post_terms($product_id, 'product_cat', ['fields' => 'names']);
+    $categories = is_wp_error($category_names) ? '' : implode(', ', array_slice($category_names, 0, 2));
     $stock_text = $product->is_in_stock() ? 'В наличии' : 'Нет в наличии';
     $stock_class = $product->is_in_stock() ? 'is-in-stock' : 'is-out-of-stock';
     ?>
@@ -160,7 +161,7 @@ function cg_ajax_search_product_item($product, $index) {
         <span class="cg-live-search__content">
             <span class="cg-live-search__meta">
                 <span class="cg-live-search__stock <?php echo esc_attr($stock_class); ?>"><?php echo esc_html($stock_text); ?></span>
-                <?php if ($categories): ?><span class="cg-live-search__category"><?php echo wp_kses_post($categories); ?></span><?php endif; ?>
+                <?php if ($categories): ?><span class="cg-live-search__category"><?php echo esc_html($categories); ?></span><?php endif; ?>
             </span>
             <strong><?php echo esc_html($product->get_name()); ?></strong>
         </span>
