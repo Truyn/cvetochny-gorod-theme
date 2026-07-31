@@ -1,0 +1,101 @@
+/* Targeted storefront fixes after cart and single-product styles. */
+
+/* The settlement is selected only in the custom card above the totals. */
+.woocommerce-cart .cart_totals ul#shipping_method,
+.woocommerce-cart .cart_totals .woocommerce-shipping-methods{
+    margin:0!important;
+    padding:0!important;
+    list-style:none!important;
+}
+.woocommerce-cart .cart_totals ul#shipping_method li,
+.woocommerce-cart .cart_totals .woocommerce-shipping-methods li{
+    margin:0!important;
+    padding:0!important;
+    list-style:none!important;
+}
+.woocommerce-cart .cart_totals ul#shipping_method li:not(:first-child),
+.woocommerce-cart .cart_totals .woocommerce-shipping-methods li:not(:first-child){
+    display:none!important;
+}
+.woocommerce-cart .cart_totals ul#shipping_method input,
+.woocommerce-cart .cart_totals .woocommerce-shipping-methods input{
+    display:none!important;
+}
+.woocommerce-cart .cart_totals ul#shipping_method label,
+.woocommerce-cart .cart_totals .woocommerce-shipping-methods label{
+    display:block!important;
+    margin:0!important;
+    color:#3f312e!important;
+    font-weight:800!important;
+    line-height:1.45!important;
+    cursor:default!important;
+}
+
+/* Promo-code controls stay aligned and readable on narrow screens. */
+.woocommerce-cart .woocommerce-cart-form .coupon{
+    min-width:0!important;
+    box-sizing:border-box!important;
+}
+.woocommerce-cart .woocommerce-cart-form .coupon .input-text{
+    min-width:0!important;
+    box-sizing:border-box!important;
+}
+.woocommerce-cart .woocommerce-cart-form .coupon button[name="apply_coupon"]{
+    display:inline-flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    white-space:nowrap!important;
+    text-align:center!important;
+}
+html.cg-cart-js .woocommerce-cart .woocommerce-cart-form button[name="update_cart"]{
+    display:none!important;
+}
+
+/* WooCommerce FlexSlider needs slides sized against the viewport, not its wide track. */
+.single-product .woocommerce-product-gallery .flex-viewport .woocommerce-product-gallery__wrapper{
+    display:flex!important;
+    width:100%!important;
+}
+.single-product .woocommerce-product-gallery .flex-viewport .woocommerce-product-gallery__image{
+    flex:0 0 100%!important;
+    min-width:100%!important;
+    width:100%!important;
+    float:none!important;
+}
+
+/* Remove the default WooCommerce tab timeline, bullets and protruding dots. */
+.single-product .woocommerce-tabs ul.tabs,
+.single-product .woocommerce-tabs ul.tabs li{
+    list-style:none!important;
+}
+.single-product .woocommerce-tabs ul.tabs::before,
+.single-product .woocommerce-tabs ul.tabs::after,
+.single-product .woocommerce-tabs ul.tabs li::before,
+.single-product .woocommerce-tabs ul.tabs li::after{
+    content:none!important;
+    display:none!important;
+    width:0!important;
+    height:0!important;
+    border:0!important;
+    box-shadow:none!important;
+}
+
+@media(max-width:760px){
+    .woocommerce-cart .woocommerce-cart-form .coupon{
+        display:grid!important;
+        grid-template-columns:minmax(0,1fr)!important;
+        gap:10px!important;
+        width:100%!important;
+        float:none!important;
+    }
+    .woocommerce-cart .woocommerce-cart-form .coupon .input-text,
+    .woocommerce-cart .woocommerce-cart-form .coupon button[name="apply_coupon"]{
+        width:100%!important;
+        min-height:50px!important;
+        margin:0!important;
+    }
+    .single-product .woocommerce-tabs ul.tabs{
+        margin-left:0!important;
+        padding-left:8px!important;
+    }
+}
