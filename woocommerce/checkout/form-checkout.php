@@ -34,6 +34,17 @@ $delivery_keys = [
     'cg_card_message',
     'order_comments',
 ];
+
+$recipient_identity_keys = [
+    'billing_first_name',
+    'billing_last_name',
+    'billing_phone',
+];
+
+$recipient_address_keys = [
+    'billing_address_1',
+    'billing_address_2',
+];
 ?>
 
 <form name="checkout" method="post" class="checkout woocommerce-checkout cg-classic-checkout" action="<?php echo esc_url(wc_get_checkout_url()); ?>" enctype="multipart/form-data" aria-label="Оформление заказа">
@@ -42,12 +53,29 @@ $delivery_keys = [
             <div class="cg-checkout-card__heading">
                 <span>1</span>
                 <div>
-                    <small>Кому доставить букет</small>
-                    <h2>Данные получателя</h2>
+                    <small>Кому и куда доставить букет</small>
+                    <h2>Получатель и адрес доставки</h2>
                 </div>
             </div>
             <div id="customer_details" class="cg-checkout-fields-grid">
+                <?php foreach ($recipient_identity_keys as $key) : ?>
+                    <?php if (isset($billing_fields[$key])) : ?>
+                        <?php woocommerce_form_field($key, $billing_fields[$key], $checkout->get_value($key)); ?>
+                    <?php endif; ?>
+                <?php endforeach; ?>
+
+                <?php if (function_exists('cg_render_checkout_delivery_selector')) : ?>
+                    <?php cg_render_checkout_delivery_selector(); ?>
+                <?php endif; ?>
+
+                <?php foreach ($recipient_address_keys as $key) : ?>
+                    <?php if (isset($billing_fields[$key])) : ?>
+                        <?php woocommerce_form_field($key, $billing_fields[$key], $checkout->get_value($key)); ?>
+                    <?php endif; ?>
+                <?php endforeach; ?>
+
                 <?php foreach ($billing_fields as $key => $field) : ?>
+                    <?php if (in_array($key, array_merge($recipient_identity_keys, $recipient_address_keys), true)) continue; ?>
                     <?php woocommerce_form_field($key, $field, $checkout->get_value($key)); ?>
                 <?php endforeach; ?>
             </div>
@@ -74,15 +102,11 @@ $delivery_keys = [
             <div class="cg-checkout-card__heading">
                 <span>3</span>
                 <div>
-                    <small>Населённый пункт, дата и пожелания</small>
-                    <h2>Доставка и пожелания</h2>
+                    <small>Когда доставить и что учесть</small>
+                    <h2>Дата и пожелания</h2>
                 </div>
             </div>
             <div class="cg-checkout-fields-grid cg-checkout-delivery-fields">
-                <?php if (function_exists('cg_render_checkout_delivery_selector')) : ?>
-                    <?php cg_render_checkout_delivery_selector(); ?>
-                <?php endif; ?>
-
                 <?php foreach ($delivery_keys as $key) : ?>
                     <?php if (!isset($order_fields[$key])) continue; ?>
                     <?php woocommerce_form_field($key, $order_fields[$key], $checkout->get_value($key)); ?>
@@ -115,4 +139,4 @@ $delivery_keys = [
     </aside>
 </form>
 
-<?php do_action('woocommerce_after_checkout_form', $checkout); ?>
+<?php do_action('woocommerce_after_checkout_form', $checkout);

@@ -101,22 +101,64 @@ function cg_storefront_promo_code_wording($translation, $text, $domain) {
 }
 add_filter('gettext_woocommerce', 'cg_storefront_promo_code_wording', 20, 3);
 
-/** Load late CSS overrides after the cart and product styles. */
-function cg_storefront_visual_fixes_assets() {
-    if (!class_exists('WooCommerce') || (!is_cart() && !is_product())) return;
+/** The shop does not collect or display product reviews. */
+function cg_storefront_remove_product_reviews_tab($tabs) {
+    unset($tabs['reviews']);
+    return $tabs;
+}
+add_filter('woocommerce_product_tabs', 'cg_storefront_remove_product_reviews_tab', 100);
+add_filter('woocommerce_product_get_reviews_allowed', '__return_false', 100);
 
-    $path = get_template_directory() . '/assets/css/storefront-visual-fixes.css';
-    $version = file_exists($path) ? filemtime($path) : wp_get_theme()->get('Version');
+function cg_storefront_close_product_comments($open, $post_id) {
+    return get_post_type($post_id) === 'product' ? false : $open;
+}
+add_filter('comments_open', 'cg_storefront_close_product_comments', 100, 2);
+
+/** Remove rating output together with the disabled review system. */
+function cg_storefront_remove_product_rating_ui() {
+    remove_action('woocommerce_single_product_summary', 'woocommerce_template_single_rating', 10);
+    remove_action('woocommerce_after_shop_loop_item_title', 'woocommerce_template_loop_rating', 5);
+}
+add_action('wp', 'cg_storefront_remove_product_rating_ui', 20);
+
+/** Load late CSS overrides after the cart, checkout and product styles. */
+function cg_storefront_visual_fixes_assets() {
+    if (!class_exists('WooCommerce')) return;
+
+    $is_checkout_screen = is_checkout() || is_page_template('page-templates/premium-checkout.php');
+    if (!is_cart() && !is_product() && !$is_checkout_screen) return;
+
+    $style_path = get_template_directory() . '/assets/css/storefront-visual-fixes.css';
+    $style_version = file_exists($style_path) ? filemtime($style_path) : wp_get_theme()->get('Version');
     $dependencies = ['cg-woocommerce'];
 
     if (is_cart()) $dependencies[] = 'cg-cart-premium';
     if (is_product()) $dependencies[] = 'cg-product-conversion-premium';
+    if ($is_checkout_screen) $dependencies[] = 'cg-classic-checkout-template';
 
     wp_enqueue_style(
         'cg-storefront-visual-fixes',
         get_template_directory_uri() . '/assets/css/storefront-visual-fixes.css',
         $dependencies,
-        $version
+        $style_version
     );
+
+    if (is_product()) {
+        $script_path = get_template_directory() . '/assets/js/storefront-visual-fixes.js';
+        $script_version = file_exists($script_path) ? filemtime($script_path) : wp_get_theme()->get('Version');
+        $script_dependencies = ['jquery'];
+
+        if (wp_script_is('wc-single-product', 'registered')) {
+            $script_dependencies[] = 'wc-single-product';
+        }
+
+        wp_enqueue_script(
+            'cg-storefront-visual-fixes',
+            get_template_directory_uri() . '/assets/js/storefront-visual-fixes.js',
+            $script_dependencies,
+            $script_version,
+            true
+        );
+    }
 }
 add_action('wp_enqueue_scripts', 'cg_storefront_visual_fixes_assets', 45);
