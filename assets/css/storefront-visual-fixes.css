@@ -31,29 +31,32 @@
     cursor:default!important;
 }
 
-/* Keep the cart in one predictable two-column composition. Dense placement
- * lets the totals occupy the right column beside both the items and add-ons. */
+/* A real two-column cart composition: the totals span the height of both the
+ * cart table and the add-on block, so no empty horizontal band appears. */
 .woocommerce-cart .woocommerce{
-    grid-auto-flow:row dense!important;
+    grid-template-columns:minmax(0,1fr) minmax(340px,410px)!important;
+    grid-template-areas:
+        "notices notices"
+        "intro intro"
+        "form totals"
+        "addons totals"
+        "reassurance reassurance"!important;
+    grid-auto-flow:row!important;
+    align-items:start!important;
 }
-.woocommerce-cart .woocommerce-cart-form{
-    grid-column:1!important;
-    align-self:start!important;
-}
-.woocommerce-cart .cg-cart-addons{
-    grid-column:1!important;
+.woocommerce-cart .woocommerce>.woocommerce-notices-wrapper{grid-area:notices!important}
+.woocommerce-cart .woocommerce>.cg-cart-intro{grid-area:intro!important}
+.woocommerce-cart .woocommerce>.woocommerce-cart-form{grid-area:form!important;align-self:start!important}
+.woocommerce-cart .woocommerce>.cg-cart-addons{
+    grid-area:addons!important;
     width:100%!important;
-    margin:0 0 8px!important;
+    margin:0!important;
     align-self:start!important;
     box-sizing:border-box!important;
 }
-.woocommerce-cart .cart-collaterals{
-    grid-column:2!important;
-    align-self:start!important;
-}
-.woocommerce-cart .cg-order-reassurance{
-    grid-column:1/-1!important;
-}
+.woocommerce-cart .woocommerce>.cart-collaterals{grid-area:totals!important;align-self:stretch!important}
+.woocommerce-cart .woocommerce>.cg-order-reassurance{grid-area:reassurance!important}
+.woocommerce-cart .cart-collaterals .cart_totals{width:100%!important}
 
 /* Additional product cards use a square, contained image instead of stretching
  * different source proportions into a narrow rectangle. */
@@ -72,6 +75,7 @@
     padding:10px!important;
     background:#fffaf8!important;
     box-sizing:border-box!important;
+    overflow:hidden!important;
 }
 .woocommerce-cart .cg-cart-addon__image img{
     display:block!important;
@@ -103,13 +107,35 @@ html.cg-cart-js .woocommerce-cart .woocommerce-cart-form button[name="update_car
     display:none!important;
 }
 
-/* Native FlexSlider owns slide widths and transforms. The previous forced 100%
- * track width prevented the active thumbnail from moving to another image. */
+/* The theme now uses one predictable manual product image stage. The first
+ * slide is the visible stage; JavaScript replaces its contents from the chosen
+ * thumbnail, bypassing conflicting FlexSlider transforms. */
 .single-product .woocommerce-product-gallery .flex-control-thumbs img{
     cursor:pointer!important;
 }
-.single-product .woocommerce-product-gallery.cg-gallery-static-fallback .flex-viewport{
+.single-product .woocommerce-product-gallery.cg-gallery-manual .flex-viewport{
     overflow:hidden!important;
+}
+.single-product .woocommerce-product-gallery.cg-gallery-manual .woocommerce-product-gallery__wrapper{
+    display:block!important;
+    width:100%!important;
+    transform:none!important;
+    margin-left:0!important;
+}
+.single-product .woocommerce-product-gallery.cg-gallery-manual .woocommerce-product-gallery__wrapper>.woocommerce-product-gallery__image{
+    display:none!important;
+    width:100%!important;
+    min-width:100%!important;
+    float:none!important;
+    margin:0!important;
+}
+.single-product .woocommerce-product-gallery.cg-gallery-manual .woocommerce-product-gallery__wrapper>.woocommerce-product-gallery__image:first-child{
+    display:block!important;
+}
+.single-product .woocommerce-product-gallery.cg-gallery-manual .woocommerce-product-gallery__wrapper>.woocommerce-product-gallery__image:first-child>a,
+.single-product .woocommerce-product-gallery.cg-gallery-manual .woocommerce-product-gallery__wrapper>.woocommerce-product-gallery__image:first-child img{
+    display:block!important;
+    width:100%!important;
 }
 .single-product #tab-title-reviews,
 .single-product #tab-reviews{
@@ -133,10 +159,53 @@ html.cg-cart-js .woocommerce-cart .woocommerce-cart-form button[name="update_car
     box-shadow:none!important;
 }
 
-/* Settlement and street address now form one recipient-address block. */
+/* Recipient, settlement, address, date and wishes form one numbered step, but
+ * remain visually separated into two calm internal sections. */
+.woocommerce-checkout .cg-checkout-card--combined{
+    padding-bottom:30px!important;
+}
+.woocommerce-checkout .cg-checkout-combined{
+    display:grid;
+    gap:18px;
+}
+.woocommerce-checkout .cg-checkout-combined__section{
+    min-width:0;
+    padding:21px;
+    border:1px solid #eadbd7;
+    border-radius:18px;
+    background:#fffdfc;
+}
+.woocommerce-checkout .cg-checkout-combined__section--details{
+    background:linear-gradient(135deg,#fff9f7,#fff);
+}
+.woocommerce-checkout .cg-checkout-subheading{
+    margin:0 0 18px;
+    padding:0 0 15px;
+    border-bottom:1px solid #eee2de;
+}
+.woocommerce-checkout .cg-checkout-subheading>span{
+    display:block;
+    margin-bottom:5px;
+    color:var(--cg-accent-dark,#8b514b);
+    font-size:10px;
+    font-weight:900;
+    letter-spacing:.13em;
+    text-transform:uppercase;
+}
+.woocommerce-checkout .cg-checkout-subheading h3{
+    margin:0!important;
+    font:600 22px/1.18 Georgia,serif!important;
+    color:#3e302d!important;
+}
+.woocommerce-checkout .cg-checkout-subheading p{
+    margin:7px 0 0;
+    color:#83716c;
+    font-size:12px;
+    line-height:1.55;
+}
 .woocommerce-checkout .cg-checkout-card--recipient .cg-checkout-delivery-selector{
     grid-column:1/-1!important;
-    margin:5px 0 2px!important;
+    margin:4px 0 2px!important;
     padding:18px!important;
     border-color:#eadbd7!important;
     background:linear-gradient(135deg,#fff8f5,#fffdfc)!important;
@@ -146,17 +215,26 @@ html.cg-cart-js .woocommerce-cart .woocommerce-cart-form button[name="update_car
     font-size:20px!important;
 }
 .woocommerce-checkout .cg-checkout-card--recipient #billing_address_1_field,
-.woocommerce-checkout .cg-checkout-card--recipient #billing_address_2_field{
+.woocommerce-checkout .cg-checkout-card--recipient #billing_address_2_field,
+.woocommerce-checkout .cg-checkout-combined__section--details #cg_card_message_field,
+.woocommerce-checkout .cg-checkout-combined__section--details #order_comments_field{
     grid-column:1/-1!important;
 }
 
 @media(max-width:980px){
     .woocommerce-cart .woocommerce{
-        grid-auto-flow:row!important;
+        grid-template-columns:1fr!important;
+        grid-template-areas:
+            "notices"
+            "intro"
+            "form"
+            "addons"
+            "totals"
+            "reassurance"!important;
     }
-    .woocommerce-cart .woocommerce-cart-form,
-    .woocommerce-cart .cg-cart-addons,
-    .woocommerce-cart .cart-collaterals{
+    .woocommerce-cart .woocommerce>.woocommerce-cart-form,
+    .woocommerce-cart .woocommerce>.cg-cart-addons,
+    .woocommerce-cart .woocommerce>.cart-collaterals{
         grid-column:1!important;
     }
 }
@@ -185,6 +263,10 @@ html.cg-cart-js .woocommerce-cart .woocommerce-cart-form button[name="update_car
         margin-left:0!important;
         padding-left:8px!important;
     }
+    .woocommerce-checkout .cg-checkout-combined__section{
+        padding:17px;
+        border-radius:16px;
+    }
 }
 
 @media(max-width:420px){
@@ -196,5 +278,8 @@ html.cg-cart-js .woocommerce-cart .woocommerce-cart-form button[name="update_car
     }
     .woocommerce-checkout .cg-checkout-card--recipient .cg-checkout-delivery-selector{
         padding:15px!important;
+    }
+    .woocommerce-checkout .cg-checkout-subheading h3{
+        font-size:20px!important;
     }
 }
