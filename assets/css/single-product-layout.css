@@ -28,9 +28,12 @@
 .single-product .cg-single-product__gallery .woocommerce-product-gallery__wrapper,
 .single-product .cg-product-detail__gallery .woocommerce-product-gallery__wrapper{margin:0!important;border-radius:22px;overflow:hidden;background:#f7f1ef}
 
+/* Do not force a width on the slide itself: WooCommerce FlexSlider writes the
+ * correct pixel width inline. Only the anchor should fill the active slide. */
 .single-product .cg-single-product__gallery .woocommerce-product-gallery__image,
+.single-product .cg-product-detail__gallery .woocommerce-product-gallery__image{display:block!important;margin:0!important;padding:0!important}
+
 .single-product .cg-single-product__gallery .woocommerce-product-gallery__image>a,
-.single-product .cg-product-detail__gallery .woocommerce-product-gallery__image,
 .single-product .cg-product-detail__gallery .woocommerce-product-gallery__image>a{display:block!important;width:100%!important;margin:0!important;padding:0!important}
 
 .single-product .cg-single-product__gallery .woocommerce-product-gallery__image img,
