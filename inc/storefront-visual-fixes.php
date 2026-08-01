@@ -114,6 +114,13 @@ function cg_storefront_close_product_comments($open, $post_id) {
 }
 add_filter('comments_open', 'cg_storefront_close_product_comments', 100, 2);
 
+/** Remove rating output together with the disabled review system. */
+function cg_storefront_remove_product_rating_ui() {
+    remove_action('woocommerce_single_product_summary', 'woocommerce_template_single_rating', 10);
+    remove_action('woocommerce_after_shop_loop_item_title', 'woocommerce_template_loop_rating', 5);
+}
+add_action('wp', 'cg_storefront_remove_product_rating_ui', 20);
+
 /** Load late CSS overrides after the cart, checkout and product styles. */
 function cg_storefront_visual_fixes_assets() {
     if (!class_exists('WooCommerce')) return;
