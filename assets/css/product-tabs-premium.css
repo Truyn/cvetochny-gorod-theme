@@ -1,9 +1,10 @@
 /* Premium product information tabs. */
 .single-product .woocommerce-tabs{padding:0!important;border:0!important;background:transparent!important;box-shadow:none!important}
-.single-product .woocommerce-tabs ul.tabs{display:flex!important;gap:10px!important;margin:0 0 22px!important;padding:8px!important;border:1px solid #eadbd7!important;border-radius:18px!important;background:#fff!important;box-shadow:0 12px 34px rgba(72,46,46,.06)}
-.single-product .woocommerce-tabs ul.tabs li{flex:1;margin:0!important;border:0!important;border-radius:14px!important;background:transparent!important;text-align:center!important}
-.single-product .woocommerce-tabs ul.tabs li a{display:block!important;padding:14px 16px!important;border-radius:14px!important;color:var(--cg-muted)!important;font-size:13px!important;letter-spacing:.02em!important}
-.single-product .woocommerce-tabs ul.tabs li.active a{background:linear-gradient(135deg,#4a3a37,#66514c)!important;color:#fff!important;box-shadow:0 10px 24px rgba(74,58,55,.22)!important}
+.single-product .woocommerce-tabs ul.tabs{display:flex!important;gap:10px!important;margin:0 0 22px!important;padding:0!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important}
+.single-product .woocommerce-tabs ul.tabs:before,.single-product .woocommerce-tabs ul.tabs li:before,.single-product .woocommerce-tabs ul.tabs li:after{content:none!important;display:none!important}
+.single-product .woocommerce-tabs ul.tabs li{flex:1;margin:0!important;padding:0!important;border:0!important;border-radius:14px!important;background:transparent!important;text-align:center!important}
+.single-product .woocommerce-tabs ul.tabs li a{display:block!important;padding:14px 16px!important;border:1px solid #eadbd7!important;border-radius:14px!important;background:#fff!important;color:var(--cg-muted)!important;font-size:13px!important;letter-spacing:.02em!important;box-shadow:0 8px 24px rgba(72,46,46,.045)!important}
+.single-product .woocommerce-tabs ul.tabs li.active a{border-color:transparent!important;background:linear-gradient(135deg,#4a3a37,#66514c)!important;color:#fff!important;box-shadow:0 10px 24px rgba(74,58,55,.22)!important}
 .single-product .woocommerce-tabs .panel{margin:0!important;padding:36px!important;border:1px solid #eadbd7!important;border-radius:26px!important;background:linear-gradient(180deg,#fff,#fffaf8)!important;box-shadow:0 22px 60px rgba(68,44,44,.08)!important;color:var(--cg-muted)!important;font-size:16px!important;line-height:1.85!important}
 .single-product .woocommerce-tabs .panel h2{margin:0 0 18px!important;font:500 clamp(30px,3vw,42px)/1.08 Georgia,serif!important;color:var(--cg-text)!important;letter-spacing:-.02em!important}
 .single-product .woocommerce-tabs .panel h3{margin:0 0 7px!important;color:var(--cg-text)!important;font-size:16px!important}
