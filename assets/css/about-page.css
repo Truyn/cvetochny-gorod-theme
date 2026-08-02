@@ -168,3 +168,10 @@
   .cg-about-contact__actions{display:grid}
 }
 @media(prefers-reduced-motion:reduce){.cg-about-page *{scroll-behavior:auto!important}.cg-about-page a,.cg-about-value,.cg-about-mosaic__item img{transition:none!important}}
+
+/* Убираем декоративную рамку и выносим подпись из фотографии. */
+.cg-about-mosaic{grid-template-rows:205px 205px auto;min-height:0}
+.cg-about-mosaic:before{content:none;display:none}
+.cg-about-mosaic__label{position:relative;right:auto;bottom:auto;z-index:1;grid-column:1/-1;max-width:none;padding:12px 16px;border:0;border-radius:14px;background:rgba(255,255,255,.72);box-shadow:none;color:#765b55;text-align:center}
+@media(max-width:760px){.cg-about-mosaic{grid-template-rows:165px 165px auto;min-height:0}.cg-about-mosaic__label{right:auto;bottom:auto;max-width:none;padding:11px 13px}}
+@media(max-width:480px){.cg-about-mosaic{grid-template-rows:210px 112px auto;min-height:0}.cg-about-mosaic__label{display:block}}

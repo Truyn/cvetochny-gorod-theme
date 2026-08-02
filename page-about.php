@@ -77,7 +77,7 @@ $schema = [
             'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday',
         ],
         'opens' => '07:00',
-        'closes' => '21:00',
+        'closes' => '20:00',
     ]],
 ];
 
@@ -131,7 +131,7 @@ get_header();
             <div class="cg-about-stat"><strong>10+</strong><span>лет семейной истории с цветами</span></div>
             <div class="cg-about-stat"><strong>15+</strong><span>лет опыта у наших флористов</span></div>
             <div class="cg-about-stat"><strong>5000+</strong><span>выполненных заказов</span></div>
-            <div class="cg-about-stat"><strong>7:00–21:00</strong><span>ежедневно принимаем заказы</span></div>
+            <div class="cg-about-stat"><strong>7:00–20:00</strong><span>ежедневно принимаем заказы</span></div>
         </div>
     </section>
 
@@ -254,7 +254,7 @@ get_header();
                     <span class="cg-about-schedule__label">Режим работы</span>
                     <h3>Заказывайте в удобное время</h3>
                     <p>Лучше оформить заказ в рабочее время и не откладывать его на последние минуты перед закрытием — так у флориста будет больше возможностей подобрать нужные цветы.</p>
-                    <div class="cg-about-schedule__hours"><span>Магазин и приём заказов</span><strong>07:00–21:00</strong></div>
+                    <div class="cg-about-schedule__hours"><span>Магазин и приём заказов</span><strong>07:00–20:00</strong></div>
                     <ul>
                         <li>Доставка в день заказа при наличии свободного интервала</li>
                         <li>Ночная доставка возможна по предварительному согласованию</li>
@@ -300,7 +300,7 @@ get_header();
                 <div class="cg-about-contact__details">
                     <div class="cg-about-contact__row"><span>Адрес</span><strong><?php echo esc_html($address_label); ?></strong></div>
                     <div class="cg-about-contact__row"><span>Телефон</span><a href="tel:<?php echo esc_attr($phone_raw); ?>"><?php echo esc_html($phone_label); ?></a></div>
-                    <div class="cg-about-contact__row"><span>Работаем</span><strong>ежедневно с 07:00 до 21:00</strong></div>
+                    <div class="cg-about-contact__row"><span>Работаем</span><strong>ежедневно с 07:00 до 20:00</strong></div>
                     <div class="cg-about-contact__actions">
                         <a href="tel:<?php echo esc_attr($phone_raw); ?>">Позвонить</a>
                         <a href="<?php echo esc_url($catalog_url); ?>">Перейти в каталог</a>
