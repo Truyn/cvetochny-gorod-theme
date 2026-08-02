@@ -19,8 +19,9 @@ $catalog_url = function_exists('cg_catalog_url') ? cg_catalog_url() : home_url('
 $phone_raw = '+79304119855';
 $phone_label = '+7 (930) 411-98-55';
 $address_label = 'Нововоронеж, ул. Победы, 1Б';
-$yandex_maps_url = 'https://yandex.ru/maps/?text=' . rawurlencode($address_label);
-$google_maps_url = 'https://www.google.com/maps/search/?api=1&query=' . rawurlencode($address_label);
+$yandex_maps_url = 'https://yandex.com/maps/org/florals_city/102742626474/';
+$google_maps_url = 'https://share.google/9kwCRZqMhlHw6F1dh';
+$twogis_maps_url = 'https://2gis.ru/novovoronezh/firm/70000001053810380';
 
 $about_products = [];
 if (function_exists('wc_get_products')) {
@@ -129,7 +130,7 @@ get_header();
         <div class="cg-about-container cg-about-stats__grid">
             <div class="cg-about-stat"><strong>10+</strong><span>лет семейной истории с цветами</span></div>
             <div class="cg-about-stat"><strong>15+</strong><span>лет опыта у наших флористов</span></div>
-            <div class="cg-about-stat"><strong>2000+</strong><span>выполненных заказов</span></div>
+            <div class="cg-about-stat"><strong>5000+</strong><span>выполненных заказов</span></div>
             <div class="cg-about-stat"><strong>7:00–21:00</strong><span>ежедневно принимаем заказы</span></div>
         </div>
     </section>
@@ -270,11 +271,12 @@ get_header();
                 <span class="cg-about-eyebrow">Честный сервис</span>
                 <h2 id="cg-about-trust-title">Мы остаёмся на связи после заказа</h2>
                 <p>
-                    Нам важно не просто выполнить заказ, а сохранить ваше доверие. Отзывы покупателей о «Цветочном городе» можно найти на Яндекс Картах и Google Картах. Если что-то вас не устроило, свяжитесь с нами — мы разберёмся в ситуации и постараемся найти справедливое решение.
+                    Нам важно не просто выполнить заказ, а сохранить ваше доверие. Отзывы покупателей о «Цветочном городе» можно найти на Яндекс Картах, Google Картах и в 2ГИС. Если что-то вас не устроило, свяжитесь с нами — мы разберёмся в ситуации и постараемся найти справедливое решение.
                 </p>
                 <div class="cg-about-trust__links">
                     <a href="<?php echo esc_url($yandex_maps_url); ?>" target="_blank" rel="noopener noreferrer">Найти на Яндекс Картах</a>
                     <a href="<?php echo esc_url($google_maps_url); ?>" target="_blank" rel="noopener noreferrer">Найти на Google Картах</a>
+                    <a href="<?php echo esc_url($twogis_maps_url); ?>" target="_blank" rel="noopener noreferrer">Найти в 2ГИС</a>
                 </div>
             </div>
 
