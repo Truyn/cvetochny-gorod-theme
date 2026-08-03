@@ -1,4 +1,8 @@
-<?php if (!defined('ABSPATH')) exit; ?>
+<?php if (!defined('ABSPATH')) exit;
+
+$cg_topbar_address_url = get_theme_mod('cg_address_url', home_url('/contacts/#cg-contacts-map-title'));
+$cg_topbar_delivery_url = get_theme_mod('cg_delivery_url', home_url('/delivery/'));
+?>
 <!doctype html>
 <html <?php language_attributes(); ?>>
 <head>
@@ -13,14 +17,14 @@
 <div class="topbar">
     <div class="container topbar__inner">
         <div class="topbar__group topbar__group--left">
-            <span class="topbar__item">
+            <a class="topbar__item topbar__link" href="<?php echo esc_url($cg_topbar_address_url); ?>">
                 <svg class="cg-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s6-5.4 6-11A6 6 0 0 0 6 10c0 5.6 6 11 6 11Zm0-8.5A2.5 2.5 0 1 1 12 7a2.5 2.5 0 0 1 0 5.5Z"/></svg>
                 <?php echo esc_html(get_theme_mod('cg_address', 'Нововоронеж, Воронежская область')); ?>
-            </span>
-            <span class="topbar__item">
+            </a>
+            <a class="topbar__item topbar__link" href="<?php echo esc_url($cg_topbar_delivery_url); ?>">
                 <svg class="cg-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h11v9H3zM14 10h3l4 4v2h-7zM6.5 19a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Zm11 0a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Z"/></svg>
                 Доставка и оплата
-            </span>
+            </a>
         </div>
         <div class="topbar__group topbar__group--right">
             <a class="topbar__phone" href="tel:<?php echo esc_attr(preg_replace('/[^0-9+]/', '', get_theme_mod('cg_phone', '+7 (900) 000-00-00'))); ?>">
