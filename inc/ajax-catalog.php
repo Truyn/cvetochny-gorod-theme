@@ -429,7 +429,18 @@ function cg_catalog_ajax_filter() {
 
     $raw = isset($_POST['filters']) ? wp_unslash($_POST['filters']) : '';
     parse_str($raw, $filters);
-    $_GET = is_array($filters) ? $filters : [];
+    $filters = is_array($filters) ? $filters : [];
+
+    // Категория передаётся отдельно, чтобы вложенная сериализация формы
+    // не могла потерять значение radio-поля на мобильных браузерах.
+    $posted_category = isset($_POST['category']) ? sanitize_title(wp_unslash($_POST['category'])) : '';
+    if ($posted_category !== '') {
+        $filters['product_cat'] = $posted_category;
+    } else {
+        unset($filters['product_cat']);
+    }
+
+    $_GET = $filters;
     $paged = max(1, absint($_POST['paged'] ?? 1));
     $query = new WP_Query(cg_catalog_build_query_args($paged));
 
@@ -446,6 +457,7 @@ function cg_catalog_ajax_filter() {
         'html' => $html,
         'url' => cg_catalog_url_with_args($url_args),
         'total' => $total,
+        'category' => cg_catalog_current_category_slug(),
         'filterCount' => cg_catalog_active_filter_count(),
     ]);
 }
