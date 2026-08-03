@@ -16,6 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   let controller = null;
   let timer = null;
+  let requestSerial = 0;
 
   const minRange = form.querySelector('.cg-catalog-range--min');
   const maxRange = form.querySelector('.cg-catalog-range--max');
@@ -27,6 +28,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const submitLabel = form.querySelector('[data-cg-filter-submit-label]');
   const filterCountBadges = root.querySelectorAll('[data-cg-filter-count]');
   const productSearch = form.querySelector('[name="catalog_search"]');
+
+  const selectedCategory = () => form.querySelector('input[name="product_cat"]:checked')?.value || '';
 
   const getValues = (params, fieldName) => {
     if (!fieldName.endsWith('[]')) return params.getAll(fieldName);
@@ -73,8 +76,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const getActiveFilterCount = () => {
     let count = 0;
-    const category = form.querySelector('[name="product_cat"]:checked');
-    if (category?.value) count += 1;
+    if (selectedCategory()) count += 1;
     if (productSearch?.value.trim()) count += 1;
 
     if (minRange && maxRange) {
@@ -101,11 +103,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const ceiling = maxRange ? Number(maxRange.max) : null;
 
     for (const [key, value] of data.entries()) {
-      if (value === '' || key === 'page_id') continue;
+      if (value === '' || key === 'page_id' || key === 'product_cat') continue;
       if (key === 'min_price' && floor !== null && Number(value) <= floor) continue;
       if (key === 'max_price' && ceiling !== null && Number(value) >= ceiling) continue;
       params.append(key, String(value));
     }
+
+    const category = selectedCategory();
+    if (category) params.set('product_cat', category);
 
     return params;
   };
@@ -115,6 +120,7 @@ document.addEventListener('DOMContentLoaded', () => {
     results.setAttribute('aria-busy', loading ? 'true' : 'false');
     const submit = form.querySelector('button[type="submit"]');
     if (submit) submit.disabled = loading;
+    if (loading && submitLabel) submitLabel.textContent = 'Подбираем товары…';
   };
 
   const updateActiveCategory = () => {
@@ -126,7 +132,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const updateSubmitLabel = (total = null) => {
     if (!submitLabel) return;
     const number = Number(total);
-    submitLabel.textContent = Number.isFinite(number) ? `Показать ${number} ${number === 1 ? 'товар' : 'товаров'}` : 'Показать товары';
+    submitLabel.textContent = Number.isFinite(number)
+      ? `Показать ${number} ${number === 1 ? 'товар' : 'товаров'}`
+      : 'Показать товары';
   };
 
   const closeDrawer = () => {
@@ -148,11 +156,14 @@ document.addEventListener('DOMContentLoaded', () => {
     controller?.abort();
     controller = new AbortController();
 
+    const serial = ++requestSerial;
     const filters = serialize();
+    const category = selectedCategory();
     const body = new URLSearchParams({
       action: 'cg_catalog_filter',
       nonce: cgCatalog.nonce,
       filters: filters.toString(),
+      category,
       paged: String(paged),
     });
 
@@ -167,6 +178,7 @@ document.addEventListener('DOMContentLoaded', () => {
       });
       const payload = await response.json();
       if (!response.ok || !payload.success || !payload.data?.html) throw new Error('Invalid AJAX response');
+      if (serial !== requestSerial) return;
 
       results.innerHTML = payload.data.html;
       const url = payload.data.url || `${cgCatalog.shopUrl}?${filters.toString()}`;
@@ -176,11 +188,12 @@ document.addEventListener('DOMContentLoaded', () => {
       updateFilterCount(payload.data.filterCount);
       updateSubmitLabel(payload.data.total);
     } catch (error) {
-      if (error.name !== 'AbortError') {
+      if (error.name !== 'AbortError' && serial === requestSerial) {
         results.insertAdjacentHTML('afterbegin', `<div class="cg-catalog-error" role="alert">${cgCatalog.errorText}</div>`);
+        updateSubmitLabel();
       }
     } finally {
-      setLoading(false);
+      if (serial === requestSerial) setLoading(false);
     }
   };
 
@@ -196,7 +209,8 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!input.name) return;
       const values = getValues(params, input.name);
       if (input.type === 'checkbox' || input.type === 'radio') {
-        input.checked = values.includes(input.value) || (input.type === 'radio' && input.name === 'product_cat' && !params.has('product_cat') && input.value === '');
+        input.checked = values.includes(input.value)
+          || (input.type === 'radio' && input.name === 'product_cat' && !params.has('product_cat') && input.value === '');
       } else if (input.type !== 'range') {
         input.value = values.length ? values[0] : '';
       }
@@ -308,12 +322,19 @@ document.addEventListener('DOMContentLoaded', () => {
     schedule(360);
   });
 
-  form.querySelectorAll('input[type="checkbox"],input[type="radio"]').forEach((input) => {
-    input.addEventListener('change', () => {
-      updateActiveCategory();
-      updateFilterCount();
-      schedule(120);
-    });
+  form.addEventListener('change', (event) => {
+    const input = event.target;
+    if (!(input instanceof HTMLInputElement)) return;
+
+    updateActiveCategory();
+    updateFilterCount();
+
+    if (input.name === 'product_cat') {
+      request(1);
+      return;
+    }
+
+    if (input.type === 'checkbox' || input.type === 'radio') schedule(100);
   });
 
   form.addEventListener('submit', (event) => {
