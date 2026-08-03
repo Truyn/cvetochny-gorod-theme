@@ -21,6 +21,8 @@ function cg_site_customize($wp_customize) {
     $fields = [
         'cg_phone' => ['Телефон', '+7 (900) 000-00-00', 'cg_header_settings', 'text'],
         'cg_address' => ['Адрес', 'Нововоронеж, Воронежская область', 'cg_header_settings', 'text'],
+        'cg_address_url' => ['Ссылка адреса в верхней панели', home_url('/contacts/#cg-contacts-map-title'), 'cg_header_settings', 'url'],
+        'cg_delivery_url' => ['Ссылка «Доставка и оплата»', home_url('/delivery/'), 'cg_header_settings', 'url'],
         'cg_worktime' => ['Режим работы', 'Ежедневно с 09:00 до 21:00', 'cg_header_settings', 'text'],
         'cg_brand_title' => ['Название магазина', 'Цветочный город', 'cg_header_settings', 'text'],
         'cg_brand_subtitle' => ['Подпись под названием', 'магазин цветов', 'cg_header_settings', 'text'],
