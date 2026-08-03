@@ -86,7 +86,8 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   const updateFilterCount = (provided = null) => {
-    const count = Number.isFinite(Number(provided)) ? Number(provided) : getActiveFilterCount();
+    const hasProvided = provided !== null && provided !== undefined && Number.isFinite(Number(provided));
+    const count = hasProvided ? Number(provided) : getActiveFilterCount();
     filterCountBadges.forEach((badge) => {
       badge.textContent = String(count);
       badge.hidden = count < 1;
