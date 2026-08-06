@@ -1,4 +1,14 @@
 </main>
+<?php
+$cg_footer_delivery_default = function_exists('cg_delivery_payment_url')
+    ? cg_delivery_payment_url()
+    : home_url('/delivery/');
+$cg_footer_delivery_url = get_theme_mod('cg_delivery_url', $cg_footer_delivery_default) ?: $cg_footer_delivery_default;
+$cg_footer_contacts_url = get_theme_mod('cg_contacts_url', home_url('/contacts/')) ?: home_url('/contacts/');
+$cg_footer_phone = get_theme_mod('cg_phone', '+7 (930) 411-98-55');
+$cg_footer_address = get_theme_mod('cg_address', 'Нововоронеж, ул. Победы, 1Б');
+$cg_footer_worktime = get_theme_mod('cg_worktime', 'Ежедневно с 07:00 до 21:00');
+?>
 <footer class="site-footer">
     <div class="container">
         <div class="footer-newsline">
@@ -51,17 +61,17 @@
                         <a href="<?php echo esc_url(wc_get_checkout_url()); ?>">Оформление заказа</a>
                         <a href="<?php echo esc_url(wc_get_page_permalink('myaccount')); ?>">Личный кабинет</a>
                     <?php endif; ?>
-                    <a href="<?php echo esc_url(home_url('/delivery/')); ?>">Доставка и оплата</a>
-                    <a href="<?php echo esc_url(home_url('/contacts/')); ?>">Контакты</a>
+                    <a href="<?php echo esc_url($cg_footer_delivery_url); ?>">Доставка и оплата</a>
+                    <a href="<?php echo esc_url($cg_footer_contacts_url); ?>">Контакты</a>
                 </div>
             </div>
 
             <div>
                 <div class="footer-title"><?php echo esc_html(get_theme_mod('cg_footer_contacts_title', 'Контакты')); ?></div>
                 <div class="footer-links footer-contacts">
-                    <span><?php echo esc_html(get_theme_mod('cg_address', 'Нововоронеж, Воронежская область')); ?></span>
-                    <a class="footer-phone" href="tel:<?php echo esc_attr(preg_replace('/[^0-9+]/', '', get_theme_mod('cg_phone', '+7 (900) 000-00-00'))); ?>"><?php echo esc_html(get_theme_mod('cg_phone', '+7 (900) 000-00-00')); ?></a>
-                    <span><?php echo esc_html(get_theme_mod('cg_worktime', 'Ежедневно с 09:00 до 21:00')); ?></span>
+                    <span><?php echo esc_html($cg_footer_address); ?></span>
+                    <a class="footer-phone" href="tel:<?php echo esc_attr(preg_replace('/[^0-9+]/', '', $cg_footer_phone)); ?>"><?php echo esc_html($cg_footer_phone); ?></a>
+                    <span><?php echo esc_html($cg_footer_worktime); ?></span>
                 </div>
             </div>
         </div>
