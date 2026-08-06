@@ -35,18 +35,62 @@ function cg_catalog_price_bounds() {
     return [$min, $max, $max > 50000 ? 500 : 100];
 }
 
-function cg_catalog_current_category_slug() {
-    $requested = sanitize_title(cg_catalog_get_request('product_cat'));
-    if ($requested !== '') return $requested;
-
-    if (!wp_doing_ajax() && function_exists('is_product_category') && is_product_category()) {
-        $term = get_queried_object();
-        if ($term instanceof WP_Term && $term->taxonomy === 'product_cat') {
-            return sanitize_title($term->slug);
-        }
+/**
+ * Resolve a product category by term ID first and slug second.
+ *
+ * Cyrillic WordPress slugs can arrive either encoded or decoded depending on
+ * the browser and URL parser. Using the numeric term ID for AJAX requests makes
+ * the filter independent of that representation while the slug remains in the
+ * public URL for readability and backwards compatibility.
+ */
+function cg_catalog_resolve_category_term($term_id = 0, $slug = '') {
+    $term_id = absint($term_id);
+    if ($term_id) {
+        $term = get_term($term_id, 'product_cat');
+        if ($term instanceof WP_Term && !is_wp_error($term)) return $term;
     }
 
-    return '';
+    $slug = is_string($slug) ? trim($slug) : '';
+    if ($slug === '') return null;
+
+    $candidates = array_values(array_unique(array_filter([
+        $slug,
+        rawurldecode($slug),
+        sanitize_title($slug),
+        sanitize_title(rawurldecode($slug)),
+    ])));
+
+    foreach ($candidates as $candidate) {
+        $term = get_term_by('slug', $candidate, 'product_cat');
+        if ($term instanceof WP_Term) return $term;
+    }
+
+    return null;
+}
+
+function cg_catalog_current_category_term() {
+    $term = cg_catalog_resolve_category_term(
+        absint(cg_catalog_get_request('product_cat_id', 0)),
+        cg_catalog_get_request('product_cat')
+    );
+    if ($term instanceof WP_Term) return $term;
+
+    if (!wp_doing_ajax() && function_exists('is_product_category') && is_product_category()) {
+        $queried = get_queried_object();
+        if ($queried instanceof WP_Term && $queried->taxonomy === 'product_cat') return $queried;
+    }
+
+    return null;
+}
+
+function cg_catalog_current_category_slug() {
+    $term = cg_catalog_current_category_term();
+    return $term instanceof WP_Term ? (string) $term->slug : '';
+}
+
+function cg_catalog_current_category_id() {
+    $term = cg_catalog_current_category_term();
+    return $term instanceof WP_Term ? (int) $term->term_id : 0;
 }
 
 function cg_catalog_form_action() {
@@ -55,8 +99,14 @@ function cg_catalog_form_action() {
 
 function cg_catalog_preserved_query_args() {
     $args = [];
-    foreach (['product_cat', 'catalog_search', 'min_price', 'max_price', 'stock_status', 'on_sale', 'cg_orderby'] as $key) {
-        $value = $key === 'product_cat' ? cg_catalog_current_category_slug() : cg_catalog_get_request($key);
+    $category = cg_catalog_current_category_term();
+    if ($category instanceof WP_Term) {
+        $args['product_cat'] = $category->slug;
+        $args['product_cat_id'] = (int) $category->term_id;
+    }
+
+    foreach (['catalog_search', 'min_price', 'max_price', 'stock_status', 'on_sale', 'cg_orderby'] as $key) {
+        $value = cg_catalog_get_request($key);
         if ($value !== '') $args[$key] = $value;
     }
 
@@ -76,7 +126,9 @@ function cg_catalog_url_with_args($args = []) {
 function cg_catalog_remove_filter_url($key, $value = null) {
     $args = cg_catalog_preserved_query_args();
 
-    if ($value === null || !isset($args[$key]) || !is_array($args[$key])) {
+    if ($key === 'product_cat' || $key === 'product_cat_id') {
+        unset($args['product_cat'], $args['product_cat_id']);
+    } elseif ($value === null || !isset($args[$key]) || !is_array($args[$key])) {
         unset($args[$key]);
     } else {
         $args[$key] = array_values(array_diff($args[$key], [$value]));
@@ -94,7 +146,7 @@ function cg_catalog_active_filter_count() {
     [$catalog_min, $catalog_max] = cg_catalog_price_bounds();
     $count = 0;
 
-    if (cg_catalog_current_category_slug() !== '') $count++;
+    if (cg_catalog_current_category_id()) $count++;
     if (cg_catalog_get_request('catalog_search') !== '') $count++;
     if ((int) cg_catalog_get_request('min_price', $catalog_min) > $catalog_min || (int) cg_catalog_get_request('max_price', $catalog_max) < $catalog_max) $count++;
     if (cg_catalog_get_request('stock_status') === 'instock') $count++;
@@ -126,12 +178,12 @@ function cg_catalog_build_query_args($paged = 1) {
     $search = cg_catalog_get_request('catalog_search');
     if ($search !== '') $args['s'] = $search;
 
-    $category = cg_catalog_current_category_slug();
-    if ($category) {
+    $category_id = cg_catalog_current_category_id();
+    if ($category_id) {
         $args['tax_query'][] = [
             'taxonomy' => 'product_cat',
-            'field' => 'slug',
-            'terms' => [$category],
+            'field' => 'term_id',
+            'terms' => [$category_id],
             'include_children' => true,
         ];
     }
@@ -207,15 +259,12 @@ function cg_catalog_excluded_category_id() {
     return (int) get_option('default_product_cat', 0);
 }
 
-function cg_catalog_category_contains_current($term_id, $current) {
-    if (!$current) return false;
-    $term = get_term_by('slug', $current, 'product_cat');
-    if (!$term) return false;
-
-    return (int) $term->term_id === (int) $term_id || term_is_ancestor_of($term_id, $term->term_id, 'product_cat');
+function cg_catalog_category_contains_current($term_id, $current_id) {
+    if (!$current_id) return false;
+    return (int) $current_id === (int) $term_id || term_is_ancestor_of($term_id, $current_id, 'product_cat');
 }
 
-function cg_catalog_render_category_options($terms, $current, $depth = 0) {
+function cg_catalog_render_category_options($terms, $current_id, $depth = 0) {
     $excluded = cg_catalog_excluded_category_id();
 
     foreach ($terms as $term) {
@@ -229,11 +278,12 @@ function cg_catalog_render_category_options($terms, $current, $depth = 0) {
             'exclude' => $excluded ? [$excluded] : [],
         ]);
         $has_children = !is_wp_error($children) && !empty($children);
-        $open = $has_children && cg_catalog_category_contains_current($term->term_id, $current);
+        $open = $has_children && cg_catalog_category_contains_current($term->term_id, $current_id);
+        $active = (int) $current_id === (int) $term->term_id;
 
         echo '<div class="cg-category-node' . ($open ? ' is-open' : '') . '" style="--cg-depth:' . esc_attr($depth) . '">';
         echo '<div class="cg-category-row">';
-        echo '<label class="cg-catalog-category-option' . ($current === $term->slug ? ' is-active' : '') . '"><input type="radio" name="product_cat" value="' . esc_attr($term->slug) . '"' . checked($current, $term->slug, false) . '><span>' . esc_html($term->name) . '</span><b>' . esc_html($term->count) . '</b></label>';
+        echo '<label class="cg-catalog-category-option' . ($active ? ' is-active' : '') . '"><input type="radio" name="product_cat" value="' . esc_attr($term->slug) . '" data-category-id="' . esc_attr($term->term_id) . '"' . checked($active, true, false) . '><span>' . esc_html($term->name) . '</span><b>' . esc_html($term->count) . '</b></label>';
         if ($has_children) {
             echo '<button type="button" class="cg-category-toggle" aria-expanded="' . ($open ? 'true' : 'false') . '" aria-label="Показать подкатегории ' . esc_attr($term->name) . '"><span aria-hidden="true"></span></button>';
         }
@@ -241,7 +291,7 @@ function cg_catalog_render_category_options($terms, $current, $depth = 0) {
 
         if ($has_children) {
             echo '<div class="cg-category-children"' . ($open ? '' : ' hidden') . '>';
-            cg_catalog_render_category_options($children, $current, $depth + 1);
+            cg_catalog_render_category_options($children, $current_id, $depth + 1);
             echo '</div>';
         }
         echo '</div>';
@@ -268,7 +318,8 @@ function cg_catalog_sidebar() {
     $selected_max = min($catalog_max, (int) cg_catalog_get_request('max_price', $catalog_max));
     if ($selected_min > $selected_max) [$selected_min, $selected_max] = [$selected_max, $selected_min];
 
-    $current = cg_catalog_current_category_slug();
+    $current_term = cg_catalog_current_category_term();
+    $current_id = $current_term instanceof WP_Term ? (int) $current_term->term_id : 0;
     $excluded = cg_catalog_excluded_category_id();
     $active_count = cg_catalog_active_filter_count();
     $terms = get_terms([
@@ -288,8 +339,8 @@ function cg_catalog_sidebar() {
     echo '<label class="cg-catalog-product-search"><span>Поиск по каталогу</span><span class="cg-catalog-product-search__field"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.6"/><path d="m15.7 15.7 4.3 4.3"/></svg><input type="search" name="catalog_search" value="' . esc_attr(cg_catalog_get_request('catalog_search')) . '" placeholder="Название букета" autocomplete="off"></span></label>';
 
     echo '<details class="cg-filter-group" open><summary>Категории <span></span></summary><div class="cg-filter-group__body cg-catalog-category-list">';
-    echo '<label class="cg-catalog-category-option' . ($current === '' ? ' is-active' : '') . '"><input type="radio" name="product_cat" value=""' . checked($current, '', false) . '><span>Все товары</span></label>';
-    if (!is_wp_error($terms)) cg_catalog_render_category_options($terms, $current);
+    echo '<label class="cg-catalog-category-option' . ($current_id === 0 ? ' is-active' : '') . '"><input type="radio" name="product_cat" value="" data-category-id="0"' . checked($current_id, 0, false) . '><span>Все товары</span></label>';
+    if (!is_wp_error($terms)) cg_catalog_render_category_options($terms, $current_id);
     echo '</div></details>';
 
     echo '<details class="cg-filter-group" open><summary>Цена <span></span></summary><div class="cg-filter-group__body cg-catalog-price-filter">';
@@ -357,13 +408,12 @@ function cg_catalog_active_filters() {
     $min = (int) cg_catalog_get_request('min_price', $catalog_min);
     $max = (int) cg_catalog_get_request('max_price', $catalog_max);
     $chips = [];
-    $category = cg_catalog_current_category_slug();
+    $category = cg_catalog_current_category_term();
     $search = cg_catalog_get_request('catalog_search');
 
     if ($search !== '') $chips[] = ['Поиск: ' . $search, cg_catalog_remove_filter_url('catalog_search')];
-    if ($category) {
-        $term = get_term_by('slug', $category, 'product_cat');
-        if ($term) $chips[] = ['Категория: ' . $term->name, cg_catalog_remove_filter_url('product_cat')];
+    if ($category instanceof WP_Term) {
+        $chips[] = ['Категория: ' . $category->name, cg_catalog_remove_filter_url('product_cat')];
     }
     if ($min > $catalog_min || $max < $catalog_max) {
         $chips[] = [sprintf('Цена: %s — %s', wp_strip_all_tags(wc_price($min)), wp_strip_all_tags(wc_price($max))), cg_catalog_remove_filter_url('min_price')];
@@ -431,13 +481,15 @@ function cg_catalog_ajax_filter() {
     parse_str($raw, $filters);
     $filters = is_array($filters) ? $filters : [];
 
-    // Категория передаётся отдельно, чтобы вложенная сериализация формы
-    // не могла потерять значение radio-поля на мобильных браузерах.
-    $posted_category = isset($_POST['category']) ? sanitize_title(wp_unslash($_POST['category'])) : '';
-    if ($posted_category !== '') {
-        $filters['product_cat'] = $posted_category;
+    $posted_id = isset($_POST['category_id']) ? absint($_POST['category_id']) : absint($filters['product_cat_id'] ?? 0);
+    $posted_slug = isset($_POST['category']) ? sanitize_text_field(wp_unslash($_POST['category'])) : sanitize_text_field($filters['product_cat'] ?? '');
+    $category = cg_catalog_resolve_category_term($posted_id, $posted_slug);
+
+    if ($category instanceof WP_Term) {
+        $filters['product_cat'] = $category->slug;
+        $filters['product_cat_id'] = (int) $category->term_id;
     } else {
-        unset($filters['product_cat']);
+        unset($filters['product_cat'], $filters['product_cat_id']);
     }
 
     $_GET = $filters;
@@ -458,6 +510,7 @@ function cg_catalog_ajax_filter() {
         'url' => cg_catalog_url_with_args($url_args),
         'total' => $total,
         'category' => cg_catalog_current_category_slug(),
+        'categoryId' => cg_catalog_current_category_id(),
         'filterCount' => cg_catalog_active_filter_count(),
     ]);
 }
