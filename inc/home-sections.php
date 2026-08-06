@@ -18,14 +18,25 @@ function cg_home_sections_customize($wp_customize) {
         'cg_home_products' => ['Популярные букеты', 34],
         'cg_home_promo' => ['Акционный баннер', 35],
         'cg_home_about' => ['Блок «О нас»', 36],
-        'cg_home_newsletter' => ['Подписка', 37],
+        'cg_home_instagram' => ['Наши букеты в жизни', 37],
+        'cg_home_newsletter' => ['Подписка', 38],
     ];
 
     foreach ($sections as $id => $data) {
-        $wp_customize->add_section($id, [
+        $args = [
             'title' => $data[0],
             'priority' => $data[1],
-        ]);
+        ];
+
+        if ($id === 'cg_home_promo') {
+            $args['description'] = 'Здесь выбирается текст, ссылка и фотография для блока «Особенное предложение» на главной странице.';
+        }
+
+        if ($id === 'cg_home_instagram') {
+            $args['description'] = 'Загрузите до шести фотографий из Instagram или медиатеки. Это ручная галерея: она не зависит от Instagram API и не пропадёт при ограничениях соцсети.';
+        }
+
+        $wp_customize->add_section($id, $args);
     }
 
     $add_checkbox = function($id, $label, $section, $default = true) use ($wp_customize) {
@@ -40,7 +51,7 @@ function cg_home_sections_customize($wp_customize) {
         ]);
     };
 
-    $add_text = function($id, $label, $section, $default = '', $type = 'text') use ($wp_customize) {
+    $add_text = function($id, $label, $section, $default = '', $type = 'text', $description = '') use ($wp_customize) {
         $sanitize = $type === 'textarea' ? 'sanitize_textarea_field' : ($type === 'url' ? 'esc_url_raw' : 'sanitize_text_field');
         $wp_customize->add_setting($id, [
             'default' => $default,
@@ -48,6 +59,7 @@ function cg_home_sections_customize($wp_customize) {
         ]);
         $wp_customize->add_control($id, [
             'label' => $label,
+            'description' => $description,
             'section' => $section,
             'type' => $type,
         ]);
@@ -93,13 +105,14 @@ function cg_home_sections_customize($wp_customize) {
 
     $add_checkbox('cg_promo_enabled', 'Показывать акционный баннер', 'cg_home_promo');
     $add_text('cg_promo_eyebrow', 'Надзаголовок', 'cg_home_promo', 'Особенное предложение');
-    $add_text('cg_promo_title', 'Заголовок', 'cg_home_promo', 'Букет недели со скидкой 15%');
+    $add_text('cg_promo_title', 'Заголовок', 'cg_home_promo', 'Букет недели со скидкой 10%');
     $add_text('cg_promo_text', 'Описание', 'cg_home_promo', 'Каждую неделю мы выбираем одну особенную композицию и предлагаем её по приятной цене. Количество ограничено.', 'textarea');
     $add_text('cg_promo_button', 'Текст кнопки', 'cg_home_promo', 'Смотреть предложение');
-    $add_text('cg_promo_url', 'Ссылка кнопки', 'cg_home_promo', '', 'url');
+    $add_text('cg_promo_url', 'Ссылка кнопки', 'cg_home_promo', '', 'url', 'Можно вставить ссылку на конкретный товар, категорию или весь каталог.');
     $wp_customize->add_setting('cg_promo_image', ['sanitize_callback' => 'esc_url_raw']);
     $wp_customize->add_control(new WP_Customize_Image_Control($wp_customize, 'cg_promo_image', [
-        'label' => 'Изображение баннера',
+        'label' => 'Фотография для баннера',
+        'description' => 'Нажмите «Выбрать изображение». Лучше использовать горизонтальное фото без текста, примерно 1600 × 1000 px.',
         'section' => 'cg_home_promo',
     ]));
 
@@ -115,12 +128,47 @@ function cg_home_sections_customize($wp_customize) {
         'section' => 'cg_home_about',
     ]));
 
+    $add_checkbox('cg_instagram_enabled', 'Показывать галерею', 'cg_home_instagram');
+    $add_text('cg_instagram_eyebrow', 'Надзаголовок', 'cg_home_instagram', 'Вдохновение');
+    $add_text('cg_instagram_title', 'Заголовок', 'cg_home_instagram', 'Наши букеты в жизни');
+    $add_text('cg_instagram_text', 'Описание', 'cg_home_instagram', 'Следите за новыми композициями, историями заказов и работой флористов.', 'textarea');
+    $add_text('cg_instagram_gallery_url', 'Ссылка для фотографий и кнопки', 'cg_home_instagram', 'https://www.instagram.com/florals_city_nv/', 'url', 'Обычно здесь указывается ссылка на страницу магазина в Instagram.');
+    $add_text('cg_instagram_button_text', 'Текст ссылки справа', 'cg_home_instagram', 'Мы в Instagram →');
+
+    for ($i = 1; $i <= 6; $i++) {
+        $setting_id = 'cg_instagram_image_' . $i;
+        $wp_customize->add_setting($setting_id, ['sanitize_callback' => 'esc_url_raw']);
+        $wp_customize->add_control(new WP_Customize_Image_Control($wp_customize, $setting_id, [
+            'label' => 'Фотография ' . $i,
+            'description' => $i === 1 ? 'Можно загрузить фото с телефона или выбрать его из медиатеки. Лучше использовать квадратные фотографии.' : '',
+            'section' => 'cg_home_instagram',
+        ]));
+    }
+
     $add_checkbox('cg_newsletter_enabled', 'Показывать блок подписки', 'cg_home_newsletter');
     $add_text('cg_newsletter_title', 'Заголовок', 'cg_home_newsletter', 'Скидка 10% на первый заказ');
     $add_text('cg_newsletter_text', 'Описание', 'cg_home_newsletter', 'Оставьте e-mail и получите промокод.', 'textarea');
     $add_text('cg_newsletter_shortcode', 'Шорткод формы', 'cg_home_newsletter', '', 'text');
 }
 add_action('customize_register', 'cg_home_sections_customize');
+
+/** Keep the visible promotion at the agreed 10% unless it was customized. */
+function cg_upgrade_home_section_defaults() {
+    $version = '2';
+    if (get_option('cg_home_section_defaults_version') === $version) return;
+
+    $promo_title = get_theme_mod('cg_promo_title', '');
+    if ($promo_title === '' || $promo_title === 'Букет недели со скидкой 15%') {
+        set_theme_mod('cg_promo_title', 'Букет недели со скидкой 10%');
+    }
+
+    if (get_theme_mod('cg_instagram_gallery_url', '') === '') {
+        set_theme_mod('cg_instagram_gallery_url', 'https://www.instagram.com/florals_city_nv/');
+    }
+
+    update_option('cg_home_section_defaults_version', $version, false);
+}
+add_action('after_setup_theme', 'cg_upgrade_home_section_defaults', 30);
 
 function cg_get_home_categories() {
     $raw = get_theme_mod('cg_categories_items', "Свадебные|svadebnye\nСладкие|sladkie\nАвторские|avtorskie\nLux|lux\nДо 2000|do-2000\nДо 5000|do-5000\nДо 10000|do-10000\nВсе букеты|");
