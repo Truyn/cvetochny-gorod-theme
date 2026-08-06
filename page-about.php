@@ -16,9 +16,9 @@ wp_enqueue_style(
 );
 
 $catalog_url = function_exists('cg_catalog_url') ? cg_catalog_url() : home_url('/shop/');
+$delivery_url = function_exists('cg_delivery_payment_url') ? cg_delivery_payment_url() : home_url('/delivery/');
+$contacts_url = get_theme_mod('cg_contacts_url', home_url('/contacts/')) ?: home_url('/contacts/');
 $phone_raw = '+79304119855';
-$phone_label = '+7 (930) 411-98-55';
-$address_label = 'Нововоронеж, ул. Победы, 1Б';
 $yandex_maps_url = 'https://yandex.com/maps/org/florals_city/102742626474/';
 $google_maps_url = 'https://share.google/9kwCRZqMhlHw6F1dh';
 $twogis_maps_url = 'https://2gis.ru/novovoronezh/firm/70000001053810380';
@@ -77,7 +77,7 @@ $schema = [
             'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday',
         ],
         'opens' => '07:00',
-        'closes' => '20:00',
+        'closes' => '21:00',
     ]],
 ];
 
@@ -131,7 +131,7 @@ get_header();
             <div class="cg-about-stat"><strong>10+</strong><span>лет семейной истории с цветами</span></div>
             <div class="cg-about-stat"><strong>15+</strong><span>лет опыта у наших флористов</span></div>
             <div class="cg-about-stat"><strong>5000+</strong><span>выполненных заказов</span></div>
-            <div class="cg-about-stat"><strong>7:00–20:00</strong><span>ежедневно принимаем заказы</span></div>
+            <div class="cg-about-stat"><strong>7:00–21:00</strong><span>ежедневно принимаем заказы</span></div>
         </div>
     </section>
 
@@ -222,50 +222,7 @@ get_header();
         </div>
     </section>
 
-    <section class="cg-about-section cg-about-section--soft" aria-labelledby="cg-about-delivery-title">
-        <div class="cg-about-container">
-            <div class="cg-about-section__head">
-                <span class="cg-about-eyebrow">Заказ и доставка</span>
-                <h2 id="cg-about-delivery-title">От вашей идеи до вручения</h2>
-                <p>Доставляем по Нововоронежу и Воронежской области. При наличии цветов и свободного интервала возможна доставка в день заказа.</p>
-            </div>
-
-            <div class="cg-about-delivery">
-                <div class="cg-about-steps">
-                    <article class="cg-about-step">
-                        <span class="cg-about-step__number">1</span>
-                        <div><h3>Вы рассказываете о поводе</h3><p>Указываете пожелания, бюджет, дату, адрес и важные детали.</p></div>
-                    </article>
-                    <article class="cg-about-step">
-                        <span class="cg-about-step__number">2</span>
-                        <div><h3>Флорист собирает букет</h3><p>Подбирает свежие цветы и согласовывает возможные замены.</p></div>
-                    </article>
-                    <article class="cg-about-step">
-                        <span class="cg-about-step__number">3</span>
-                        <div><h3>Мы отправляем фотографию</h3><p>Вы видите готовую работу до того, как она отправится получателю.</p></div>
-                    </article>
-                    <article class="cg-about-step">
-                        <span class="cg-about-step__number">4</span>
-                        <div><h3>Курьер доставляет подарок</h3><p>Если получателя нет по адресу, курьер свяжется с ним и согласует получение.</p></div>
-                    </article>
-                </div>
-
-                <aside class="cg-about-schedule">
-                    <span class="cg-about-schedule__label">Режим работы</span>
-                    <h3>Заказывайте в удобное время</h3>
-                    <p>Лучше оформить заказ в рабочее время и не откладывать его на последние минуты перед закрытием — так у флориста будет больше возможностей подобрать нужные цветы.</p>
-                    <div class="cg-about-schedule__hours"><span>Магазин и приём заказов</span><strong>07:00–20:00</strong></div>
-                    <ul>
-                        <li>Доставка в день заказа при наличии свободного интервала</li>
-                        <li>Ночная доставка возможна по предварительному согласованию</li>
-                        <li>Можно оформить анонимную доставку</li>
-                    </ul>
-                </aside>
-            </div>
-        </div>
-    </section>
-
-    <section class="cg-about-section" aria-labelledby="cg-about-trust-title">
+    <section class="cg-about-section cg-about-section--soft" aria-labelledby="cg-about-trust-title">
         <div class="cg-about-container cg-about-trust">
             <div class="cg-about-trust__copy">
                 <span class="cg-about-eyebrow">Честный сервис</span>
@@ -274,9 +231,9 @@ get_header();
                     Нам важно не просто выполнить заказ, а сохранить ваше доверие. Отзывы покупателей о «Цветочном городе» можно найти на Яндекс Картах, Google Картах и в 2ГИС. Если что-то вас не устроило, свяжитесь с нами — мы разберёмся в ситуации и постараемся найти справедливое решение.
                 </p>
                 <div class="cg-about-trust__links">
-                    <a href="<?php echo esc_url($yandex_maps_url); ?>" target="_blank" rel="noopener noreferrer">Найти на Яндекс Картах</a>
-                    <a href="<?php echo esc_url($google_maps_url); ?>" target="_blank" rel="noopener noreferrer">Найти на Google Картах</a>
-                    <a href="<?php echo esc_url($twogis_maps_url); ?>" target="_blank" rel="noopener noreferrer">Найти в 2ГИС</a>
+                    <a href="<?php echo esc_url($yandex_maps_url); ?>" target="_blank" rel="noopener noreferrer">Отзывы на Яндекс Картах</a>
+                    <a href="<?php echo esc_url($google_maps_url); ?>" target="_blank" rel="noopener noreferrer">Отзывы в Google Картах</a>
+                    <a href="<?php echo esc_url($twogis_maps_url); ?>" target="_blank" rel="noopener noreferrer">Отзывы в 2ГИС</a>
                 </div>
             </div>
 
@@ -292,18 +249,17 @@ get_header();
         <div class="cg-about-container">
             <div class="cg-about-contact__card">
                 <div class="cg-about-contact__copy">
-                    <span class="cg-about-eyebrow">Ждём вас в магазине</span>
-                    <h2>Выберите цветы лично или закажите доставку</h2>
-                    <p>В магазине можно посмотреть готовые букеты, обсудить индивидуальную композицию с флористом и сразу подобрать подарок к нужному поводу.</p>
+                    <span class="cg-about-eyebrow">Полезная информация</span>
+                    <h2>Практические условия вынесены на отдельные страницы</h2>
+                    <p>Здесь мы рассказываем о магазине, команде и подходе к работе. Стоимость доставки, способы оплаты, телефоны, мессенджеры и карта находятся в профильных разделах.</p>
                 </div>
 
                 <div class="cg-about-contact__details">
-                    <div class="cg-about-contact__row"><span>Адрес</span><strong><?php echo esc_html($address_label); ?></strong></div>
-                    <div class="cg-about-contact__row"><span>Телефон</span><a href="tel:<?php echo esc_attr($phone_raw); ?>"><?php echo esc_html($phone_label); ?></a></div>
-                    <div class="cg-about-contact__row"><span>Работаем</span><strong>ежедневно с 07:00 до 20:00</strong></div>
+                    <div class="cg-about-contact__row"><span>Доставка и оплата</span><strong>цены, сроки, ночная доставка и способы оплаты</strong></div>
+                    <div class="cg-about-contact__row"><span>Контакты</span><strong>телефоны, мессенджеры, адрес и карта магазина</strong></div>
                     <div class="cg-about-contact__actions">
-                        <a href="tel:<?php echo esc_attr($phone_raw); ?>">Позвонить</a>
-                        <a href="<?php echo esc_url($catalog_url); ?>">Перейти в каталог</a>
+                        <a href="<?php echo esc_url($delivery_url); ?>">Доставка и оплата</a>
+                        <a href="<?php echo esc_url($contacts_url); ?>">Открыть контакты</a>
                     </div>
                 </div>
             </div>
