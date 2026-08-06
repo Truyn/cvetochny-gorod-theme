@@ -133,7 +133,6 @@ function cg_home_sections_customize($wp_customize) {
     $add_text('cg_instagram_title', 'Заголовок', 'cg_home_instagram', 'Наши букеты в жизни');
     $add_text('cg_instagram_text', 'Описание', 'cg_home_instagram', 'Следите за новыми композициями, историями заказов и работой флористов.', 'textarea');
     $add_text('cg_instagram_gallery_url', 'Ссылка для фотографий и кнопки', 'cg_home_instagram', 'https://www.instagram.com/florals_city_nv/', 'url', 'Обычно здесь указывается ссылка на страницу магазина в Instagram.');
-    $add_text('cg_instagram_button_text', 'Текст ссылки справа', 'cg_home_instagram', 'Мы в Instagram →');
 
     for ($i = 1; $i <= 6; $i++) {
         $setting_id = 'cg_instagram_image_' . $i;
@@ -151,6 +150,13 @@ function cg_home_sections_customize($wp_customize) {
     $add_text('cg_newsletter_shortcode', 'Шорткод формы', 'cg_home_newsletter', '', 'text');
 }
 add_action('customize_register', 'cg_home_sections_customize');
+
+/** Let the gallery use its own link while keeping the existing frontend markup. */
+function cg_home_instagram_gallery_url($social_url) {
+    $gallery_url = get_theme_mod('cg_instagram_gallery_url', '');
+    return $gallery_url !== '' ? $gallery_url : $social_url;
+}
+add_filter('theme_mod_cg_instagram_url', 'cg_home_instagram_gallery_url');
 
 /** Keep the visible promotion at the agreed 10% unless it was customized. */
 function cg_upgrade_home_section_defaults() {
