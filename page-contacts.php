@@ -30,6 +30,8 @@ $google_maps_url = 'https://share.google/9kwCRZqMhlHw6F1dh';
 $twogis_maps_url = 'https://2gis.ru/novovoronezh/firm/70000001053810380';
 $yandex_map_embed = 'https://yandex.ru/map-widget/v1/?from=mapframe&oid=102742626474&ol=biz';
 $catalog_url = function_exists('cg_catalog_url') ? cg_catalog_url() : home_url('/shop/');
+$about_url = home_url('/about/');
+$delivery_url = function_exists('cg_delivery_payment_url') ? cg_delivery_payment_url() : home_url('/delivery/');
 
 $schema = [
     '@context' => 'https://schema.org',
@@ -51,7 +53,7 @@ $schema = [
             'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday',
         ],
         'opens' => '07:00',
-        'closes' => '20:00',
+        'closes' => '21:00',
     ]],
     'contactPoint' => [[
         '@type' => 'ContactPoint',
@@ -71,15 +73,13 @@ get_header();
         <div class="cg-contacts-container cg-contacts-hero__grid">
             <div class="cg-contacts-hero__copy">
                 <span class="cg-contacts-eyebrow">Контакты «Цветочного города»</span>
-                <h1 id="cg-contacts-title">Всегда на связи, когда важны детали</h1>
-                <p>
-                    Поможем выбрать букет, уточнить доставку, обсудить свадебную флористику или корпоративный заказ. По вопросам уже оформленного заказа тоже можно сразу связаться с нами удобным способом.
-                </p>
+                <h1 id="cg-contacts-title">Телефоны, мессенджеры и адрес магазина</h1>
+                <p>На этой странице собраны только способы связи и карта. Для срочного заказа лучше позвонить, для обычного вопроса можно написать в удобный мессенджер.</p>
                 <div class="cg-contacts-hero__actions">
                     <a class="cg-contacts-button" href="tel:<?php echo esc_attr($primary_phone_raw); ?>">Позвонить в магазин</a>
                     <a class="cg-contacts-button cg-contacts-button--light" href="<?php echo esc_url($whatsapp_url); ?>" target="_blank" rel="noopener noreferrer">Написать в WhatsApp</a>
                 </div>
-                <div class="cg-contacts-hero__status"><span></span> Магазин работает ежедневно с 07:00 до 20:00</div>
+                <div class="cg-contacts-hero__status"><span></span> Магазин работает ежедневно с 07:00 до 21:00</div>
             </div>
 
             <aside class="cg-contacts-hero__card" aria-label="Основные контакты">
@@ -87,7 +87,7 @@ get_header();
                 <span>Основной телефон</span>
                 <a class="cg-contacts-hero__phone" href="tel:<?php echo esc_attr($primary_phone_raw); ?>"><?php echo esc_html($primary_phone_label); ?></a>
                 <p><?php echo esc_html($address); ?></p>
-                <div class="cg-contacts-hero__hours"><b>Сообщения</b><strong>06:30–22:00</strong></div>
+                <div class="cg-contacts-hero__hours"><b>Ежедневно</b><strong>07:00–21:00</strong></div>
             </aside>
         </div>
     </section>
@@ -97,7 +97,7 @@ get_header();
             <div class="cg-contacts-section__head">
                 <span class="cg-contacts-eyebrow">Как связаться</span>
                 <h2 id="cg-contacts-details-title">Выберите удобный способ</h2>
-                <p>Для срочного заказа лучше позвонить. В мессенджеры можно писать ежедневно с 06:30 до 22:00.</p>
+                <p>Звонки и сообщения принимаем ежедневно в рабочее время магазина — с 07:00 до 21:00.</p>
             </div>
 
             <div class="cg-contacts-cards">
@@ -133,8 +133,8 @@ get_header();
                         <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>
                     </span>
                     <small>Время работы</small>
-                    <h3>07:00–20:00</h3>
-                    <p>Магазин открыт ежедневно. Сообщения принимаем с 06:30 до 22:00.</p>
+                    <h3>07:00–21:00</h3>
+                    <p>Магазин открыт ежедневно без выходных.</p>
                 </article>
             </div>
 
@@ -181,35 +181,17 @@ get_header();
         </div>
     </section>
 
-    <section class="cg-contacts-section" aria-labelledby="cg-contacts-topics-title">
-        <div class="cg-contacts-container">
-            <div class="cg-contacts-section__head">
-                <span class="cg-contacts-eyebrow">С чем можно обратиться</span>
-                <h2 id="cg-contacts-topics-title">Поможем с любым вопросом о цветах и заказе</h2>
-            </div>
-
-            <div class="cg-contacts-topics">
-                <article><span>01</span><h3>Заказ букета</h3><p>Подберём готовую композицию или соберём авторский букет по вашим пожеланиям и бюджету.</p></article>
-                <article><span>02</span><h3>Свадебная флористика</h3><p>Обсудим букет невесты и цветочные решения для свадебного дня.</p></article>
-                <article><span>03</span><h3>Корпоративные заказы</h3><p>Цветы для сотрудников, партнёров, мероприятий и регулярных поздравлений.</p></article>
-                <article><span>04</span><h3>Сотрудничество</h3><p>Предложения от организаций, поставщиков и партнёров принимаем по телефону или почте.</p></article>
-                <article><span>05</span><h3>Вопрос по заказу</h3><p>Уточним статус, доставку, состав букета или другие детали уже оформленного заказа.</p></article>
-                <article><span>06</span><h3>Претензии и другое</h3><p>Выслушаем, разберёмся в ситуации и постараемся предложить справедливое решение.</p></article>
-            </div>
-        </div>
-    </section>
-
     <section class="cg-contacts-cta">
         <div class="cg-contacts-container">
             <div class="cg-contacts-cta__card">
                 <div>
-                    <span class="cg-contacts-eyebrow">Начнём с вашего повода</span>
-                    <h2>Расскажите, какой букет вам нужен</h2>
-                    <p>Флорист поможет с выбором цветов, палитры, размера композиции и стоимости.</p>
+                    <span class="cg-contacts-eyebrow">Другие разделы</span>
+                    <h2>История магазина и условия доставки — отдельно</h2>
+                    <p>На странице «О нас» рассказываем о семье, флористах и подходе к работе. На странице «Доставка и оплата» собраны цены, сроки и способы оплаты.</p>
                 </div>
                 <div class="cg-contacts-cta__actions">
-                    <a href="tel:<?php echo esc_attr($primary_phone_raw); ?>">Позвонить</a>
-                    <a href="<?php echo esc_url($whatsapp_url); ?>" target="_blank" rel="noopener noreferrer">Написать в WhatsApp</a>
+                    <a href="<?php echo esc_url($about_url); ?>">О нас</a>
+                    <a href="<?php echo esc_url($delivery_url); ?>">Доставка и оплата</a>
                     <a href="<?php echo esc_url($catalog_url); ?>">Перейти в каталог</a>
                 </div>
             </div>
