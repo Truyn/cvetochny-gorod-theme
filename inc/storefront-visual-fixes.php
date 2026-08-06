@@ -168,3 +168,6 @@ require_once get_template_directory() . '/inc/vk-order-notifications.php';
 
 /** Keep signed-in favorites synchronized across devices. */
 require_once get_template_directory() . '/inc/favorites-account-sync.php';
+
+/** Register the public delivery and payment information page. */
+require_once get_template_directory() . '/inc/delivery-payment-page.php';
