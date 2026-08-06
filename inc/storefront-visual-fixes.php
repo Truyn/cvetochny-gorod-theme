@@ -162,3 +162,6 @@ function cg_storefront_visual_fixes_assets() {
     }
 }
 add_action('wp_enqueue_scripts', 'cg_storefront_visual_fixes_assets', 45);
+
+/** Load the store-manager integration for VK order notifications. */
+require_once get_template_directory() . '/inc/vk-order-notifications.php';
