@@ -8,6 +8,7 @@
 if (!defined('ABSPATH')) exit;
 
 const CG_ACCOUNT_FAVORITES_META = '_cg_favorite_product_ids';
+const CG_ACCOUNT_FAVORITES_UPDATED_META = '_cg_favorite_product_ids_updated_at';
 
 /** Normalize and optionally validate product IDs before storing them. */
 function cg_account_favorites_normalize($ids, $validate_products = true) {
@@ -42,20 +43,31 @@ function cg_get_account_favorites($user_id = 0) {
     return cg_account_favorites_normalize(is_array($stored) ? $stored : [], false);
 }
 
+/** Timestamp used to resolve changes made on different devices. */
+function cg_get_account_favorites_updated_at($user_id = 0) {
+    $user_id = $user_id ? absint($user_id) : get_current_user_id();
+    if (!$user_id) return 0;
+
+    return absint(get_user_meta($user_id, CG_ACCOUNT_FAVORITES_UPDATED_META, true));
+}
+
 /** Persist the exact ordered list for a customer. */
-function cg_save_account_favorites($user_id, $ids) {
+function cg_save_account_favorites($user_id, $ids, $client_updated_at = 0) {
     $user_id = absint($user_id);
-    if (!$user_id) return [];
+    if (!$user_id) return ['ids' => [], 'updatedAt' => 0];
 
     $ids = cg_account_favorites_normalize($ids, true);
+    $server_now = (int) round(microtime(true) * 1000);
+    $updated_at = max(absint($client_updated_at), $server_now);
 
     if ($ids) {
         update_user_meta($user_id, CG_ACCOUNT_FAVORITES_META, $ids);
     } else {
         delete_user_meta($user_id, CG_ACCOUNT_FAVORITES_META);
     }
+    update_user_meta($user_id, CG_ACCOUNT_FAVORITES_UPDATED_META, $updated_at);
 
-    return $ids;
+    return ['ids' => $ids, 'updatedAt' => $updated_at];
 }
 
 /** AJAX endpoint used after every signed-in favorites change. */
@@ -66,13 +78,29 @@ function cg_ajax_sync_account_favorites() {
         wp_send_json_error(['message' => 'Войдите в личный кабинет, чтобы синхронизировать избранное.'], 401);
     }
 
+    $user_id = get_current_user_id();
     $raw_ids = isset($_POST['ids']) ? (array) wp_unslash($_POST['ids']) : [];
-    $saved_ids = cg_save_account_favorites(get_current_user_id(), $raw_ids);
+    $client_updated_at = isset($_POST['updated_at']) ? absint($_POST['updated_at']) : 0;
+    $server_updated_at = cg_get_account_favorites_updated_at($user_id);
+
+    // A stale tab or device must not overwrite a newer account state.
+    if ($server_updated_at > 0 && $client_updated_at < $server_updated_at) {
+        $server_ids = cg_account_favorites_normalize(cg_get_account_favorites($user_id), true);
+        wp_send_json_success([
+            'ids' => $server_ids,
+            'count' => count($server_ids),
+            'updatedAt' => $server_updated_at,
+            'conflictResolved' => true,
+        ]);
+    }
+
+    $saved = cg_save_account_favorites($user_id, $raw_ids, $client_updated_at);
 
     wp_send_json_success([
-        'ids' => $saved_ids,
-        'count' => count($saved_ids),
-        'savedAt' => wp_date('c'),
+        'ids' => $saved['ids'],
+        'count' => count($saved['ids']),
+        'updatedAt' => $saved['updatedAt'],
+        'conflictResolved' => false,
     ]);
 }
 add_action('wp_ajax_cg_sync_account_favorites', 'cg_ajax_sync_account_favorites');
@@ -113,6 +141,7 @@ function cg_favorites_account_sync_assets() {
         'ajaxUrl' => admin_url('admin-ajax.php'),
         'nonce' => wp_create_nonce('cg_favorites_account_sync'),
         'serverIds' => $logged_in ? cg_get_account_favorites() : [],
+        'serverUpdatedAt' => $logged_in ? cg_get_account_favorites_updated_at() : 0,
         'accountUrl' => $account_url,
         'strings' => [
             'guest' => 'Войдите в личный кабинет — избранное будет доступно на телефоне и компьютере.',
