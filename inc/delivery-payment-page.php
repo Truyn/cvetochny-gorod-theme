@@ -49,6 +49,13 @@ add_filter('redirect_canonical', function($redirect_url) {
 add_action('template_redirect', function() {
     if (!cg_is_delivery_payment_page()) return;
 
+    global $wp_query;
+    if ($wp_query instanceof WP_Query) {
+        $wp_query->is_404 = false;
+        $wp_query->is_page = true;
+        $wp_query->is_singular = true;
+    }
+
     status_header(200);
     nocache_headers();
 });
@@ -70,6 +77,7 @@ add_filter('pre_get_document_title', function($title) {
 
 add_filter('body_class', function($classes) {
     if (cg_is_delivery_payment_page()) {
+        $classes = array_values(array_diff($classes, ['error404']));
         $classes[] = 'cg-delivery-payment-page';
     }
     return $classes;
@@ -115,12 +123,13 @@ function cg_delivery_payment_methods() {
 
 /** Enabled payment methods configured in WooCommerce. */
 function cg_delivery_payment_gateways() {
-    if (!class_exists('WooCommerce') || !function_exists('WC') || !WC()->payment_gateways()) {
-        return [];
-    }
+    if (!class_exists('WooCommerce') || !function_exists('WC')) return [];
+
+    $woocommerce = WC();
+    if (!$woocommerce || !$woocommerce->payment_gateways()) return [];
 
     $gateways = [];
-    foreach (WC()->payment_gateways()->payment_gateways() as $gateway) {
+    foreach ($woocommerce->payment_gateways()->payment_gateways() as $gateway) {
         if (!$gateway instanceof WC_Payment_Gateway || $gateway->enabled !== 'yes') continue;
 
         $description = method_exists($gateway, 'get_description')
