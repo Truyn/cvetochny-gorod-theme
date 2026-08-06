@@ -17,10 +17,10 @@ wp_enqueue_style(
 
 $catalog_url = function_exists('cg_catalog_url') ? cg_catalog_url() : home_url('/shop/');
 $checkout_url = class_exists('WooCommerce') ? wc_get_checkout_url() : $catalog_url;
+$contacts_url = get_theme_mod('cg_contacts_url', home_url('/contacts/')) ?: home_url('/contacts/');
 $phone_label = get_theme_mod('cg_phone', '+7 (930) 411-98-55');
 $phone_raw = preg_replace('/[^0-9+]/', '', $phone_label);
 if (!$phone_raw) $phone_raw = '+79304119855';
-$address = get_theme_mod('cg_address', 'Нововоронеж, ул. Победы, 1Б');
 $threshold = function_exists('cg_get_novovoronezh_free_delivery_threshold')
     ? (float) cg_get_novovoronezh_free_delivery_threshold()
     : 10000;
@@ -287,11 +287,12 @@ get_header();
             <div>
                 <span class="cg-delivery-eyebrow">Готовы оформить заказ?</span>
                 <h2>Выберите букет — доставку рассчитаем сразу</h2>
-                <p>Магазин: <?php echo esc_html($address); ?>. Заказы и доставка ежедневно с 7:00 до 21:00.</p>
+                <p>Телефоны, мессенджеры, адрес и карта магазина собраны на отдельной странице контактов.</p>
             </div>
             <div class="cg-delivery-cta__actions">
                 <a class="cg-delivery-button" href="<?php echo esc_url($catalog_url); ?>">Перейти в каталог</a>
                 <a class="cg-delivery-button cg-delivery-button--light" href="<?php echo esc_url($checkout_url); ?>">Оформить заказ</a>
+                <a class="cg-delivery-button cg-delivery-button--light" href="<?php echo esc_url($contacts_url); ?>">Открыть контакты</a>
             </div>
         </div>
     </section>
@@ -299,4 +300,4 @@ get_header();
 
 <script type="application/ld+json"><?php echo wp_json_encode($schema, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); ?></script>
 
-<?php get_footer(); ?>
+<?php get_footer();
