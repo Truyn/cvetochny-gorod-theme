@@ -165,3 +165,6 @@ add_action('wp_enqueue_scripts', 'cg_storefront_visual_fixes_assets', 45);
 
 /** Load the store-manager integration for VK order notifications. */
 require_once get_template_directory() . '/inc/vk-order-notifications.php';
+
+/** Keep signed-in favorites synchronized across devices. */
+require_once get_template_directory() . '/inc/favorites-account-sync.php';
