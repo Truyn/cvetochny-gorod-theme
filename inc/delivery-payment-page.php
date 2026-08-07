@@ -9,7 +9,9 @@ if (!defined('ABSPATH')) exit;
 
 /** Public URL used in navigation and calls to action. */
 function cg_delivery_payment_url() {
-    return home_url('/delivery/');
+    $fallback = home_url('/delivery/');
+    $custom_url = (string) get_theme_mod('cg_delivery_url', $fallback);
+    return $custom_url !== '' ? $custom_url : $fallback;
 }
 
 /** Register a virtual page so the section works without manual page creation. */
