@@ -163,6 +163,22 @@ function cg_storefront_visual_fixes_assets() {
 }
 add_action('wp_enqueue_scripts', 'cg_storefront_visual_fixes_assets', 45);
 
+/** Load final contrast and color corrections for the About and Contacts pages. */
+function cg_information_page_polish_assets() {
+    $is_about = is_page('about') || is_page_template('page-templates/about.php');
+    $is_contacts = is_page('contacts') || is_page_template('page-templates/contacts.php');
+    if (!$is_about && !$is_contacts) return;
+
+    $style_path = get_template_directory() . '/assets/css/information-page-polish.css';
+    wp_enqueue_style(
+        'cg-information-page-polish',
+        get_template_directory_uri() . '/assets/css/information-page-polish.css',
+        [],
+        file_exists($style_path) ? filemtime($style_path) : wp_get_theme()->get('Version')
+    );
+}
+add_action('wp_enqueue_scripts', 'cg_information_page_polish_assets', 60);
+
 /** Load the store-manager integration for VK order notifications. */
 require_once get_template_directory() . '/inc/vk-order-notifications.php';
 
