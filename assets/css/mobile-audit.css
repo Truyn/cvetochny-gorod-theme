@@ -1,0 +1,21 @@
+/* Финальный мобильный аудит без изменения общей стилистики. */
+@media (max-width:980px){
+html,body{max-width:100%;overflow-x:clip}
+main,.site-main,.site-content,.content-area,.woocommerce,.container,.cg-custom-catalog,.cg-about-page,.cg-contacts-page,.cg-delivery-payment-page,.cg-account-page,.cg-favorites-page{min-width:0;max-width:100%}
+main img,main picture,main video,main canvas{max-width:100%;height:auto}
+main iframe{max-width:100%}
+main input,main select,main textarea,main button{max-width:100%}
+.woocommerce form .form-row,.woocommerce form .form-row-first,.woocommerce form .form-row-last,.woocommerce .woocommerce-MyAccount-content,.woocommerce .woocommerce-MyAccount-navigation{min-width:0}
+.woocommerce table,.woocommerce table.shop_table,.woocommerce table.woocommerce-table{max-width:100%}
+.woocommerce td,.woocommerce th,.cg-account-page .woocommerce-MyAccount-content,.cg-contacts-page,.cg-about-page,.cg-delivery-payment-page{overflow-wrap:anywhere}
+.cg-custom-catalog .cg-shop-shell>*,.cg-custom-catalog .cg-shop-toolbar>*,.cg-custom-catalog .cg-catalog-filter-actions>*{min-width:0}
+.cg-mini-cart,.cg-custom-catalog .cg-catalog-sidebar{max-width:100vw}
+.cg-mini-cart__name,.cg-catalog-category-option span,.cg-catalog-check span,.cg-contacts-card h3,.cg-contacts-messenger span,.cg-about-contact__row strong{overflow-wrap:anywhere}
+.woocommerce .button,.woocommerce button.button,.woocommerce a.button,.cg-catalog-filter-actions .button,.cg-about-contact__actions a,.cg-contacts-cta__actions a{white-space:normal;text-align:center;line-height:1.3}
+}
+@media (max-width:560px){
+main input,main select,main textarea{font-size:16px}
+.cg-mini-cart__header{padding-top:max(19px,env(safe-area-inset-top))}
+.cg-mini-cart__body{padding-bottom:max(22px,env(safe-area-inset-bottom))}
+.woocommerce-error,.woocommerce-message,.woocommerce-info{overflow-wrap:anywhere}
+}
