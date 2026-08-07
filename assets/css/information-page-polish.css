@@ -1,0 +1,67 @@
+/* Финальная коррекция блоков «О нас» и «Контакты». */
+
+/* Контакты: все мессенджеры оформлены последовательно, а не только первые два. */
+.cg-contacts-messenger:nth-child(3){background:#f3f6ff;border-color:#d8deef;color:#4d5f8a}
+.cg-contacts-messenger:nth-child(4){background:#fff3f7;border-color:#ead2dc;color:#8a5266}
+.cg-contacts-messenger:nth-child(3) span{color:#7d89a8}
+.cg-contacts-messenger:nth-child(4) span{color:#a77a8b}
+
+/* Контакты: нижний переход между разделами — светлее, спокойнее и с явными кнопками. */
+.cg-contacts-cta__card{
+  border:1px solid #e4ccc7;
+  background:
+    radial-gradient(circle at 88% 18%,rgba(255,255,255,.9),transparent 28%),
+    linear-gradient(135deg,#f8ebe8 0%,#efd9d5 54%,#e7cdca 100%);
+  color:#43322f;
+  box-shadow:0 24px 58px rgba(92,58,57,.12);
+}
+.cg-contacts-cta__card:before{color:rgba(166,97,105,.08)}
+.cg-contacts-cta .cg-contacts-eyebrow{color:#9b5e66}
+.cg-contacts-cta__card h2{color:#3f302d}
+.cg-contacts-cta__card p{color:#725d58}
+.cg-contacts-cta__actions a{
+  border-color:#d5b9b4;
+  background:rgba(255,255,255,.86);
+  color:#624743;
+  box-shadow:0 5px 14px rgba(91,55,53,.05);
+}
+.cg-contacts-cta__actions a:nth-child(1){border-color:#725156;background:#725156;color:#fff}
+.cg-contacts-cta__actions a:nth-child(2){border-color:#b86e78;background:#b86e78;color:#fff}
+.cg-contacts-cta__actions a:nth-child(3){border-color:#cfb4af;background:#fff;color:#5c433f}
+.cg-contacts-cta__actions a:hover{box-shadow:0 10px 22px rgba(87,53,51,.12);transform:translateY(-2px)}
+
+/* О нас: вместо насыщенного красного — светлая карточка с тёмным читаемым текстом. */
+.cg-about-contact__card{
+  border:1px solid #e2cbc6;
+  background:
+    radial-gradient(circle at 90% 20%,rgba(255,255,255,.92),transparent 30%),
+    linear-gradient(135deg,#f8ece8 0%,#f0dcda 56%,#e9d2cf 100%);
+  color:#43332f;
+  box-shadow:0 24px 58px rgba(92,58,57,.12);
+}
+.cg-about-contact__card:before{color:rgba(166,97,105,.08)}
+.cg-about-contact .cg-about-eyebrow{color:#9e6068}
+.cg-about-contact__copy h2{color:#3f302d}
+.cg-about-contact__copy p{color:#725f59}
+.cg-about-contact__details{
+  border-color:#ddc5c0;
+  background:rgba(255,255,255,.72);
+  box-shadow:0 12px 30px rgba(97,62,60,.07);
+  backdrop-filter:none;
+}
+.cg-about-contact__row{border-bottom-color:#ead9d5}
+.cg-about-contact__row span{color:#986a6c}
+.cg-about-contact__row strong,.cg-about-contact__row a{color:#493936}
+.cg-about-contact__actions a{
+  border-color:#cfb3ae;
+  background:#fff;
+  color:#614642;
+  box-shadow:0 5px 14px rgba(91,55,53,.05);
+}
+.cg-about-contact__actions a:first-child{border-color:#b86e78;background:#b86e78;color:#fff}
+.cg-about-contact__actions a:last-child{border-color:#725156;background:#725156;color:#fff}
+.cg-about-contact__actions a:hover{box-shadow:0 10px 22px rgba(87,53,51,.12);transform:translateY(-2px)}
+
+@media(max-width:760px){
+  .cg-contacts-cta__card,.cg-about-contact__card{box-shadow:0 16px 38px rgba(92,58,57,.1)}
+}
