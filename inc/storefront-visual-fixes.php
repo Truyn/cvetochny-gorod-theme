@@ -179,6 +179,18 @@ function cg_information_page_polish_assets() {
 }
 add_action('wp_enqueue_scripts', 'cg_information_page_polish_assets', 60);
 
+/** Load conservative mobile guards after the page-specific styles. */
+function cg_mobile_audit_assets() {
+    $style_path = get_template_directory() . '/assets/css/mobile-audit.css';
+    wp_enqueue_style(
+        'cg-mobile-audit',
+        get_template_directory_uri() . '/assets/css/mobile-audit.css',
+        [],
+        file_exists($style_path) ? filemtime($style_path) : wp_get_theme()->get('Version')
+    );
+}
+add_action('wp_enqueue_scripts', 'cg_mobile_audit_assets', 90);
+
 /** Load the store-manager integration for VK order notifications. */
 require_once get_template_directory() . '/inc/vk-order-notifications.php';
 
