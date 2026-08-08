@@ -29,6 +29,11 @@
 .topbar .topbar__link{display:inline-flex!important;align-items:center!important;gap:8px!important;color:inherit!important;text-decoration:none!important;border-radius:8px!important;transition:color .18s ease,background .18s ease!important}
 .topbar .topbar__link:hover,.topbar .topbar__link:focus-visible{color:var(--cg-accent-dark)!important;background:rgba(183,117,109,.07)!important;outline:none!important}
 
+/* Keep the desktop chrome on the same 1240px content axis as the homepage. */
+@media(min-width:1121px){
+    .topbar .container,.site-header>.container,.site-header .header-search>.container{width:min(calc(100% - 32px),var(--cg-container))!important;max-width:var(--cg-container)!important}
+}
+
 /* Desktop navigation must stay compact and horizontal even after resizing from mobile. */
 @media(min-width:901px){
     .site-header .main-navigation,.site-header .main-navigation.is-open{position:static!important;inset:auto!important;display:flex!important;align-items:center!important;justify-content:center!important;width:100%!important;height:auto!important;max-height:none!important;margin:0!important;padding:0!important;border:0!important;background:transparent!important;box-shadow:none!important;overflow:visible!important;opacity:1!important;visibility:visible!important;transform:none!important}
