@@ -1,0 +1,44 @@
+/* Final alignment for expandable filter controls. */
+.cg-custom-catalog .cg-filter-group summary > span,
+.cg-custom-catalog .cg-category-toggle {
+    position: relative;
+}
+
+.cg-custom-catalog .cg-filter-group summary > span::before,
+.cg-custom-catalog .cg-filter-group summary > span::after,
+.cg-custom-catalog .cg-category-toggle::before,
+.cg-custom-catalog .cg-category-toggle::after {
+    content: "" !important;
+    position: absolute !important;
+    left: 50% !important;
+    top: 50% !important;
+    width: 12px !important;
+    height: 2px !important;
+    border: 0 !important;
+    border-radius: 999px;
+    background: #a56368;
+    transform: translate(-50%, -50%) !important;
+    transform-origin: center;
+    transition: opacity .18s ease, transform .18s ease, background .18s ease;
+}
+
+.cg-custom-catalog .cg-filter-group summary > span::after,
+.cg-custom-catalog .cg-category-toggle::after {
+    transform: translate(-50%, -50%) rotate(90deg) !important;
+}
+
+.cg-custom-catalog .cg-filter-group[open] summary > span::after,
+.cg-custom-catalog .cg-category-node.is-open > .cg-category-row .cg-category-toggle::after {
+    opacity: 0;
+    transform: translate(-50%, -50%) rotate(90deg) scale(.45) !important;
+}
+
+.cg-custom-catalog .cg-category-node.is-open > .cg-category-row .cg-category-toggle::before {
+    transform: translate(-50%, -50%) !important;
+}
+
+.cg-custom-catalog .cg-category-toggle:focus-visible,
+.cg-custom-catalog .cg-filter-group summary:focus-visible {
+    outline: 3px solid rgba(183,117,109,.2);
+    outline-offset: 2px;
+}
