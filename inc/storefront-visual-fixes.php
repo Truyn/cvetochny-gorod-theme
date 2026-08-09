@@ -205,3 +205,6 @@ require_once get_template_directory() . '/inc/home-gallery-layout.php';
 
 /** Add conservative SEO defaults and a launch-readiness checklist. */
 require_once get_template_directory() . '/inc/launch-readiness.php';
+
+/** Mirror delivery/order details into Custom Fields for the WooCommerce mobile app. */
+require_once get_template_directory() . '/inc/mobile-order-fields.php';
