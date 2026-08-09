@@ -202,3 +202,6 @@ require_once get_template_directory() . '/inc/delivery-payment-page.php';
 
 /** Add quantity, layout and scale controls to the homepage photo gallery. */
 require_once get_template_directory() . '/inc/home-gallery-layout.php';
+
+/** Add conservative SEO defaults and a launch-readiness checklist. */
+require_once get_template_directory() . '/inc/launch-readiness.php';
