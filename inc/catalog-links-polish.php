@@ -76,25 +76,49 @@ function cg_about_url() {
         if ($url) return $url;
     }
 
-    return home_url('/about/');
+    $base = untrailingslashit((string) get_option('home'));
+    return $base . '/about/';
 }
 
 /**
- * Existing templates historically linked to /about/ directly.
- * If that legacy URL is a 404, redirect it to the actual About page.
+ * Make old template calls like home_url('/about/') point to the real About page.
+ * This fixes the Contacts button without forcing a particular page slug.
  */
+function cg_filter_legacy_about_home_url($url, $path, $orig_scheme, $blog_id) {
+    $normalized_path = '/' . trim((string) $path, '/') . '/';
+    if ($normalized_path !== '/about/') return $url;
+
+    $custom = trim((string) get_theme_mod('cg_about_url', ''));
+    if ($custom !== '') return $custom;
+
+    $direct = get_page_by_path('about', OBJECT, 'page');
+    if ($direct instanceof WP_Post && $direct->post_status === 'publish') {
+        return $url;
+    }
+
+    $page = cg_find_about_page();
+    if (!$page instanceof WP_Post) return $url;
+
+    $target = get_permalink($page);
+    return $target ?: $url;
+}
+add_filter('home_url', 'cg_filter_legacy_about_home_url', 20, 4);
+
+/** Keep old /about/ bookmarks working if WordPress currently returns a 404 there. */
 function cg_redirect_legacy_about_url() {
     if (is_admin() || wp_doing_ajax() || !is_404()) return;
 
     $request_path = isset($_SERVER['REQUEST_URI'])
         ? (string) wp_parse_url(wp_unslash($_SERVER['REQUEST_URI']), PHP_URL_PATH)
         : '';
-    $legacy_path = (string) wp_parse_url(home_url('/about/'), PHP_URL_PATH);
+    $home_path = rtrim((string) wp_parse_url((string) get_option('home'), PHP_URL_PATH), '/');
+    $legacy_path = $home_path . '/about/';
 
     if (untrailingslashit($request_path) !== untrailingslashit($legacy_path)) return;
 
     $target = cg_about_url();
-    if (!$target || untrailingslashit($target) === untrailingslashit(home_url('/about/'))) return;
+    $legacy_url = untrailingslashit((string) get_option('home')) . '/about/';
+    if (!$target || untrailingslashit($target) === untrailingslashit($legacy_url)) return;
 
     wp_safe_redirect($target, 301, 'Cvetochny Gorod');
     exit;
