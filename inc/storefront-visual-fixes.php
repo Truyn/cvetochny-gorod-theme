@@ -208,3 +208,6 @@ require_once get_template_directory() . '/inc/launch-readiness.php';
 
 /** Mirror delivery/order details into Custom Fields for the WooCommerce mobile app. */
 require_once get_template_directory() . '/inc/mobile-order-fields.php';
+
+/** Fix legacy navigation targets and catalog expand/collapse controls. */
+require_once get_template_directory() . '/inc/catalog-links-polish.php';
