@@ -211,3 +211,6 @@ require_once get_template_directory() . '/inc/mobile-order-fields.php';
 
 /** Fix legacy navigation targets and catalog expand/collapse controls. */
 require_once get_template_directory() . '/inc/catalog-links-polish.php';
+
+/** Register draft legal documents, seller settings and checkout legal notices. */
+require_once get_template_directory() . '/inc/legal-commerce.php';

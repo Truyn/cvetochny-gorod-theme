@@ -8,6 +8,9 @@ $cg_footer_contacts_url = get_theme_mod('cg_contacts_url', home_url('/contacts/'
 $cg_footer_phone = get_theme_mod('cg_phone', '+7 (930) 411-98-55');
 $cg_footer_address = get_theme_mod('cg_address', 'Нововоронеж, ул. Победы, 1Б');
 $cg_footer_worktime = get_theme_mod('cg_worktime', 'Ежедневно с 07:00 до 21:00');
+$cg_footer_privacy_url = function_exists('cg_legal_page_url') ? cg_legal_page_url('privacy') : '';
+$cg_footer_offer_url = function_exists('cg_legal_page_url') ? cg_legal_page_url('offer') : '';
+$cg_footer_returns_url = function_exists('cg_legal_page_url') ? cg_legal_page_url('returns') : '';
 ?>
 <footer class="site-footer">
     <div class="container">
@@ -78,7 +81,24 @@ $cg_footer_worktime = get_theme_mod('cg_worktime', 'Ежедневно с 07:00 
 
         <div class="footer-bottom">
             <span>© <?php echo esc_html(wp_date('Y')); ?> <?php echo esc_html(get_theme_mod('cg_footer_copyright', 'Цветочный город')); ?></span>
-            <span><?php echo esc_html(get_theme_mod('cg_footer_legal', 'Политика конфиденциальности · Публичная оферта')); ?></span>
+            <span class="footer-legal-links">
+                <?php if ($cg_footer_privacy_url || $cg_footer_offer_url || $cg_footer_returns_url): ?>
+                    <?php $cg_legal_separator = false; ?>
+                    <?php if ($cg_footer_privacy_url): ?>
+                        <a href="<?php echo esc_url($cg_footer_privacy_url); ?>">Политика персональных данных</a><?php $cg_legal_separator = true; ?>
+                    <?php endif; ?>
+                    <?php if ($cg_footer_offer_url): ?>
+                        <?php if ($cg_legal_separator) echo '<span aria-hidden="true"> · </span>'; ?>
+                        <a href="<?php echo esc_url($cg_footer_offer_url); ?>">Публичная оферта</a><?php $cg_legal_separator = true; ?>
+                    <?php endif; ?>
+                    <?php if ($cg_footer_returns_url): ?>
+                        <?php if ($cg_legal_separator) echo '<span aria-hidden="true"> · </span>'; ?>
+                        <a href="<?php echo esc_url($cg_footer_returns_url); ?>">Возврат и претензии</a>
+                    <?php endif; ?>
+                <?php else: ?>
+                    <?php echo esc_html(get_theme_mod('cg_footer_legal', 'Политика конфиденциальности · Публичная оферта')); ?>
+                <?php endif; ?>
+            </span>
         </div>
     </div>
 </footer>

@@ -1,0 +1,112 @@
+/* Юридические документы и уведомления — Цветочный город. */
+.cg-legal-document{
+  width:min(calc(100% - 32px),1040px);
+  margin:58px auto 86px;
+  color:#493936;
+  font-size:16px;
+  line-height:1.75;
+}
+.cg-legal-document__header{
+  position:relative;
+  overflow:hidden;
+  margin-bottom:24px;
+  padding:42px 46px;
+  border:1px solid #e7d0cb;
+  border-radius:30px;
+  background:
+    radial-gradient(circle at 92% 15%,rgba(211,116,128,.15),transparent 30%),
+    linear-gradient(145deg,#fffaf8 0%,#f8e9e6 100%);
+  box-shadow:0 20px 54px rgba(84,52,51,.09);
+}
+.cg-legal-document__header:after{
+  content:"§";
+  position:absolute;
+  right:26px;
+  top:-36px;
+  color:rgba(178,99,108,.07);
+  font:180px/1 Georgia,serif;
+  pointer-events:none;
+}
+.cg-legal-document__header>span{
+  position:relative;
+  z-index:1;
+  display:inline-flex;
+  align-items:center;
+  gap:10px;
+  margin-bottom:14px;
+  color:#a95f68;
+  font-size:12px;
+  font-weight:750;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+}
+.cg-legal-document__header>span:before{content:"";width:34px;height:1px;background:currentColor}
+.cg-legal-document__header h1{
+  position:relative;
+  z-index:1;
+  max-width:780px;
+  margin:0 0 12px;
+  color:#3e302d;
+  font:500 clamp(38px,5.6vw,62px)/1.06 Georgia,"Times New Roman",serif;
+  letter-spacing:-.035em;
+}
+.cg-legal-document__header p{position:relative;z-index:1;margin:0;color:#8c716b;font-size:13px}
+.cg-legal-document section{
+  margin-top:16px;
+  padding:28px 30px;
+  border:1px solid #eadedb;
+  border-radius:22px;
+  background:#fff;
+  box-shadow:0 10px 30px rgba(78,51,49,.04);
+}
+.cg-legal-document section h2{
+  margin:0 0 14px;
+  color:#493632;
+  font:600 24px/1.25 Georgia,"Times New Roman",serif;
+}
+.cg-legal-document section p{margin:0 0 13px;color:#725f5a}
+.cg-legal-document section p:last-child{margin-bottom:0}
+.cg-legal-document ul{margin:10px 0 0;padding-left:22px;color:#725f5a}
+.cg-legal-document li+li{margin-top:7px}
+.cg-legal-document a{color:#9c5861;text-decoration:underline;text-underline-offset:3px}
+.cg-legal-document a:hover{color:#713e45}
+.cg-legal-requisites{display:grid;gap:0;margin:20px 0 0;border:1px solid #ead9d5;border-radius:18px;background:#fffaf8;overflow:hidden}
+.cg-legal-requisites>div{display:grid;grid-template-columns:minmax(170px,.38fr) minmax(0,.62fr);gap:18px;padding:13px 16px;border-bottom:1px solid #eee1de}
+.cg-legal-requisites>div:last-child{border-bottom:0}
+.cg-legal-requisites dt{color:#9b6869;font-size:12px;font-weight:750;text-transform:uppercase;letter-spacing:.05em}
+.cg-legal-requisites dd{margin:0;color:#493936;font-weight:600;overflow-wrap:anywhere}
+.cg-legal-callout{padding:18px 20px;border-left:4px solid #cd7480;border-radius:13px;background:#fff2ef;color:#624a46}
+.cg-legal-callout strong{display:block;margin-bottom:5px;color:#74464b;font-size:17px}
+.cg-legal-callout p{margin:0!important;color:#755c57!important}
+.cg-legal-admin-warning{margin-bottom:18px;padding:15px 18px;border:1px solid #e1b865;border-radius:14px;background:#fff8e8;color:#6f541d}
+
+/* Checkout: прозрачное и читаемое объяснение обработки данных. */
+.cg-checkout-legal-notice{
+  margin:14px 0 12px;
+  padding:13px 15px;
+  border:1px solid #ead7d2;
+  border-radius:13px;
+  background:#fff9f7;
+  color:#705b56;
+  font-size:13px;
+  line-height:1.55;
+}
+.cg-checkout-legal-notice a{color:#9c5861;font-weight:650;text-decoration:underline;text-underline-offset:2px}
+.woocommerce-checkout .woocommerce-terms-and-conditions-wrapper{margin-top:10px}
+.woocommerce-checkout .woocommerce-terms-and-conditions-wrapper .form-row{line-height:1.5}
+.woocommerce-checkout .woocommerce-terms-and-conditions-wrapper label{
+  color:#594744;
+  font-size:14px;
+  font-weight:550;
+}
+.woocommerce-checkout .woocommerce-terms-and-conditions-wrapper a{color:#98545e;font-weight:650;text-underline-offset:2px}
+
+@media(max-width:640px){
+  .cg-legal-document{width:min(calc(100% - 22px),1040px);margin:34px auto 60px;font-size:15px}
+  .cg-legal-document__header{padding:30px 22px;border-radius:23px}
+  .cg-legal-document__header h1{font-size:37px}
+  .cg-legal-document section{padding:22px 18px;border-radius:18px}
+  .cg-legal-document section h2{font-size:21px}
+  .cg-legal-requisites>div{grid-template-columns:1fr;gap:3px;padding:12px 14px}
+  .cg-checkout-legal-notice{font-size:12.5px}
+}
