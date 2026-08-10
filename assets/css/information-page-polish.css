@@ -1,67 +1,174 @@
 /* Финальная коррекция блоков «О нас» и «Контакты». */
 
 /* Контакты: все мессенджеры оформлены последовательно, а не только первые два. */
-.cg-contacts-messenger:nth-child(3){background:#f3f6ff;border-color:#d8deef;color:#4d5f8a}
-.cg-contacts-messenger:nth-child(4){background:#fff3f7;border-color:#ead2dc;color:#8a5266}
-.cg-contacts-messenger:nth-child(3) span{color:#7d89a8}
-.cg-contacts-messenger:nth-child(4) span{color:#a77a8b}
+.cg-contacts-messenger:nth-child(3){background:#eef2ff;border-color:#cfd8f4;color:#435b9b}
+.cg-contacts-messenger:nth-child(4){background:#fff0f5;border-color:#e7c4d2;color:#8a4961}
+.cg-contacts-messenger:nth-child(3) span{color:#6678a7}
+.cg-contacts-messenger:nth-child(4) span{color:#98677a}
 
-/* Контакты: нижний переход между разделами — светлее, спокойнее и с явными кнопками. */
+/* Контакты: нижний переход между разделами — светлее, но заметнее и контрастнее. */
 .cg-contacts-cta__card{
-  border:1px solid #e4ccc7;
+  border:1px solid #dfbbb5;
   background:
-    radial-gradient(circle at 88% 18%,rgba(255,255,255,.9),transparent 28%),
-    linear-gradient(135deg,#f8ebe8 0%,#efd9d5 54%,#e7cdca 100%);
+    radial-gradient(circle at 88% 18%,rgba(255,255,255,.94),transparent 28%),
+    linear-gradient(135deg,#f7e2de 0%,#edcfca 54%,#e5c1bd 100%);
   color:#43322f;
-  box-shadow:0 24px 58px rgba(92,58,57,.12);
+  box-shadow:0 24px 58px rgba(92,58,57,.15);
 }
-.cg-contacts-cta__card:before{color:rgba(166,97,105,.08)}
-.cg-contacts-cta .cg-contacts-eyebrow{color:#9b5e66}
-.cg-contacts-cta__card h2{color:#3f302d}
-.cg-contacts-cta__card p{color:#725d58}
+.cg-contacts-cta__card:before{color:rgba(166,97,105,.1)}
+.cg-contacts-cta .cg-contacts-eyebrow{color:#98545e}
+.cg-contacts-cta__card h2{color:#3b2c29}
+.cg-contacts-cta__card p{color:#6a5651}
 .cg-contacts-cta__actions a{
-  border-color:#d5b9b4;
-  background:rgba(255,255,255,.86);
-  color:#624743;
-  box-shadow:0 5px 14px rgba(91,55,53,.05);
+  min-height:50px;
+  padding:0 20px;
+  border-color:#d0aaa4;
+  background:rgba(255,255,255,.92);
+  color:#5a403c;
+  font-size:15px;
+  font-weight:650;
+  line-height:1.25;
+  box-shadow:0 7px 18px rgba(91,55,53,.07);
 }
-.cg-contacts-cta__actions a:nth-child(1){border-color:#725156;background:#725156;color:#fff}
-.cg-contacts-cta__actions a:nth-child(2){border-color:#b86e78;background:#b86e78;color:#fff}
-.cg-contacts-cta__actions a:nth-child(3){border-color:#cfb4af;background:#fff;color:#5c433f}
-.cg-contacts-cta__actions a:hover{box-shadow:0 10px 22px rgba(87,53,51,.12);transform:translateY(-2px)}
+.cg-contacts-cta__actions a:nth-child(1){border-color:#765257;background:#765257;color:#fff}
+.cg-contacts-cta__actions a:nth-child(2){border-color:#bf707b;background:#bf707b;color:#fff}
+.cg-contacts-cta__actions a:nth-child(3){border-color:#cfaaa4;background:#fff;color:#5c433f}
+.cg-contacts-cta__actions a:hover{box-shadow:0 12px 26px rgba(87,53,51,.15);transform:translateY(-2px)}
 
-/* О нас: вместо насыщенного красного — светлая карточка с тёмным читаемым текстом. */
-.cg-about-contact__card{
-  border:1px solid #e2cbc6;
-  background:
-    radial-gradient(circle at 90% 20%,rgba(255,255,255,.92),transparent 30%),
-    linear-gradient(135deg,#f8ece8 0%,#f0dcda 56%,#e9d2cf 100%);
-  color:#43332f;
-  box-shadow:0 24px 58px rgba(92,58,57,.12);
+/* Общие кнопки: убираем мелкий сверхжирный текст. */
+.cg-about-page .cg-about-button,
+.cg-contacts-button{
+  min-height:54px;
+  padding-inline:24px;
+  font-size:15px;
+  font-weight:650;
+  letter-spacing:.005em;
 }
-.cg-about-contact__card:before{color:rgba(166,97,105,.08)}
-.cg-about-contact .cg-about-eyebrow{color:#9e6068}
-.cg-about-contact__copy h2{color:#3f302d}
-.cg-about-contact__copy p{color:#725f59}
+.cg-about-trust__links a,
+.cg-contacts-map-links a{
+  min-height:44px;
+  padding-inline:17px;
+  font-size:13px;
+  font-weight:650;
+}
+
+/* О нас: карточки преимуществ становятся ярче, но остаются в мягкой палитре. */
+.cg-about-value{
+  border-color:#e5cfca;
+  box-shadow:0 14px 36px rgba(75,45,45,.065);
+}
+.cg-about-value:nth-child(1){background:linear-gradient(145deg,#fff8f3,#fff)}
+.cg-about-value:nth-child(2){background:linear-gradient(145deg,#f6f8ff,#fff)}
+.cg-about-value:nth-child(3){background:linear-gradient(145deg,#fff6f8,#fff)}
+.cg-about-value:nth-child(4){background:linear-gradient(145deg,#fff8fb,#fff)}
+.cg-about-value:nth-child(5){background:linear-gradient(145deg,#f4faf5,#fff)}
+.cg-about-value:nth-child(6){background:linear-gradient(145deg,#fff9ef,#fff)}
+.cg-about-value__icon{
+  width:50px;
+  height:50px;
+  border-radius:16px;
+  font-size:23px;
+  box-shadow:0 8px 20px rgba(72,49,47,.07);
+}
+.cg-about-value:nth-child(1) .cg-about-value__icon{background:#fff0e6;color:#e07752}
+.cg-about-value:nth-child(2) .cg-about-value__icon{background:#eef1ff;color:#6574c8}
+.cg-about-value:nth-child(3) .cg-about-value__icon{background:#fff0f3;color:#d65f7d}
+.cg-about-value:nth-child(4) .cg-about-value__icon{background:#f9edf6;color:#b95d98}
+.cg-about-value:nth-child(5) .cg-about-value__icon{background:#eaf7ed;color:#4e9a65}
+.cg-about-value:nth-child(6) .cg-about-value__icon{background:#fff5df;color:#c68a35}
+.cg-about-value h3{color:#43312e}
+.cg-about-value p{color:#765f59}
+
+/* О нас: блоки услуг и обещаний получают чуть больше глубины. */
+.cg-about-service{border-color:#e4cbc5;box-shadow:0 14px 36px rgba(75,45,45,.06)}
+.cg-about-service:nth-child(1){background:linear-gradient(145deg,#fff8f4,#fff)}
+.cg-about-service:nth-child(2){background:linear-gradient(145deg,#f8f5ff,#fff)}
+.cg-about-service:nth-child(3){background:linear-gradient(145deg,#fff5f7,#fff)}
+.cg-about-service:nth-child(4){background:linear-gradient(145deg,#f3faf5,#fff)}
+.cg-about-promise{border-color:#e1c7c1;box-shadow:0 22px 54px rgba(75,45,45,.1)}
+.cg-about-promise__item b{box-shadow:0 6px 16px rgba(70,49,46,.06)}
+.cg-about-promise__item:nth-child(1) b{background:#eef5ff;color:#5579b8}
+.cg-about-promise__item:nth-child(2) b{background:#edf8f0;color:#4e9563}
+.cg-about-promise__item:nth-child(3) b{background:#fff0f2;color:#c95f70}
+
+/* О нас: нижний информационный блок со скриншота — теплее и заметнее. */
+.cg-about-contact__card{
+  border:1px solid #dfbdb7;
+  background:
+    radial-gradient(circle at 90% 20%,rgba(255,255,255,.96),transparent 30%),
+    linear-gradient(135deg,#f7e5e1 0%,#efd2ce 56%,#e8c7c3 100%);
+  color:#43332f;
+  box-shadow:0 25px 62px rgba(92,58,57,.15);
+}
+.cg-about-contact__card:before{color:rgba(166,97,105,.1)}
+.cg-about-contact .cg-about-eyebrow{color:#98545e}
+.cg-about-contact__copy h2{color:#3a2b28}
+.cg-about-contact__copy p{color:#685550}
 .cg-about-contact__details{
-  border-color:#ddc5c0;
-  background:rgba(255,255,255,.72);
-  box-shadow:0 12px 30px rgba(97,62,60,.07);
+  border-color:#d9b9b3;
+  background:rgba(255,255,255,.9);
+  box-shadow:0 14px 34px rgba(97,62,60,.09);
   backdrop-filter:none;
 }
-.cg-about-contact__row{border-bottom-color:#ead9d5}
-.cg-about-contact__row span{color:#986a6c}
-.cg-about-contact__row strong,.cg-about-contact__row a{color:#493936}
+.cg-about-contact__row{border-bottom-color:#ead1cc}
+.cg-about-contact__row span{color:#a05f65}
+.cg-about-contact__row strong,.cg-about-contact__row a{color:#42322f}
 .cg-about-contact__actions a{
-  border-color:#cfb3ae;
+  min-height:50px;
+  padding:0 20px;
+  border-color:#cda8a2;
   background:#fff;
-  color:#614642;
-  box-shadow:0 5px 14px rgba(91,55,53,.05);
+  color:#5c423e;
+  font-size:15px;
+  font-weight:650;
+  line-height:1.25;
+  box-shadow:0 7px 18px rgba(91,55,53,.07);
 }
-.cg-about-contact__actions a:first-child{border-color:#b86e78;background:#b86e78;color:#fff}
-.cg-about-contact__actions a:last-child{border-color:#725156;background:#725156;color:#fff}
-.cg-about-contact__actions a:hover{box-shadow:0 10px 22px rgba(87,53,51,.12);transform:translateY(-2px)}
+.cg-about-contact__actions a:first-child{border-color:#bf707b;background:#bf707b;color:#fff}
+.cg-about-contact__actions a:last-child{border-color:#765257;background:#765257;color:#fff}
+.cg-about-contact__actions a:hover{box-shadow:0 12px 26px rgba(87,53,51,.15);transform:translateY(-2px)}
 
+/* Контакты: основные карточки и иконки различаются по смыслу. */
+.cg-contacts-hero__card{border-color:#dfc2bc;background:rgba(255,255,255,.93);box-shadow:0 30px 72px rgba(82,50,50,.14)}
+.cg-contacts-card{
+  border-color:#e4cdc8;
+  box-shadow:0 15px 40px rgba(75,45,45,.07);
+}
+.cg-contacts-card:nth-child(1){background:linear-gradient(145deg,#fff7f2,#fff)}
+.cg-contacts-card:nth-child(2){background:linear-gradient(145deg,#f5f7ff,#fff)}
+.cg-contacts-card:nth-child(3){background:linear-gradient(145deg,#fff6fa,#fff)}
+.cg-contacts-card:nth-child(4){background:linear-gradient(145deg,#f2faf4,#fff)}
+.cg-contacts-card__icon{
+  width:52px;
+  height:52px;
+  border-radius:17px;
+  box-shadow:0 8px 20px rgba(70,49,46,.07);
+}
+.cg-contacts-card:nth-child(1) .cg-contacts-card__icon{background:#fff0e7;color:#df744f}
+.cg-contacts-card:nth-child(2) .cg-contacts-card__icon{background:#eef1ff;color:#6676ca}
+.cg-contacts-card:nth-child(3) .cg-contacts-card__icon{background:#fff0f6;color:#c75f87}
+.cg-contacts-card:nth-child(4) .cg-contacts-card__icon{background:#eaf7ed;color:#4f9b66}
+.cg-contacts-card small{color:#966d67}
+.cg-contacts-card h3{color:#40302d}
+.cg-contacts-card p{color:#765f59}
+
+/* Мессенджеры и мини-блоки адреса — чуть насыщеннее. */
+.cg-contacts-messenger{box-shadow:0 8px 22px rgba(74,47,47,.045)}
+.cg-contacts-messenger--whatsapp{background:#eaf7ee;border-color:#bcdcc5;color:#2d7244}
+.cg-contacts-messenger--telegram{background:#eaf4fb;border-color:#bfd8e8;color:#2c718f}
+.cg-contacts-place-features>div{
+  border-color:#e1cbc5;
+  background:#fffdfc;
+  box-shadow:0 8px 22px rgba(75,45,45,.045);
+}
+.cg-contacts-place-features>div:nth-child(1){border-left:4px solid #d97983;background:#fff8f8}
+.cg-contacts-place-features>div:nth-child(2){border-left:4px solid #6f80c6;background:#f8f9ff}
+.cg-contacts-place-features>div:nth-child(3){border-left:4px solid #5aa271;background:#f5fbf6}
+.cg-contacts-place-features b{color:#453431}
+.cg-contacts-place-features span{color:#79645e}
+
+/* Чуть больше читаемости в CTA и на мобильных устройствах. */
 @media(max-width:760px){
-  .cg-contacts-cta__card,.cg-about-contact__card{box-shadow:0 16px 38px rgba(92,58,57,.1)}
+  .cg-contacts-cta__card,.cg-about-contact__card{box-shadow:0 18px 42px rgba(92,58,57,.12)}
+  .cg-about-contact__actions a,.cg-contacts-cta__actions a{font-size:15px;font-weight:650}
 }
