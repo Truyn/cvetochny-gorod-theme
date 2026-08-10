@@ -75,6 +75,53 @@ function cg_site_customize($wp_customize) {
 }
 add_action('customize_register', 'cg_site_customize', 20);
 
+/**
+ * Add a dedicated mobile image for the homepage About block.
+ *
+ * The existing cg_about_image remains the desktop/tablet source. This keeps
+ * current sites backwards compatible while allowing a separate crop for phones.
+ */
+function cg_home_about_responsive_image_customize($wp_customize) {
+    if (!$wp_customize instanceof WP_Customize_Manager) return;
+
+    $desktop_control = $wp_customize->get_control('cg_about_image');
+    if ($desktop_control) {
+        $desktop_control->label = 'Изображение для компьютера';
+        $desktop_control->description = 'Рекомендуемый размер: около 1600 × 1200 px. Используется на компьютерах и планшетах.';
+    }
+
+    if (!$wp_customize->get_setting('cg_about_image_mobile')) {
+        $wp_customize->add_setting('cg_about_image_mobile', [
+            'default' => '',
+            'sanitize_callback' => 'esc_url_raw',
+        ]);
+    }
+
+    if (!$wp_customize->get_control('cg_about_image_mobile')) {
+        $wp_customize->add_control(new WP_Customize_Image_Control($wp_customize, 'cg_about_image_mobile', [
+            'label' => 'Изображение для телефона',
+            'description' => 'Рекомендуемый размер: около 900 × 1200 px (вертикальное 3:4). Если оставить пустым, на телефоне будет использоваться обычное изображение.',
+            'section' => 'cg_home_about',
+        ]));
+    }
+}
+add_action('customize_register', 'cg_home_about_responsive_image_customize', 30);
+
+/** Use the phone-specific About image below the theme's mobile breakpoint. */
+function cg_home_about_responsive_image_css() {
+    if (!is_front_page()) return;
+
+    $mobile_image = trim((string) get_theme_mod('cg_about_image_mobile', ''));
+    if ($mobile_image === '') return;
+
+    $mobile_image = esc_url_raw($mobile_image);
+    if ($mobile_image === '') return;
+
+    $css = '@media(max-width:640px){.cg-about__image{background-image:linear-gradient(180deg,rgba(44,40,39,.02),rgba(44,40,39,.16)),url("' . esc_url($mobile_image) . '")!important;background-position:center center!important;background-size:cover!important;background-repeat:no-repeat!important;}}';
+    wp_add_inline_style('cg-homepage', $css);
+}
+add_action('wp_enqueue_scripts', 'cg_home_about_responsive_image_css', 20);
+
 /** Replace only untouched placeholders with the actual store contacts. */
 function cg_upgrade_store_contact_defaults() {
     $version = '2';
