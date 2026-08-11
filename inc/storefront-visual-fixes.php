@@ -214,3 +214,6 @@ require_once get_template_directory() . '/inc/catalog-links-polish.php';
 
 /** Register draft legal documents, seller settings and checkout legal notices. */
 require_once get_template_directory() . '/inc/legal-commerce.php';
+
+/** Use flower-specific, legally conservative wording for returns and claims. */
+require_once get_template_directory() . '/inc/legal-returns-policy.php';
