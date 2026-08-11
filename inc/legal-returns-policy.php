@@ -62,3 +62,6 @@ add_filter('do_shortcode_tag', 'cg_legal_flower_returns_document', 20, 4);
 
 /** Add the customer care/returns memo to emails, orders and the print workflow. */
 require_once get_template_directory() . '/inc/customer-buyer-memo.php';
+
+/** Keep the compact buyer memo limited to phone number and opening hours. */
+require_once get_template_directory() . '/inc/customer-buyer-memo-contact-cleanup.php';
