@@ -59,3 +59,6 @@ function cg_legal_flower_returns_document($output, $tag, $attr, $m) {
     return $html;
 }
 add_filter('do_shortcode_tag', 'cg_legal_flower_returns_document', 20, 4);
+
+/** Add the customer care/returns memo to emails, orders and the print workflow. */
+require_once get_template_directory() . '/inc/customer-buyer-memo.php';
