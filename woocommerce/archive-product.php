@@ -12,7 +12,7 @@ get_header('shop');
 
 $paged = max(1, (int) get_query_var('paged'), (int) get_query_var('product-page'));
 $catalog_query = new WP_Query(cg_catalog_build_query_args($paged));
-$title = is_product_category() ? single_term_title('', false) : 'Каталог букетов';
+$title = is_product_category() ? single_term_title('', false) : 'Каталог';
 $subtitle = is_product_category() ? 'Подборка букетов из выбранной категории.' : 'Выберите букет по случаю, стилю и бюджету.';
 ?>
 <style>
