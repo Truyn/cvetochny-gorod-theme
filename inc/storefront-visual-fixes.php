@@ -61,7 +61,7 @@ function cg_storefront_force_selected_delivery_rate($rates, $package) {
 
     if (isset($zones[$zone_key])) {
         $zone = $zones[$zone_key];
-        $cost = isset($zone['price']) ? max(0, (float) $zone['price'] : 0;
+        $cost = isset($zone['price']) ? max(0, (float) $zone['price']) : 0;
         $label = !empty($zone['label']) ? (string) $zone['label'] : 'Доставка';
         $method_id = !empty($zone['method_id']) ? (string) $zone['method_id'] : 'flat_rate';
         $instance_id = !empty($zone['instance_id']) ? absint($zone['instance_id']) : 0;
