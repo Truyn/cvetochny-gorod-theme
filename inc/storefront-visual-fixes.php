@@ -217,3 +217,6 @@ require_once get_template_directory() . '/inc/legal-commerce.php';
 
 /** Use flower-specific, legally conservative wording for returns and claims. */
 require_once get_template_directory() . '/inc/legal-returns-policy.php';
+
+/** Final alignment, catalog-header and checkout-phone polish from the visual audit. */
+require_once get_template_directory() . '/inc/final-layout-phone-polish.php';
