@@ -220,3 +220,6 @@ require_once get_template_directory() . '/inc/legal-returns-policy.php';
 
 /** Final alignment, catalog-header and checkout-phone polish from the visual audit. */
 require_once get_template_directory() . '/inc/final-layout-phone-polish.php';
+
+/** Add automatic order-flow diagnostics and a real-order verification checklist. */
+require_once get_template_directory() . '/inc/order-readiness.php';
