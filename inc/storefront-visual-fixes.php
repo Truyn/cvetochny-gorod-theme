@@ -145,7 +145,7 @@ function cg_storefront_visual_fixes_assets() {
 
     if (is_product()) {
         $script_path = get_template_directory() . '/assets/js/storefront-visual-fixes.js';
-        $script_version = file_exists($script_path) ? filemtime($script_path) : wp_get_theme()->get('Version');
+        $script_version = file_exists($script_path) ? filemtime($script_path) : $version;
         $script_dependencies = ['jquery'];
 
         if (wp_script_is('wc-single-product', 'registered')) {
@@ -223,3 +223,9 @@ require_once get_template_directory() . '/inc/final-layout-phone-polish.php';
 
 /** Add automatic order-flow diagnostics and a real-order verification checklist. */
 require_once get_template_directory() . '/inc/order-readiness.php';
+
+/** Simplify occasion/holiday assignment in products and move «Повод» up in filters. */
+require_once get_template_directory() . '/inc/catalog-occasion-admin.php';
+
+/** Add manually curated SEO landing pages and conversion-oriented selections. */
+require_once get_template_directory() . '/inc/seo-landing-pages.php';
