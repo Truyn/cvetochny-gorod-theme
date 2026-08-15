@@ -186,7 +186,7 @@ function cg_seo_landing_product_query($post_id = 0) {
         if (!empty($visibility['exclude-from-catalog'])) {
             $tax_query[] = [
                 'taxonomy' => 'product_visibility',
-                'field' => 'term_taxonomy_id',
+                'field' => 'term_id',
                 'terms' => [(int) $visibility['exclude-from-catalog']],
                 'operator' => 'NOT IN',
             ];
@@ -305,14 +305,28 @@ function cg_seo_landing_catalog_links() {
         'post_status' => 'publish',
         'posts_per_page' => 8,
         'orderby' => ['menu_order' => 'ASC', 'date' => 'DESC'],
+        'meta_query' => [[
+            'key' => '_cg_landing_term_id',
+            'value' => 0,
+            'compare' => '>',
+            'type' => 'NUMERIC',
+        ]],
         'suppress_filters' => false,
     ]);
     if (!$landings) return;
 
+    $cards = [];
+    foreach ($landings as $landing) {
+        $term = cg_seo_landing_target($landing->ID);
+        if (!$term || (int) $term->count < 1) continue;
+        $cards[] = $landing;
+    }
+    if (!$cards) return;
+
     echo '<section class="cg-catalog-landings" aria-labelledby="cg-catalog-landings-title">';
     echo '<div class="cg-catalog-landings__head"><span>Готовые подборки</span><h2 id="cg-catalog-landings-title">Выберите букет по ситуации</h2><p>Отдельные подборки с подходящими товарами и полезной информацией.</p></div>';
     echo '<div class="cg-catalog-landings__grid">';
-    foreach ($landings as $landing) {
+    foreach ($cards as $landing) {
         $excerpt = has_excerpt($landing) ? get_the_excerpt($landing) : '';
         echo '<a class="cg-catalog-landing-card" href="' . esc_url(get_permalink($landing)) . '">';
         echo '<strong>' . esc_html(get_the_title($landing)) . '</strong>';
@@ -358,7 +372,12 @@ function cg_seo_landing_admin_styles($hook) {
     $screen = get_current_screen();
     if (!$screen || $screen->post_type !== 'cg_landing') return;
 
-    $css = '.cg-seo-landing-admin{padding:4px 2px}.cg-seo-landing-admin>p{max-width:940px;color:#646970;line-height:1.55}.cg-seo-landing-admin__grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-top:16px}.cg-seo-landing-admin__grid label{display:grid;gap:7px;padding:14px;border:1px solid #ddd;border-radius:10px;background:#fff}.cg-seo-landing-admin__grid select,.cg-seo-landing-admin__grid input,.cg-seo-landing-admin__grid textarea{width:100%}.cg-seo-landing-admin__grid label>span{color:#757575;font-size:12px}@media(max-width:1100px){.cg-seo-landing-admin__grid{grid-template-columns:1fr}}';
-    wp_add_inline_style('wp-admin', $css);
+    $path = get_template_directory() . '/assets/css/seo-landings-admin.css';
+    wp_enqueue_style(
+        'cg-seo-landings-admin',
+        get_template_directory_uri() . '/assets/css/seo-landings-admin.css',
+        [],
+        file_exists($path) ? filemtime($path) : wp_get_theme()->get('Version')
+    );
 }
 add_action('admin_enqueue_scripts', 'cg_seo_landing_admin_styles', 50);
