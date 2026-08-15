@@ -145,7 +145,7 @@ function cg_storefront_visual_fixes_assets() {
 
     if (is_product()) {
         $script_path = get_template_directory() . '/assets/js/storefront-visual-fixes.js';
-        $script_version = file_exists($script_path) ? filemtime($script_path) : $version;
+        $script_version = file_exists($script_path) ? filemtime($script_path) : wp_get_theme()->get('Version');
         $script_dependencies = ['jquery'];
 
         if (wp_script_is('wc-single-product', 'registered')) {
