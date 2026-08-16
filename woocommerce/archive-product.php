@@ -12,8 +12,14 @@ get_header('shop');
 
 $paged = max(1, (int) get_query_var('paged'), (int) get_query_var('product-page'));
 $catalog_query = new WP_Query(cg_catalog_build_query_args($paged));
-$title = is_product_category() ? single_term_title('', false) : 'Каталог';
-$subtitle = is_product_category() ? 'Подборка букетов из выбранной категории.' : 'Выберите букет по случаю, стилю и бюджету.';
+$current_category = is_product_category() ? get_queried_object() : null;
+$title = $current_category instanceof WP_Term ? $current_category->name : 'Каталог';
+$category_intro = ($current_category instanceof WP_Term && function_exists('cg_seo_stage_two_category_intro'))
+    ? cg_seo_stage_two_category_intro($current_category)
+    : '';
+$subtitle = $current_category instanceof WP_Term
+    ? ($category_intro !== '' ? $category_intro : 'Подборка букетов из выбранной категории.')
+    : 'Выберите букет по случаю, стилю и бюджету.';
 ?>
 <style>
 .cg-custom-catalog .cg-filter-group summary > span {
@@ -56,6 +62,7 @@ $subtitle = is_product_category() ? 'Подборка букетов из выб
         </div>
 
         <?php if (function_exists('cg_seo_landing_catalog_links')) cg_seo_landing_catalog_links(); ?>
+        <?php if ($current_category instanceof WP_Term && function_exists('cg_seo_stage_two_category_content')) cg_seo_stage_two_category_content($current_category); ?>
     </div>
 </main>
 <?php
