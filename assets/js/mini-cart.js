@@ -4,10 +4,32 @@
   const getDrawer=()=>document.getElementById('cg-mini-cart');
   const getOverlay=()=>document.querySelector('.cg-mini-cart-overlay');
 
+  /** Keep trailing product numbers such as №15 visually even inside serif names. */
+  const polishProductNames=(root=document)=>{
+    root.querySelectorAll('.cg-mini-cart__name:not([data-cg-name-polished])').forEach((node)=>{
+      const original=(node.textContent||'').trim();
+      const match=original.match(/^(.*?)(\s*№\s*\d+)\s*$/u);
+
+      node.setAttribute('data-cg-name-polished','1');
+      if(!match) return;
+
+      const label=match[1].trimEnd();
+      const code=match[2].replace(/\s+/g,'');
+      node.textContent='';
+      node.append(document.createTextNode(label+' '));
+
+      const codeNode=document.createElement('span');
+      codeNode.className='cg-mini-cart__name-code';
+      codeNode.textContent=code;
+      node.append(codeNode);
+    });
+  };
+
   const openCart=()=>{
     const drawer=getDrawer();
     const overlay=getOverlay();
     if(!drawer||!overlay) return;
+    polishProductNames(drawer);
     drawer.classList.add('is-open');
     drawer.setAttribute('aria-hidden','false');
     overlay.hidden=false;
@@ -37,6 +59,7 @@
         if(replacement) node.replaceWith(replacement.cloneNode(true));
       });
     });
+    polishProductNames(document);
   };
 
   const request=(action,key,quantity)=>{
@@ -55,6 +78,8 @@
       })
       .always(()=>getDrawer()?.classList.remove('is-loading'));
   };
+
+  document.addEventListener('DOMContentLoaded',()=>polishProductNames(document));
 
   document.addEventListener('click',(event)=>{
     if(event.target.closest('[data-cg-mini-cart-open]')){
@@ -120,5 +145,12 @@
     if(event.key==='Escape'&&drawer?.classList.contains('is-open')) closeCart();
   });
 
-  $(document.body).on('added_to_cart',()=>openCart());
+  $(document.body).on('wc_fragments_loaded wc_fragments_refreshed',()=>{
+    window.requestAnimationFrame(()=>polishProductNames(document));
+  });
+
+  $(document.body).on('added_to_cart',()=>{
+    window.requestAnimationFrame(()=>polishProductNames(document));
+    openCart();
+  });
 })(jQuery);
