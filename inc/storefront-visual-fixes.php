@@ -229,3 +229,6 @@ require_once get_template_directory() . '/inc/catalog-occasion-admin.php';
 
 /** Add manually curated SEO landing pages and conversion-oriented selections. */
 require_once get_template_directory() . '/inc/seo-landing-pages.php';
+
+/** Category SEO, faceted-index guards and curated conversion/internal links. */
+require_once get_template_directory() . '/inc/seo-stage-two.php';
