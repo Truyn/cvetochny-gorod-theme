@@ -28,9 +28,30 @@ function cg_repeat_customer_last_order($customer_id = 0) {
     return $cache[$customer_id];
 }
 
+/** Only completed orders are offered as a deliberate repeat purchase. */
+function cg_repeat_customer_last_completed_order($customer_id = 0) {
+    static $cache = [];
+
+    $customer_id = $customer_id ?: get_current_user_id();
+    if ($customer_id <= 0 || !function_exists('wc_get_orders')) return false;
+    if (array_key_exists($customer_id, $cache)) return $cache[$customer_id];
+
+    $orders = wc_get_orders([
+        'customer_id' => $customer_id,
+        'status'      => ['wc-completed'],
+        'limit'       => 1,
+        'orderby'     => 'date',
+        'order'       => 'DESC',
+        'return'      => 'objects',
+    ]);
+
+    $cache[$customer_id] = !empty($orders) && $orders[0] instanceof WC_Order ? $orders[0] : false;
+    return $cache[$customer_id];
+}
+
 /** Native WooCommerce "order again" URL: only products are returned to cart. */
 function cg_repeat_customer_order_again_url($order) {
-    if (!$order instanceof WC_Order) return '';
+    if (!$order instanceof WC_Order || $order->get_status() !== 'completed') return '';
 
     return wp_nonce_url(
         add_query_arg('order_again', $order->get_id(), wc_get_cart_url()),
@@ -91,7 +112,7 @@ function cg_repeat_customer_order_products($order, $limit = 3) {
 /** Useful repeat-purchase card on the customer dashboard. */
 function cg_repeat_customer_dashboard_card() {
     if (!is_user_logged_in()) return;
-    $order = cg_repeat_customer_last_order();
+    $order = cg_repeat_customer_last_completed_order();
     if (!$order instanceof WC_Order) return;
 
     $products = cg_repeat_customer_order_products($order, 3);
@@ -111,11 +132,11 @@ function cg_repeat_customer_dashboard_card() {
 }
 add_action('woocommerce_account_dashboard', 'cg_repeat_customer_dashboard_card', 16);
 
-/** Repeat action on an owned order page. */
+/** Repeat action on an owned completed order page. */
 function cg_repeat_customer_order_action($order) {
     if (!$order instanceof WC_Order || !is_user_logged_in()) return;
     if ((int) $order->get_user_id() !== get_current_user_id()) return;
-    if (!in_array($order->get_status(), ['processing', 'completed', 'on-hold'], true)) return;
+    if ($order->get_status() !== 'completed') return;
 
     echo '<section class="cg-repeat-order cg-repeat-order--compact">';
     echo '<div><span>Заказать ещё раз</span><h3>Повторить товары из этого заказа</h3><p>Товары вернутся в корзину, а данные новой доставки вы заполните заново.</p></div>';
@@ -123,6 +144,22 @@ function cg_repeat_customer_order_action($order) {
     echo '</section>';
 }
 add_action('woocommerce_order_details_after_order_table', 'cg_repeat_customer_order_action', 35, 1);
+
+/** Add a repeat shortcut to the customer's order history. */
+function cg_repeat_customer_order_list_actions($actions, $order) {
+    if (!$order instanceof WC_Order || $order->get_status() !== 'completed') return $actions;
+    if ((int) $order->get_user_id() !== get_current_user_id()) return $actions;
+
+    $url = cg_repeat_customer_order_again_url($order);
+    if ($url !== '') {
+        $actions['cg-repeat'] = [
+            'url'  => $url,
+            'name' => 'Повторить',
+        ];
+    }
+    return $actions;
+}
+add_filter('woocommerce_my_account_my_orders_actions', 'cg_repeat_customer_order_list_actions', 30, 2);
 
 /** Small post-order cross-sell without forcing an account or another purchase. */
 function cg_repeat_customer_thankyou_extra($order_id) {
