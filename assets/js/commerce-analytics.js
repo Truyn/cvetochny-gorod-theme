@@ -136,4 +136,25 @@
             }
         });
     });
+
+    $(document.body).on('removed_from_cart', function (event, fragments, cartHash, $button) {
+        var button = $button && $button[0] ? $button[0] : null;
+        var item = itemFromButton(button);
+        emit({
+            event: 'remove_from_cart',
+            ecommerce: {
+                currency: cfg.currency || '',
+                items: item ? [item] : []
+            }
+        });
+    });
+
+    $(document.body).on('checkout_error', function () {
+        window.setTimeout(function () {
+            emit({
+                event: 'checkout_error',
+                invalid_fields: document.querySelectorAll('.woocommerce-checkout .woocommerce-invalid').length
+            });
+        }, 80);
+    });
 })(jQuery);
