@@ -229,3 +229,13 @@ require_once get_template_directory() . '/inc/catalog-occasion-admin.php';
 
 /** Add manually curated SEO landing pages and conversion-oriented selections. */
 require_once get_template_directory() . '/inc/seo-landing-pages.php';
+
+/** Category SEO, faceted-index guards and curated conversion/internal links. */
+require_once get_template_directory() . '/inc/seo-stage-two.php';
+
+/** Put curated SEO selections on the homepage without hard-coding them into the template. */
+function cg_storefront_render_home_seo_landings_before_footer() {
+    if (!is_front_page() || !function_exists('cg_seo_stage_two_home_landings')) return;
+    cg_seo_stage_two_home_landings();
+}
+add_action('get_footer', 'cg_storefront_render_home_seo_landings_before_footer', 2);
