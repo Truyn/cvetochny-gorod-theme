@@ -245,6 +245,9 @@ require_once get_template_directory() . '/inc/performance-safe.php';
 /** Keep technical SEO/analytics understandable for the store owner. */
 require_once get_template_directory() . '/inc/seo-owner-friendly.php';
 
+/** Reduce checkout friction and let visitors return to recently viewed bouquets. */
+require_once get_template_directory() . '/inc/cart-checkout-retention.php';
+
 /** Put curated SEO selections on the homepage without hard-coding them into the template. */
 function cg_storefront_render_home_seo_landings_before_footer() {
     if (!is_front_page() || !function_exists('cg_seo_stage_two_home_landings')) return;
