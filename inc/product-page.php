@@ -101,6 +101,21 @@ function cg_single_product_actions() {
 }
 add_action('woocommerce_single_product_summary', 'cg_single_product_actions', 31);
 
+/** Compact delivery/payment summary close to the purchase button. */
+function cg_single_product_delivery_snapshot() {
+    $threshold = function_exists('cg_get_novovoronezh_free_delivery_threshold')
+        ? (float) cg_get_novovoronezh_free_delivery_threshold()
+        : 10000;
+    $delivery_url = (string) get_theme_mod('cg_delivery_url', home_url('/delivery/'));
+
+    echo '<div class="cg-product-delivery-snapshot" aria-label="Доставка и оплата">';
+    echo '<div class="cg-product-delivery-snapshot__item"><span class="cg-product-delivery-snapshot__icon" aria-hidden="true">'.cg_product_benefit_icon('delivery').'</span><span><strong>Доставка</strong><small>По Нововоронежу бесплатно от '.wp_kses_post(wc_price($threshold, ['decimals' => 0])).'</small></span></div>';
+    echo '<div class="cg-product-delivery-snapshot__item"><span class="cg-product-delivery-snapshot__icon" aria-hidden="true">'.cg_product_benefit_icon('payment').'</span><span><strong>Оплата</strong><small>Выберите удобный способ при оформлении заказа</small></span></div>';
+    echo '<a class="cg-product-delivery-snapshot__link" href="'.esc_url($delivery_url).'">Все условия доставки и оплаты →</a>';
+    echo '</div>';
+}
+add_action('woocommerce_single_product_summary', 'cg_single_product_delivery_snapshot', 33);
+
 /** Explain the next steps after adding a bouquet to the cart. */
 function cg_single_product_order_confidence() {
     echo '<div class="cg-order-confidence" aria-label="Как проходит оформление заказа">';
@@ -133,9 +148,35 @@ function cg_product_description_tab_heading($heading) {
 }
 add_filter('woocommerce_product_description_heading', 'cg_product_description_tab_heading');
 
-/** Temporary plain placeholder until final delivery/payment copy is provided. */
+/** Real delivery/payment information instead of the old placeholder. */
 function cg_product_delivery_tab_content() {
-    echo '<div class="cg-tab-intro cg-tab-intro--plain"><span>Информация</span><h2>Доставка и оплата</h2><p>Здесь будет размещена подробная информация о доставке и способах оплаты.</p></div>';
+    $threshold = function_exists('cg_get_novovoronezh_free_delivery_threshold')
+        ? (float) cg_get_novovoronezh_free_delivery_threshold()
+        : 10000;
+    $delivery_url = (string) get_theme_mod('cg_delivery_url', home_url('/delivery/'));
+    $payment_titles = [];
+
+    if (function_exists('WC') && WC()->payment_gateways()) {
+        foreach (WC()->payment_gateways()->payment_gateways() as $gateway) {
+            if (!is_object($gateway) || !isset($gateway->enabled) || $gateway->enabled !== 'yes') continue;
+            $title = isset($gateway->title) ? trim(wp_strip_all_tags((string) $gateway->title)) : '';
+            if ($title !== '') $payment_titles[] = $title;
+        }
+    }
+
+    echo '<div class="cg-tab-intro"><span>Перед оформлением</span><h2>Доставка и оплата</h2><p>Точная стоимость доставки зависит от населённого пункта и сразу показывается при оформлении заказа.</p></div>';
+    echo '<div class="cg-product-delivery-tab-grid">';
+    echo '<section><h3>Доставка</h3><ul><li>По Нововоронежу — бесплатно при сумме заказа от '.wp_kses_post(wc_price($threshold, ['decimals' => 0])).'.</li><li>Для других населённых пунктов стоимость рассчитывается по выбранной зоне.</li><li>Доступный интервал доставки согласуем после оформления заказа.</li></ul></section>';
+    echo '<section><h3>Оплата</h3>';
+    if ($payment_titles) {
+        echo '<p>Сейчас в магазине доступны:</p><ul>';
+        foreach (array_unique($payment_titles) as $title) echo '<li>'.esc_html($title).'</li>';
+        echo '</ul>';
+    } else {
+        echo '<p>Доступный способ оплаты будет показан на странице оформления заказа.</p>';
+    }
+    echo '</section></div>';
+    echo '<p class="cg-product-delivery-tab-more"><a class="button button--ghost" href="'.esc_url($delivery_url).'">Подробнее о доставке и оплате</a></p>';
 }
 
 /** Load the custom, self-contained single product layout stylesheets. */
@@ -146,6 +187,8 @@ function cg_enqueue_single_product_layout() {
     $modern_path = get_template_directory() . '/assets/css/single-product-modern.css';
     $tabs_path = get_template_directory() . '/assets/css/product-tabs-premium.css';
     $conversion_path = get_template_directory() . '/assets/css/product-conversion-premium.css';
+    $growth_path = get_template_directory() . '/assets/css/product-growth.css';
+    $growth_script_path = get_template_directory() . '/assets/js/product-mobile-buy.js';
     $version = wp_get_theme()->get('Version');
 
     wp_enqueue_style(
@@ -175,5 +218,203 @@ function cg_enqueue_single_product_layout() {
         ['cg-product-tabs-premium'],
         file_exists($conversion_path) ? filemtime($conversion_path) : $version
     );
+
+    wp_enqueue_style(
+        'cg-product-growth',
+        get_template_directory_uri() . '/assets/css/product-growth.css',
+        ['cg-product-conversion-premium'],
+        file_exists($growth_path) ? filemtime($growth_path) : $version
+    );
+
+    wp_enqueue_script(
+        'cg-product-mobile-buy',
+        get_template_directory_uri() . '/assets/js/product-mobile-buy.js',
+        [],
+        file_exists($growth_script_path) ? filemtime($growth_script_path) : $version,
+        true
+    );
 }
 add_action('wp_enqueue_scripts', 'cg_enqueue_single_product_layout', 30);
+
+/** Mobile purchase bar: direct add for simple products, scroll to options otherwise. */
+function cg_single_product_mobile_buy_bar() {
+    if (!is_product()) return;
+    global $product;
+    if (!$product instanceof WC_Product || !$product->is_purchasable() || !$product->is_in_stock()) return;
+
+    $simple = $product->is_type('simple');
+    echo '<div class="cg-mobile-buybar" data-cg-mobile-buybar data-simple="'.($simple ? '1' : '0').'" aria-hidden="true">';
+    echo '<div class="cg-mobile-buybar__price"><small>Цена</small><strong>'.wp_kses_post($product->get_price_html()).'</strong></div>';
+    echo '<button type="button" class="cg-mobile-buybar__button" data-cg-mobile-buy-button>'.($simple ? 'В корзину' : 'Выбрать').'</button>';
+    echo '</div>';
+}
+add_action('wp_footer', 'cg_single_product_mobile_buy_bar', 30);
+
+/** Collect simple, owner-friendly catalog quality information. */
+function cg_catalog_quality_report() {
+    if (!class_exists('WooCommerce')) return ['products' => [], 'score' => 0, 'heavy' => 0, 'occasion' => 0, 'holiday' => 0];
+
+    $products = wc_get_products([
+        'status' => 'publish',
+        'limit' => -1,
+        'orderby' => 'date',
+        'order' => 'DESC',
+    ]);
+    $rows = [];
+    $checks_total = 0;
+    $checks_ok = 0;
+    $heavy_count = 0;
+    $occasion_count = 0;
+    $holiday_count = 0;
+    $default_category = (int) get_option('default_product_cat', 0);
+
+    foreach ($products as $product) {
+        if (!$product instanceof WC_Product) continue;
+        $product_id = $product->get_id();
+        $image_id = (int) $product->get_image_id();
+        $alt = $image_id ? trim((string) get_post_meta($image_id, '_wp_attachment_image_alt', true)) : '';
+        $categories = wp_get_object_terms($product_id, 'product_cat', ['fields' => 'ids']);
+        $categories = is_wp_error($categories) ? [] : array_map('intval', $categories);
+        $real_categories = array_values(array_diff($categories, [$default_category]));
+
+        $checks = [
+            'Главное фото' => $image_id > 0,
+            'Подпись к главному фото' => $alt !== '',
+            'Цена' => $product->get_price() !== '',
+            'Короткое описание' => trim(wp_strip_all_tags($product->get_short_description())) !== '',
+            'Полное описание' => mb_strlen(trim(wp_strip_all_tags($product->get_description()))) >= 80,
+            'Категория' => !empty($real_categories),
+        ];
+        $checks_total += count($checks);
+        $checks_ok += count(array_filter($checks));
+        $issues = [];
+        foreach ($checks as $label => $ok) if (!$ok) $issues[] = $label;
+
+        $image_note = '';
+        if ($image_id) {
+            $image_size = 0;
+            $file = get_attached_file($image_id);
+            if ($file && is_file($file)) $image_size = (int) @filesize($file);
+            $meta = wp_get_attachment_metadata($image_id);
+            $width = is_array($meta) && !empty($meta['width']) ? (int) $meta['width'] : 0;
+            $height = is_array($meta) && !empty($meta['height']) ? (int) $meta['height'] : 0;
+            if ($image_size > (int) (1.5 * MB_IN_BYTES)) {
+                $image_note = 'Файл '.size_format($image_size, 1).' — желательно уменьшить';
+                $heavy_count++;
+            } elseif ($width > 3200 || $height > 3200) {
+                $image_note = 'Очень большое разрешение: '.$width.'×'.$height.' px';
+                $heavy_count++;
+            }
+        }
+
+        if (taxonomy_exists('pa_povod')) {
+            $terms = wp_get_object_terms($product_id, 'pa_povod', ['fields' => 'ids']);
+            if (!is_wp_error($terms) && $terms) $occasion_count++;
+        }
+        if (taxonomy_exists('pa_prazdniki')) {
+            $terms = wp_get_object_terms($product_id, 'pa_prazdniki', ['fields' => 'ids']);
+            if (!is_wp_error($terms) && $terms) $holiday_count++;
+        }
+
+        $rows[] = [
+            'id' => $product_id,
+            'name' => $product->get_name(),
+            'score' => (int) round((count($checks) - count($issues)) / count($checks) * 100),
+            'issues' => $issues,
+            'image_note' => $image_note,
+        ];
+    }
+
+    usort($rows, static function ($a, $b) {
+        if ($a['score'] === $b['score']) return strcasecmp($a['name'], $b['name']);
+        return $a['score'] <=> $b['score'];
+    });
+
+    return [
+        'products' => $rows,
+        'score' => $checks_total ? (int) round($checks_ok / $checks_total * 100) : 100,
+        'heavy' => $heavy_count,
+        'occasion' => $occasion_count,
+        'holiday' => $holiday_count,
+    ];
+}
+
+function cg_catalog_quality_admin_menu() {
+    add_submenu_page(
+        'woocommerce',
+        'Качество каталога',
+        'Качество каталога',
+        'manage_woocommerce',
+        'cg-catalog-quality',
+        'cg_catalog_quality_admin_page'
+    );
+}
+add_action('admin_menu', 'cg_catalog_quality_admin_menu', 82);
+
+function cg_catalog_quality_admin_assets($hook) {
+    if ($hook !== 'woocommerce_page_cg-catalog-quality') return;
+    $path = get_template_directory() . '/assets/css/product-growth.css';
+    wp_enqueue_style(
+        'cg-catalog-quality-admin',
+        get_template_directory_uri() . '/assets/css/product-growth.css',
+        [],
+        file_exists($path) ? filemtime($path) : wp_get_theme()->get('Version')
+    );
+}
+add_action('admin_enqueue_scripts', 'cg_catalog_quality_admin_assets');
+
+function cg_catalog_quality_admin_page() {
+    if (!current_user_can('manage_woocommerce')) return;
+    $report = cg_catalog_quality_report();
+    $rows = $report['products'];
+    $total = count($rows);
+    $problematic = count(array_filter($rows, static function ($row) { return $row['score'] < 100; }));
+    ?>
+    <div class="wrap cg-catalog-quality-admin">
+        <h1>Качество каталога</h1>
+        <p class="cg-catalog-quality-admin__lead">Здесь нет сложного SEO. Страница просто показывает, какие опубликованные товары стоит дополнить, чтобы каталог выглядел аккуратно для покупателей и поисковых систем.</p>
+
+        <div class="cg-quality-cards">
+            <div class="cg-quality-card cg-quality-card--score"><span>Готовность каталога</span><strong><?php echo esc_html($report['score']); ?>%</strong><small>по 6 простым пунктам</small></div>
+            <div class="cg-quality-card"><span>Опубликовано</span><strong><?php echo esc_html($total); ?></strong><small>товаров</small></div>
+            <div class="cg-quality-card"><span>Нужно дополнить</span><strong><?php echo esc_html($problematic); ?></strong><small>товаров</small></div>
+            <div class="cg-quality-card"><span>Тяжёлые фото</span><strong><?php echo esc_html($report['heavy']); ?></strong><small>проверить по возможности</small></div>
+        </div>
+
+        <div class="cg-quality-progress" aria-label="Готовность каталога <?php echo esc_attr($report['score']); ?> процентов"><span style="width:<?php echo esc_attr($report['score']); ?>%"></span></div>
+
+        <div class="cg-quality-help">
+            <h2>Что считается готовым товаром</h2>
+            <div class="cg-quality-help__grid">
+                <span>✓ Главное фото</span><span>✓ Понятная подпись к фото</span><span>✓ Цена</span><span>✓ Короткое описание</span><span>✓ Нормальное полное описание</span><span>✓ Категория</span>
+            </div>
+            <p><strong>«Повод» и «Праздники» не обязательны.</strong> Сейчас «Повод» назначен у <?php echo esc_html($report['occasion']); ?> из <?php echo esc_html($total); ?> товаров, «Праздники» — у <?php echo esc_html($report['holiday']); ?>.</p>
+        </div>
+
+        <?php if (!$rows) : ?>
+            <div class="notice notice-info inline"><p>Опубликованных товаров пока нет.</p></div>
+        <?php else : ?>
+            <h2>Что стоит исправить</h2>
+            <table class="widefat striped cg-quality-table">
+                <thead><tr><th>Товар</th><th>Готовность</th><th>Что добавить</th><th>Фото / скорость</th></tr></thead>
+                <tbody>
+                <?php foreach (array_slice($rows, 0, 100) as $row) : ?>
+                    <tr>
+                        <td><a href="<?php echo esc_url(get_edit_post_link($row['id'])); ?>"><strong><?php echo esc_html($row['name']); ?></strong></a></td>
+                        <td><span class="cg-quality-score <?php echo $row['score'] === 100 ? 'is-ready' : ''; ?>"><?php echo esc_html($row['score']); ?>%</span></td>
+                        <td><?php echo $row['issues'] ? esc_html(implode(' · ', $row['issues'])) : '<span class="cg-quality-ready">Готово ✓</span>'; ?></td>
+                        <td><?php echo $row['image_note'] ? esc_html($row['image_note']) : 'Нормально'; ?></td>
+                    </tr>
+                <?php endforeach; ?>
+                </tbody>
+            </table>
+            <?php if ($total > 100) : ?><p>Показаны первые 100 товаров с наименьшей готовностью.</p><?php endif; ?>
+        <?php endif; ?>
+
+        <div class="cg-quality-speed-note">
+            <h2>Про скорость сайта</h2>
+            <p>Тема ничего автоматически не пережимает и не отключает. Если здесь отмечена тяжёлая фотография, её можно позже заменить более лёгкой версией. Это безопаснее, чем агрессивно отключать WooCommerce-скрипты.</p>
+        </div>
+    </div>
+    <?php
+}
