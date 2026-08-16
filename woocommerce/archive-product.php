@@ -54,6 +54,8 @@ $subtitle = is_product_category() ? 'Подборка букетов из выб
                 <?php cg_catalog_render_results($catalog_query, $paged); ?>
             </section>
         </div>
+
+        <?php if (function_exists('cg_seo_landing_catalog_links')) cg_seo_landing_catalog_links(); ?>
     </div>
 </main>
 <?php

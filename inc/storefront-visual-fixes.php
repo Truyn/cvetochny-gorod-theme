@@ -223,3 +223,9 @@ require_once get_template_directory() . '/inc/final-layout-phone-polish.php';
 
 /** Add automatic order-flow diagnostics and a real-order verification checklist. */
 require_once get_template_directory() . '/inc/order-readiness.php';
+
+/** Simplify occasion/holiday assignment in products and move «Повод» up in filters. */
+require_once get_template_directory() . '/inc/catalog-occasion-admin.php';
+
+/** Add manually curated SEO landing pages and conversion-oriented selections. */
+require_once get_template_directory() . '/inc/seo-landing-pages.php';
