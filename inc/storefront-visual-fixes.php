@@ -233,6 +233,15 @@ require_once get_template_directory() . '/inc/seo-landing-pages.php';
 /** Category SEO, faceted-index guards and curated conversion/internal links. */
 require_once get_template_directory() . '/inc/seo-stage-two.php';
 
+/** Ecommerce funnel events and optional GA4 transport. */
+require_once get_template_directory() . '/inc/commerce-analytics.php';
+
+/** Editable snippets and conservative structured data. */
+require_once get_template_directory() . '/inc/seo-stage-three.php';
+
+/** Conservative LCP/preload improvements without changing WooCommerce behavior. */
+require_once get_template_directory() . '/inc/performance-safe.php';
+
 /** Put curated SEO selections on the homepage without hard-coding them into the template. */
 function cg_storefront_render_home_seo_landings_before_footer() {
     if (!is_front_page() || !function_exists('cg_seo_stage_two_home_landings')) return;
