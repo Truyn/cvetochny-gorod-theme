@@ -62,7 +62,7 @@ $subtitle = $current_category instanceof WP_Term
         </div>
 
         <?php if (function_exists('cg_seo_landing_catalog_links')) cg_seo_landing_catalog_links(); ?>
-        <?php if ($current_category instanceof WP_Term && function_exists('cg_seo_stage_two_category_content')) cg_seo_stage_two_category_content($current_category); ?>
+        <?php if ($paged === 1 && $current_category instanceof WP_Term && function_exists('cg_seo_stage_two_category_content')) cg_seo_stage_two_category_content($current_category); ?>
     </div>
 </main>
 <?php
