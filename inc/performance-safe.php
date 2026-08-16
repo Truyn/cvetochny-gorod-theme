@@ -38,10 +38,10 @@ function cg_performance_product_image_attributes($attr, $attachment, $size) {
 }
 add_filter('wp_get_attachment_image_attributes', 'cg_performance_product_image_attributes', 30, 3);
 
-/** Remove the legacy embed helper when nothing on the storefront needs it. */
-function cg_performance_dequeue_legacy_embed() {
-    if (is_admin()) return;
-    wp_dequeue_script('wp-embed');
-    wp_deregister_script('wp-embed');
+/** WooCommerce already creates BreadcrumbList for native product pages. */
+function cg_seo_schema_compat_native_product() {
+    if (function_exists('is_product') && is_product()) {
+        remove_action('wp_head', 'cg_seo_three_structured_data', 8);
+    }
 }
-add_action('wp_enqueue_scripts', 'cg_performance_dequeue_legacy_embed', 100);
+add_action('wp', 'cg_seo_schema_compat_native_product', 50);
