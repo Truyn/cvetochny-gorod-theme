@@ -13,6 +13,39 @@ main input,main select,main textarea,main button{max-width:100%}
 .cg-mini-cart__name,.cg-catalog-category-option span,.cg-catalog-check span,.cg-contacts-card h3,.cg-contacts-messenger span,.cg-about-contact__row strong{overflow-wrap:anywhere}
 .woocommerce .button,.woocommerce button.button,.woocommerce a.button,.cg-catalog-filter-actions .button,.cg-about-contact__actions a,.cg-contacts-cta__actions a{white-space:normal;text-align:center;line-height:1.3}
 }
+
+/* Мобильный личный кабинет: единая геометрия иконок и без сдвига активного пункта. */
+@media (max-width:680px){
+.cg-account-page .woocommerce-MyAccount-navigation{padding:14px!important;border-radius:22px!important}
+.cg-account-page .woocommerce-MyAccount-navigation ul{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px 10px!important}
+.cg-account-page .woocommerce-MyAccount-navigation li{min-width:0!important}
+.cg-account-page .woocommerce-MyAccount-navigation a{display:grid!important;grid-template-columns:38px minmax(0,1fr)!important;align-items:center!important;gap:10px!important;min-height:58px!important;padding:9px 10px!important;font-size:13px!important;line-height:1.2!important;transform:none!important}
+.cg-account-page .woocommerce-MyAccount-navigation li.is-active a,.cg-account-page .woocommerce-MyAccount-navigation a:hover,.cg-account-page .woocommerce-MyAccount-navigation a:focus-visible{transform:none!important}
+.cg-account-page .woocommerce-MyAccount-navigation a:before{content:""!important;display:block!important;width:38px!important;height:38px!important;min-width:38px!important;max-width:38px!important;min-height:38px!important;max-height:38px!important;flex:0 0 38px!important;border-radius:12px!important;background-position:center!important;background-repeat:no-repeat!important;background-size:20px 20px!important;box-sizing:border-box!important}
+.cg-account-page .woocommerce-MyAccount-navigation-link--dashboard a:before{background-color:#fff1ec!important;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23c66d60' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 10.5 12 4l8 6.5'/%3E%3Cpath d='M6.5 9.5V20h11V9.5M9.5 20v-6h5v6'/%3E%3C/svg%3E")!important}
+.cg-account-page .woocommerce-MyAccount-navigation-link--orders a:before{background-color:#f3f1ff!important;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23766fba' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='6' y='5' width='12' height='15' rx='2'/%3E%3Cpath d='M9 5V3.8h6V5M9 10h6M9 14h6'/%3E%3C/svg%3E")!important}
+.cg-account-page .woocommerce-MyAccount-navigation-link--edit-address a:before{background-color:#edf8f2!important;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23528f70' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 21s6-5.1 6-11a6 6 0 1 0-12 0c0 5.9 6 11 6 11Z'/%3E%3Ccircle cx='12' cy='10' r='2.2'/%3E%3C/svg%3E")!important}
+.cg-account-page .woocommerce-MyAccount-navigation-link--payment-methods a:before{background-color:#fff7e8!important;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23b48643' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3.5' y='6' width='17' height='12' rx='2'/%3E%3Cpath d='M3.5 10h17M7 14h4'/%3E%3C/svg%3E")!important}
+.cg-account-page .woocommerce-MyAccount-navigation-link--edit-account a:before{background-color:#eef5ff!important;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235e7fae' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='8' r='3.2'/%3E%3Cpath d='M5.5 20c.7-3.9 3-6 6.5-6s5.8 2.1 6.5 6'/%3E%3C/svg%3E")!important}
+.cg-account-page .woocommerce-MyAccount-navigation-link--customer-logout a:before{background-color:#fff0f1!important;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23b85d66' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M10 5H6.5A1.5 1.5 0 0 0 5 6.5v11A1.5 1.5 0 0 0 6.5 19H10'/%3E%3Cpath d='m14 8 4 4-4 4M9 12h9'/%3E%3C/svg%3E")!important}
+}
+
+/* Корзина на телефоне: убираем чередующиеся серые ячейки WooCommerce и внутренние полосы. */
+@media (max-width:760px){
+.woocommerce-cart .woocommerce-cart-form table.shop_table_responsive tbody tr.cart_item,.woocommerce-cart .woocommerce-cart-form table.shop_table_responsive tbody tr.cart_item:nth-child(2n){background:#fff!important;box-shadow:none!important}
+.woocommerce-cart .woocommerce-cart-form table.shop_table_responsive tbody tr.cart_item{border:0!important;padding:18px 0!important}
+.woocommerce-cart .woocommerce-cart-form table.shop_table_responsive tbody tr.cart_item+tr.cart_item{border-top:1px solid #eee2de!important}
+.woocommerce-cart .woocommerce-cart-form table.shop_table_responsive tbody tr.cart_item>td,.woocommerce-cart .woocommerce-cart-form table.shop_table_responsive tbody tr.cart_item:nth-child(2n)>td{background:transparent!important;background-color:transparent!important;background-image:none!important;border:0!important;border-top:0!important;border-bottom:0!important;box-shadow:none!important}
+.woocommerce-cart .woocommerce-cart-form table.shop_table_responsive tbody tr.cart_item>td:before,.woocommerce-cart .woocommerce-cart-form table.shop_table_responsive tbody tr.cart_item>td:after{content:none!important;display:none!important}
+.woocommerce-cart .woocommerce-cart-form .product-thumbnail,.woocommerce-cart .woocommerce-cart-form .product-name,.woocommerce-cart .woocommerce-cart-form .product-price,.woocommerce-cart .woocommerce-cart-form .product-quantity,.woocommerce-cart .woocommerce-cart-form .product-subtotal,.woocommerce-cart .woocommerce-cart-form .product-remove{background:transparent!important;background-color:transparent!important;background-image:none!important;box-shadow:none!important}
+.woocommerce-cart .woocommerce-cart-form .product-thumbnail a{display:block!important;background:transparent!important;box-shadow:none!important}
+.woocommerce-cart .woocommerce-cart-form .product-thumbnail img{background:#fff7f4!important;box-shadow:none!important}
+.woocommerce-cart .woocommerce-cart-form .product-name{padding-top:2px!important}
+.woocommerce-cart .woocommerce-cart-form .product-name>a{display:block!important;margin:0!important;line-height:1.2!important}
+.woocommerce-cart .woocommerce-cart-form .product-price,.woocommerce-cart .woocommerce-cart-form .product-subtotal{padding-top:7px!important}
+.woocommerce-cart .woocommerce-cart-form .product-quantity{padding-top:9px!important}
+}
+
 @media (max-width:560px){
 main input,main select,main textarea{font-size:16px}
 .cg-mini-cart__header{padding-top:max(19px,env(safe-area-inset-top))}
