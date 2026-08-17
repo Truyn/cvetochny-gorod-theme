@@ -7,26 +7,19 @@
 
 if (!defined('ABSPATH')) exit;
 
+require_once get_template_directory() . '/inc/store-tools-hub.php';
+require_once get_template_directory() . '/inc/local-search-seo.php';
+
 /**
- * Hide helper pages from the everyday WooCommerce menu.
- * The pages stay registered and remain available by direct link.
+ * Keep only one occasional-tools entry in the WooCommerce menu.
+ * Helper pages stay registered and are opened from «Инструменты магазина».
  */
 function cg_simple_store_hide_helper_menus() {
     remove_submenu_page('woocommerce', 'cg-search-promotion-guide');
     remove_submenu_page('woocommerce', 'cg-commerce-analytics');
     remove_submenu_page('woocommerce', 'cg-catalog-quality');
     remove_submenu_page('woocommerce', 'edit.php?post_type=cg_landing');
-
-    global $submenu;
-    if (empty($submenu['woocommerce']) || !is_array($submenu['woocommerce'])) return;
-
-    foreach ($submenu['woocommerce'] as &$item) {
-        $slug = isset($item[2]) ? (string) $item[2] : '';
-        if ($slug === 'cg-order-readiness') {
-            $item[0] = 'Проверка перед запуском';
-        }
-    }
-    unset($item);
+    remove_submenu_page('woocommerce', 'cg-order-readiness');
 }
 add_action('admin_menu', 'cg_simple_store_hide_helper_menus', 10000);
 
