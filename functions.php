@@ -245,3 +245,6 @@ function cg_admin_notice() {
     echo '<div class="notice notice-info is-dismissible"><p><strong>Цветочный город:</strong> для визуального редактирования установите Elementor и WooCommerce. Для главной страницы выберите шаблон «Elementor — на всю ширину».</p></div>';
 }
 add_action('admin_notices','cg_admin_notice');
+
+/** Keep the owner-facing admin simple; helper tools remain available by direct links. */
+require_once get_template_directory() . '/inc/simple-store-admin.php';
