@@ -132,6 +132,73 @@ function cg_delivery_board_counts() {
     ];
 }
 
+/** Unicode-friendly local search without another order query. */
+function cg_delivery_board_text_contains($haystack, $needle) {
+    $haystack = (string) $haystack;
+    $needle = trim((string) $needle);
+    if ($needle === '') return true;
+
+    if (function_exists('mb_stripos')) {
+        return mb_stripos($haystack, $needle, 0, 'UTF-8') !== false;
+    }
+    return stripos($haystack, $needle) !== false;
+}
+
+/** Filter the already loaded delivery rows by simple manager-facing controls. */
+function cg_delivery_board_filter_rows($rows, $query = '', $status = 'all', $payment = 'all', $sort = 'asc') {
+    $query = trim((string) $query);
+    $query_digits = preg_replace('/\D+/', '', $query);
+    $status_allowed = ['all', 'pending', 'on-hold', 'processing', 'completed'];
+    $payment_allowed = ['all', 'paid', 'unpaid'];
+
+    if (!in_array($status, $status_allowed, true)) $status = 'all';
+    if (!in_array($payment, $payment_allowed, true)) $payment = 'all';
+    if (!in_array($sort, ['asc', 'desc'], true)) $sort = 'asc';
+
+    $filtered = array_values(array_filter((array) $rows, static function ($row) use ($query, $query_digits, $status, $payment) {
+        $order = $row['order'] ?? null;
+        if (!$order instanceof WC_Order) return false;
+
+        if ($status !== 'all' && $order->get_status() !== $status) return false;
+        if ($payment === 'paid' && !$order->is_paid()) return false;
+        if ($payment === 'unpaid' && $order->is_paid()) return false;
+
+        if ($query === '') return true;
+
+        $sender_name = trim((string) $order->get_meta('_cg_sender_first_name') . ' ' . (string) $order->get_meta('_cg_sender_last_name'));
+        $sender_phone = trim((string) $order->get_meta('_cg_sender_phone'));
+        $recipient = trim($order->get_billing_first_name() . ' ' . $order->get_billing_last_name());
+        $recipient_phone = trim((string) $order->get_billing_phone());
+
+        $haystack = implode(' | ', [
+            $order->get_order_number(),
+            '#' . $order->get_order_number(),
+            '№' . $order->get_order_number(),
+            $recipient,
+            $recipient_phone,
+            $sender_name,
+            $sender_phone,
+            (string) ($row['city'] ?? ''),
+            (string) ($row['date'] ?? ''),
+            (string) ($row['time'] ?? ''),
+            (string) $order->get_payment_method_title(),
+            wc_get_order_status_name($order->get_status()),
+        ]);
+
+        if (cg_delivery_board_text_contains($haystack, $query)) return true;
+
+        if ($query_digits !== '') {
+            $phone_haystack = preg_replace('/\D+/', '', $recipient_phone . $sender_phone . $order->get_order_number());
+            if ($phone_haystack !== '' && strpos($phone_haystack, $query_digits) !== false) return true;
+        }
+
+        return false;
+    }));
+
+    if ($sort === 'desc') $filtered = array_reverse($filtered);
+    return $filtered;
+}
+
 function cg_delivery_board_register_page() {
     add_submenu_page(
         'woocommerce',
@@ -144,6 +211,12 @@ function cg_delivery_board_register_page() {
 }
 add_action('admin_menu', 'cg_delivery_board_register_page', 33);
 
+/** Hide the duplicate technical launch link from Appearance; access remains through WooCommerce → Control order. */
+function cg_delivery_board_cleanup_duplicate_admin_menu() {
+    remove_submenu_page('themes.php', 'cg-launch-readiness');
+}
+add_action('admin_menu', 'cg_delivery_board_cleanup_duplicate_admin_menu', 999);
+
 function cg_delivery_board_admin_assets($hook) {
     if (!in_array($hook, ['woocommerce_page_cg-delivery-board', 'woocommerce_page_cg-order-readiness'], true)) return;
 
@@ -153,6 +226,14 @@ function cg_delivery_board_admin_assets($hook) {
         get_template_directory_uri() . '/assets/css/delivery-board-admin.css',
         [],
         file_exists($path) ? filemtime($path) : wp_get_theme()->get('Version')
+    );
+
+    $polish_path = get_template_directory() . '/assets/css/delivery-board-admin-polish.css';
+    wp_enqueue_style(
+        'cg-delivery-board-admin-polish',
+        get_template_directory_uri() . '/assets/css/delivery-board-admin-polish.css',
+        ['cg-delivery-board-admin'],
+        file_exists($polish_path) ? filemtime($polish_path) : wp_get_theme()->get('Version')
     );
 }
 add_action('admin_enqueue_scripts', 'cg_delivery_board_admin_assets');
@@ -179,7 +260,12 @@ function cg_delivery_board_render_page() {
     $range = isset($_GET['range']) ? sanitize_key(wp_unslash($_GET['range'])) : 'week';
     if (!in_array($range, $allowed, true)) $range = 'week';
 
-    $rows = cg_delivery_board_orders($range);
+    $query = isset($_GET['q']) ? sanitize_text_field(wp_unslash($_GET['q'])) : '';
+    $status = isset($_GET['order_status']) ? sanitize_key(wp_unslash($_GET['order_status'])) : 'all';
+    $payment = isset($_GET['payment']) ? sanitize_key(wp_unslash($_GET['payment'])) : 'all';
+    $sort = isset($_GET['sort']) ? sanitize_key(wp_unslash($_GET['sort'])) : 'asc';
+
+    $rows = cg_delivery_board_filter_rows(cg_delivery_board_orders($range), $query, $status, $payment, $sort);
     $counts = cg_delivery_board_counts();
     $today = current_datetime()->format('Y-m-d');
 
@@ -190,6 +276,14 @@ function cg_delivery_board_render_page() {
         'all' => 'Все будущие',
         'overdue' => 'Просроченные',
     ];
+
+    $persistent_args = [];
+    if ($query !== '') $persistent_args['q'] = $query;
+    if ($status !== 'all') $persistent_args['order_status'] = $status;
+    if ($payment !== 'all') $persistent_args['payment'] = $payment;
+    if ($sort !== 'asc') $persistent_args['sort'] = $sort;
+
+    $has_filters = !empty($persistent_args);
     ?>
     <div class="wrap cg-delivery-board">
         <div class="cg-delivery-board__hero">
@@ -201,8 +295,17 @@ function cg_delivery_board_render_page() {
             <a class="button" href="<?php echo esc_url(cg_delivery_board_all_orders_url()); ?>">Все заказы WooCommerce</a>
         </div>
 
+        <?php if ($counts['overdue'] > 0) :
+            $overdue_url = add_query_arg(['page' => 'cg-delivery-board', 'range' => 'overdue'], admin_url('admin.php'));
+            ?>
+            <div class="cg-delivery-board__urgent">
+                <div><strong>Есть просроченные доставки: <?php echo esc_html($counts['overdue']); ?></strong><span>Это активные заказы с датой доставки раньше сегодняшней. Проверьте их статус.</span></div>
+                <a href="<?php echo esc_url($overdue_url); ?>">Показать просроченные</a>
+            </div>
+        <?php endif; ?>
+
         <div class="cg-delivery-board__stats">
-            <div><span>Сегодня</span><strong><?php echo esc_html($counts['today']); ?></strong></div>
+            <div class="<?php echo $counts['today'] ? 'is-today' : ''; ?>"><span>Сегодня</span><strong><?php echo esc_html($counts['today']); ?></strong></div>
             <div><span>Завтра</span><strong><?php echo esc_html($counts['tomorrow']); ?></strong></div>
             <div><span>На 7 дней</span><strong><?php echo esc_html($counts['week']); ?></strong></div>
             <div class="<?php echo $counts['overdue'] ? 'is-alert' : ''; ?>"><span>Просроченные</span><strong><?php echo esc_html($counts['overdue']); ?></strong></div>
@@ -210,14 +313,61 @@ function cg_delivery_board_render_page() {
 
         <nav class="cg-delivery-board__tabs" aria-label="Период доставок">
             <?php foreach ($tabs as $key => $label) :
-                $url = add_query_arg(['page' => 'cg-delivery-board', 'range' => $key], admin_url('admin.php'));
+                $url = add_query_arg(array_merge(['page' => 'cg-delivery-board', 'range' => $key], $persistent_args), admin_url('admin.php'));
                 ?>
                 <a class="<?php echo $range === $key ? 'is-active' : ''; ?>" href="<?php echo esc_url($url); ?>"><?php echo esc_html($label); ?></a>
             <?php endforeach; ?>
         </nav>
 
+        <form class="cg-delivery-board__filters" method="get">
+            <input type="hidden" name="page" value="cg-delivery-board">
+            <input type="hidden" name="range" value="<?php echo esc_attr($range); ?>">
+            <label class="cg-delivery-board__search">
+                <span>Найти заказ</span>
+                <input type="search" name="q" value="<?php echo esc_attr($query); ?>" placeholder="№ заказа, имя, телефон, населённый пункт">
+            </label>
+            <label>
+                <span>Статус</span>
+                <select name="order_status">
+                    <option value="all" <?php selected($status, 'all'); ?>>Все статусы</option>
+                    <option value="processing" <?php selected($status, 'processing'); ?>>В обработке</option>
+                    <option value="on-hold" <?php selected($status, 'on-hold'); ?>>На удержании</option>
+                    <option value="pending" <?php selected($status, 'pending'); ?>>Ожидает оплаты</option>
+                    <option value="completed" <?php selected($status, 'completed'); ?>>Выполнен</option>
+                </select>
+            </label>
+            <label>
+                <span>Оплата</span>
+                <select name="payment">
+                    <option value="all" <?php selected($payment, 'all'); ?>>Любая</option>
+                    <option value="paid" <?php selected($payment, 'paid'); ?>>Оплачено</option>
+                    <option value="unpaid" <?php selected($payment, 'unpaid'); ?>>Не отмечено как оплачено</option>
+                </select>
+            </label>
+            <label>
+                <span>Порядок</span>
+                <select name="sort">
+                    <option value="asc" <?php selected($sort, 'asc'); ?>>Сначала ближайшие</option>
+                    <option value="desc" <?php selected($sort, 'desc'); ?>>Сначала дальние</option>
+                </select>
+            </label>
+            <div class="cg-delivery-board__filter-actions">
+                <button class="button button-primary" type="submit">Показать</button>
+                <?php if ($has_filters) :
+                    $reset_url = add_query_arg(['page' => 'cg-delivery-board', 'range' => $range], admin_url('admin.php'));
+                    ?>
+                    <a href="<?php echo esc_url($reset_url); ?>">Сбросить</a>
+                <?php endif; ?>
+            </div>
+        </form>
+
+        <div class="cg-delivery-board__result-line">
+            <span>Найдено заказов: <strong><?php echo esc_html(count($rows)); ?></strong></span>
+            <?php if ($has_filters) : ?><small>Фильтры применены только к текущему периоду.</small><?php endif; ?>
+        </div>
+
         <?php if (!$rows) : ?>
-            <div class="cg-delivery-board__empty"><strong>В этом периоде доставок нет.</strong><span>Новые заказы с указанной датой появятся здесь автоматически.</span></div>
+            <div class="cg-delivery-board__empty"><strong>По выбранным условиям доставок нет.</strong><span>Измените период или сбросьте фильтры.</span></div>
         <?php else : ?>
             <div class="cg-delivery-board__table-wrap">
                 <table class="widefat striped cg-delivery-board__table">
@@ -230,13 +380,16 @@ function cg_delivery_board_render_page() {
                         $name = trim($order->get_billing_first_name() . ' ' . $order->get_billing_last_name());
                         $date_label = wp_date('d.m.Y', strtotime($row['date']));
                         $is_today = $row['date'] === $today;
+                        $active = in_array($order->get_status(), ['pending', 'on-hold', 'processing'], true);
+                        $is_overdue = $row['date'] < $today && $active;
+                        $row_class = $is_overdue ? 'is-overdue' : ($is_today ? 'is-today' : '');
                         ?>
-                        <tr>
+                        <tr class="<?php echo esc_attr($row_class); ?>">
                             <td><a class="cg-delivery-board__order" href="<?php echo esc_url($order->get_edit_order_url()); ?>"><strong>№<?php echo esc_html($order->get_order_number()); ?></strong><span><?php echo wp_kses_post($order->get_formatted_order_total()); ?></span></a></td>
-                            <td><span class="cg-delivery-board__date <?php echo $is_today ? 'is-today' : ''; ?>"><?php echo esc_html($is_today ? 'Сегодня · ' . $date_label : $date_label); ?></span><?php if ($row['time'] !== '') : ?><small><?php echo esc_html($row['time']); ?></small><?php endif; ?></td>
-                            <td><strong><?php echo esc_html($name !== '' ? $name : 'Не указано'); ?></strong><?php if ($phone !== '') : ?><a href="<?php echo esc_url($tel); ?>"><?php echo esc_html($phone); ?></a><?php endif; ?></td>
+                            <td><span class="cg-delivery-board__date <?php echo $is_today ? 'is-today' : ($is_overdue ? 'is-overdue' : ''); ?>"><?php echo esc_html($is_overdue ? 'Просрочено · ' . $date_label : ($is_today ? 'Сегодня · ' . $date_label : $date_label)); ?></span><?php if ($row['time'] !== '') : ?><small><?php echo esc_html($row['time']); ?></small><?php endif; ?></td>
+                            <td><strong><?php echo esc_html($name !== '' ? $name : 'Не указано'); ?></strong><?php if ($phone !== '') : ?><a class="cg-delivery-board__phone" href="<?php echo esc_url($tel); ?>"><?php echo esc_html($phone); ?></a><?php endif; ?></td>
                             <td><?php echo esc_html($row['city'] !== '' ? $row['city'] : 'Не указан'); ?></td>
-                            <td><span><?php echo esc_html($order->get_payment_method_title() ?: 'Не указана'); ?></span><small><?php echo esc_html($order->is_paid() ? 'Оплачено' : 'Не отмечено как оплачено'); ?></small></td>
+                            <td><span class="cg-delivery-board__payment <?php echo $order->is_paid() ? 'is-paid' : 'is-unpaid'; ?>"><?php echo esc_html($order->is_paid() ? 'Оплачено' : 'Не оплачено'); ?></span><small><?php echo esc_html($order->get_payment_method_title() ?: 'Способ не указан'); ?></small></td>
                             <td><span class="cg-delivery-board__status is-<?php echo esc_attr($order->get_status()); ?>"><?php echo esc_html(wc_get_order_status_name($order->get_status())); ?></span></td>
                         </tr>
                     <?php endforeach; ?>
