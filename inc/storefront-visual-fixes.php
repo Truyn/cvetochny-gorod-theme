@@ -254,6 +254,9 @@ require_once get_template_directory() . '/inc/customer-retention-launch.php';
 /** Explain order statuses and make daily order handling faster for the store manager. */
 require_once get_template_directory() . '/inc/order-operations.php';
 
+/** Brand customer emails, add the delivery board and combine final launch signals. */
+require_once get_template_directory() . '/inc/delivery-email-launch.php';
+
 /** Put curated SEO selections on the homepage without hard-coding them into the template. */
 function cg_storefront_render_home_seo_landings_before_footer() {
     if (!is_front_page() || !function_exists('cg_seo_stage_two_home_landings')) return;

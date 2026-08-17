@@ -1,0 +1,289 @@
+<?php
+/**
+ * Branded customer emails, daily delivery board and final launch summary.
+ *
+ * @package Cvetochny_Gorod
+ */
+
+if (!defined('ABSPATH')) exit;
+
+/** Keep WooCommerce email templates update-safe and brand them through the official CSS filter. */
+function cg_delivery_launch_email_styles($css, $email) {
+    $css .= "\n/* Цветочный город — мягкая фирменная полировка писем */\n";
+    $css .= "body{background:#fff8f5!important;color:#4a3935!important;}\n";
+    $css .= "#wrapper{background:#fff8f5!important;padding:28px 0!important;}\n";
+    $css .= "#template_container{border:1px solid #ead8d3!important;border-radius:18px!important;overflow:hidden!important;box-shadow:0 12px 34px rgba(83,55,52,.08)!important;}\n";
+    $css .= "#template_header{background:#d97c87!important;border-radius:0!important;}\n";
+    $css .= "#template_header h1{color:#fff!important;font-weight:600!important;letter-spacing:-.01em!important;}\n";
+    $css .= "#body_content{background:#fffdfa!important;}\n";
+    $css .= "#body_content_inner{color:#66534e!important;font-size:15px!important;line-height:1.65!important;}\n";
+    $css .= "#body_content h1,#body_content h2,#body_content h3{color:#4a3834!important;}\n";
+    $css .= "#body_content a{color:#a95662!important;}\n";
+    $css .= "#body_content table.td,#body_content th.td,#body_content td.td{border-color:#ead8d3!important;}\n";
+    $css .= "#body_content th.td{background:#fff4ef!important;color:#6e5751!important;}\n";
+    $css .= "#body_content .button,#body_content a.button{background:#d97c87!important;border-color:#d97c87!important;color:#fff!important;border-radius:10px!important;}\n";
+    $css .= "#template_footer{background:#fff8f5!important;}\n";
+    $css .= "#credit{color:#917b75!important;font-size:12px!important;line-height:1.6!important;text-align:center!important;}\n";
+    return $css;
+}
+add_filter('woocommerce_email_styles', 'cg_delivery_launch_email_styles', 30, 2);
+
+/** Useful branded footer instead of a generic WooCommerce credit line. */
+function cg_delivery_launch_email_footer($text, $email = null) {
+    $phone = trim((string) get_theme_mod('cg_phone', '+7 (930) 411-98-55'));
+    $hours = trim((string) get_theme_mod('cg_worktime', 'Ежедневно с 07:00 до 21:00'));
+    $parts = ['Цветочный город · магазин цветов в Нововоронеже'];
+    if ($phone !== '') $parts[] = 'Телефон: ' . $phone;
+    if ($hours !== '') $parts[] = $hours;
+    return implode('<br>', array_map('esc_html', $parts));
+}
+add_filter('woocommerce_email_footer_text', 'cg_delivery_launch_email_footer', 30, 2);
+
+/** Parse the first time from a delivery interval for stable chronological sorting. */
+function cg_delivery_board_time_key($value) {
+    $value = (string) $value;
+    if (preg_match('/(?:^|\D)([01]?\d|2[0-3])[:.]([0-5]\d)/u', $value, $match)) {
+        return sprintf('%02d:%02d', (int) $match[1], (int) $match[2]);
+    }
+    return '99:99';
+}
+
+/** Load delivery rows once through wc_get_orders so the board remains compatible with HPOS. */
+function cg_delivery_board_source_rows() {
+    static $rows = null;
+    if ($rows !== null) return $rows;
+    if (!function_exists('wc_get_orders')) return [];
+
+    $orders = wc_get_orders([
+        'status' => ['wc-pending', 'wc-on-hold', 'wc-processing', 'wc-completed'],
+        'limit' => 250,
+        'orderby' => 'date',
+        'order' => 'DESC',
+        'return' => 'objects',
+    ]);
+
+    $rows = [];
+    foreach ($orders as $order) {
+        if (!$order instanceof WC_Order) continue;
+
+        $date = trim((string) $order->get_meta('_cg_delivery_date'));
+        if ($date === '' || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) continue;
+
+        $time = trim((string) $order->get_meta('_cg_delivery_time'));
+        $city = trim((string) $order->get_meta('_cg_delivery_city'));
+        if ($city === '') $city = trim((string) $order->get_billing_city());
+
+        $rows[] = [
+            'order' => $order,
+            'date' => $date,
+            'time' => $time,
+            'time_key' => cg_delivery_board_time_key($time),
+            'city' => $city,
+        ];
+    }
+
+    usort($rows, static function ($a, $b) {
+        $left = $a['date'] . ' ' . $a['time_key'] . ' ' . str_pad((string) $a['order']->get_id(), 12, '0', STR_PAD_LEFT);
+        $right = $b['date'] . ' ' . $b['time_key'] . ' ' . str_pad((string) $b['order']->get_id(), 12, '0', STR_PAD_LEFT);
+        return strcmp($left, $right);
+    });
+
+    return $rows;
+}
+
+function cg_delivery_board_orders($range = 'week') {
+    $now = current_datetime();
+    $today = $now->format('Y-m-d');
+    $tomorrow = $now->modify('+1 day')->format('Y-m-d');
+    $week_end = $now->modify('+6 days')->format('Y-m-d');
+    $rows = [];
+
+    foreach (cg_delivery_board_source_rows() as $row) {
+        $order = $row['order'];
+        $date = $row['date'];
+        $status = $order->get_status();
+        $active = in_array($status, ['pending', 'on-hold', 'processing'], true);
+        $include = false;
+
+        if ($range === 'today') {
+            $include = $date === $today;
+        } elseif ($range === 'tomorrow') {
+            $include = $date === $tomorrow && $active;
+        } elseif ($range === 'overdue') {
+            $include = $date < $today && $active;
+        } elseif ($range === 'all') {
+            $include = ($date >= $today && $active) || ($date === $today && $status === 'completed');
+        } else {
+            $include = $date >= $today && $date <= $week_end && ($active || ($date === $today && $status === 'completed'));
+        }
+
+        if ($include) $rows[] = $row;
+    }
+
+    return $rows;
+}
+
+function cg_delivery_board_counts() {
+    return [
+        'today' => count(cg_delivery_board_orders('today')),
+        'tomorrow' => count(cg_delivery_board_orders('tomorrow')),
+        'week' => count(cg_delivery_board_orders('week')),
+        'overdue' => count(cg_delivery_board_orders('overdue')),
+    ];
+}
+
+function cg_delivery_board_register_page() {
+    add_submenu_page(
+        'woocommerce',
+        'Заказы на доставку',
+        'Заказы на доставку',
+        'manage_woocommerce',
+        'cg-delivery-board',
+        'cg_delivery_board_render_page'
+    );
+}
+add_action('admin_menu', 'cg_delivery_board_register_page', 33);
+
+function cg_delivery_board_admin_assets($hook) {
+    if (!in_array($hook, ['woocommerce_page_cg-delivery-board', 'woocommerce_page_cg-order-readiness'], true)) return;
+
+    $path = get_template_directory() . '/assets/css/delivery-board-admin.css';
+    wp_enqueue_style(
+        'cg-delivery-board-admin',
+        get_template_directory_uri() . '/assets/css/delivery-board-admin.css',
+        [],
+        file_exists($path) ? filemtime($path) : wp_get_theme()->get('Version')
+    );
+}
+add_action('admin_enqueue_scripts', 'cg_delivery_board_admin_assets');
+
+function cg_delivery_board_all_orders_url() {
+    if (class_exists('\\Automattic\\WooCommerce\\Utilities\\OrderUtil')
+        && \Automattic\WooCommerce\Utilities\OrderUtil::custom_orders_table_usage_is_enabled()) {
+        return admin_url('admin.php?page=wc-orders');
+    }
+    return admin_url('edit.php?post_type=shop_order');
+}
+
+function cg_delivery_board_phone_link($phone) {
+    $digits = preg_replace('/\D+/', '', (string) $phone);
+    if ($digits === '') return '';
+    if (strlen($digits) === 11 && $digits[0] === '8') $digits = '7' . substr($digits, 1);
+    return 'tel:+' . ltrim($digits, '+');
+}
+
+function cg_delivery_board_render_page() {
+    if (!current_user_can('manage_woocommerce')) return;
+
+    $allowed = ['today', 'tomorrow', 'week', 'all', 'overdue'];
+    $range = isset($_GET['range']) ? sanitize_key(wp_unslash($_GET['range'])) : 'week';
+    if (!in_array($range, $allowed, true)) $range = 'week';
+
+    $rows = cg_delivery_board_orders($range);
+    $counts = cg_delivery_board_counts();
+    $today = current_datetime()->format('Y-m-d');
+
+    $tabs = [
+        'today' => 'Сегодня',
+        'tomorrow' => 'Завтра',
+        'week' => '7 дней',
+        'all' => 'Все будущие',
+        'overdue' => 'Просроченные',
+    ];
+    ?>
+    <div class="wrap cg-delivery-board">
+        <div class="cg-delivery-board__hero">
+            <div>
+                <span>Ежедневная работа</span>
+                <h1>Заказы на доставку</h1>
+                <p>Ближайшие доставки в одном месте. Эта страница ничего не меняет в заказах — только помогает быстро видеть дату, время и контакты.</p>
+            </div>
+            <a class="button" href="<?php echo esc_url(cg_delivery_board_all_orders_url()); ?>">Все заказы WooCommerce</a>
+        </div>
+
+        <div class="cg-delivery-board__stats">
+            <div><span>Сегодня</span><strong><?php echo esc_html($counts['today']); ?></strong></div>
+            <div><span>Завтра</span><strong><?php echo esc_html($counts['tomorrow']); ?></strong></div>
+            <div><span>На 7 дней</span><strong><?php echo esc_html($counts['week']); ?></strong></div>
+            <div class="<?php echo $counts['overdue'] ? 'is-alert' : ''; ?>"><span>Просроченные</span><strong><?php echo esc_html($counts['overdue']); ?></strong></div>
+        </div>
+
+        <nav class="cg-delivery-board__tabs" aria-label="Период доставок">
+            <?php foreach ($tabs as $key => $label) :
+                $url = add_query_arg(['page' => 'cg-delivery-board', 'range' => $key], admin_url('admin.php'));
+                ?>
+                <a class="<?php echo $range === $key ? 'is-active' : ''; ?>" href="<?php echo esc_url($url); ?>"><?php echo esc_html($label); ?></a>
+            <?php endforeach; ?>
+        </nav>
+
+        <?php if (!$rows) : ?>
+            <div class="cg-delivery-board__empty"><strong>В этом периоде доставок нет.</strong><span>Новые заказы с указанной датой появятся здесь автоматически.</span></div>
+        <?php else : ?>
+            <div class="cg-delivery-board__table-wrap">
+                <table class="widefat striped cg-delivery-board__table">
+                    <thead><tr><th>Заказ</th><th>Доставка</th><th>Получатель</th><th>Населённый пункт</th><th>Оплата</th><th>Статус</th></tr></thead>
+                    <tbody>
+                    <?php foreach ($rows as $row) :
+                        $order = $row['order'];
+                        $phone = trim((string) $order->get_billing_phone());
+                        $tel = cg_delivery_board_phone_link($phone);
+                        $name = trim($order->get_billing_first_name() . ' ' . $order->get_billing_last_name());
+                        $date_label = wp_date('d.m.Y', strtotime($row['date']));
+                        $is_today = $row['date'] === $today;
+                        ?>
+                        <tr>
+                            <td><a class="cg-delivery-board__order" href="<?php echo esc_url($order->get_edit_order_url()); ?>"><strong>№<?php echo esc_html($order->get_order_number()); ?></strong><span><?php echo wp_kses_post($order->get_formatted_order_total()); ?></span></a></td>
+                            <td><span class="cg-delivery-board__date <?php echo $is_today ? 'is-today' : ''; ?>"><?php echo esc_html($is_today ? 'Сегодня · ' . $date_label : $date_label); ?></span><?php if ($row['time'] !== '') : ?><small><?php echo esc_html($row['time']); ?></small><?php endif; ?></td>
+                            <td><strong><?php echo esc_html($name !== '' ? $name : 'Не указано'); ?></strong><?php if ($phone !== '') : ?><a href="<?php echo esc_url($tel); ?>"><?php echo esc_html($phone); ?></a><?php endif; ?></td>
+                            <td><?php echo esc_html($row['city'] !== '' ? $row['city'] : 'Не указан'); ?></td>
+                            <td><span><?php echo esc_html($order->get_payment_method_title() ?: 'Не указана'); ?></span><small><?php echo esc_html($order->is_paid() ? 'Оплачено' : 'Не отмечено как оплачено'); ?></small></td>
+                            <td><span class="cg-delivery-board__status is-<?php echo esc_attr($order->get_status()); ?>"><?php echo esc_html(wc_get_order_status_name($order->get_status())); ?></span></td>
+                        </tr>
+                    <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+        <?php endif; ?>
+    </div>
+    <?php
+}
+
+/** One compact summary above the existing order-readiness checks. */
+function cg_delivery_launch_final_summary() {
+    if (!is_admin() || !current_user_can('manage_woocommerce')) return;
+    $page = isset($_GET['page']) ? sanitize_key(wp_unslash($_GET['page'])) : '';
+    if ($page !== 'cg-order-readiness') return;
+
+    $technical = function_exists('cg_launch_checklist_items') ? (array) cg_launch_checklist_items() : [];
+    $technical_done = count(array_filter($technical, static function ($item) { return !empty($item['ok']); }));
+
+    $manual_items = function_exists('cg_order_readiness_manual_items') ? (array) cg_order_readiness_manual_items() : [];
+    $manual_saved = function_exists('cg_order_readiness_saved_manual') ? (array) cg_order_readiness_saved_manual() : [];
+    $manual_done = 0;
+    foreach (array_keys($manual_items) as $key) if (!empty($manual_saved[$key])) $manual_done++;
+
+    $catalog = function_exists('cg_catalog_quality_report') ? (array) cg_catalog_quality_report() : [];
+    $catalog_score = isset($catalog['score']) ? (int) $catalog['score'] : 0;
+
+    $from_name = trim((string) get_option('woocommerce_email_from_name', get_bloginfo('name')));
+    $from_email = trim((string) get_option('woocommerce_email_from_address', get_option('admin_email')));
+    $sender_ok = $from_name !== '' && is_email($from_email);
+
+    $technical_ok = !$technical || $technical_done === count($technical);
+    $manual_ok = !$manual_items || $manual_done === count($manual_items);
+    $catalog_ok = $catalog_score >= 85;
+    $ready = $technical_ok && $manual_ok && $catalog_ok && $sender_ok;
+
+    echo '<section class="cg-final-launch-summary ' . ($ready ? 'is-ready' : 'needs-attention') . '">';
+    echo '<div class="cg-final-launch-summary__head"><div><span>Общая картина</span><strong>' . ($ready ? 'Основные проверки закрыты' : 'До запуска осталось несколько пунктов') . '</strong></div><b>' . ($ready ? '✓' : '!') . '</b></div>';
+    echo '<div class="cg-final-launch-summary__grid">';
+    echo '<div><span>Техническая готовность</span><strong>' . esc_html($technical_done . '/' . count($technical)) . '</strong></div>';
+    echo '<div><span>Реальный тест заказа</span><strong>' . esc_html($manual_done . '/' . count($manual_items)) . '</strong></div>';
+    echo '<div><span>Качество каталога</span><strong>' . esc_html($catalog_score . '%') . '</strong></div>';
+    echo '<div><span>Отправитель писем</span><strong>' . esc_html($sender_ok ? 'Готов' : 'Проверить') . '</strong></div>';
+    echo '</div>';
+    echo '<p>Фактическую доставку писем, оплату, VK и мобильное приложение всё равно подтверждаем только реальным тестовым заказом.</p>';
+    echo '<div class="cg-final-launch-summary__links"><a href="' . esc_url(admin_url('themes.php?page=cg-launch-readiness')) . '">Техническая готовность</a><a href="' . esc_url(admin_url('admin.php?page=cg-catalog-quality')) . '">Качество каталога</a><a href="' . esc_url(admin_url('admin.php?page=cg-delivery-board')) . '">Заказы на доставку</a></div>';
+    echo '</section>';
+}
+add_action('admin_notices', 'cg_delivery_launch_final_summary', 5);
