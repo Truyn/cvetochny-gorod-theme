@@ -36,6 +36,34 @@ function cg_final_polish_checkout_phone_prefix($value, $input) {
 }
 add_filter('woocommerce_checkout_get_value', 'cg_final_polish_checkout_phone_prefix', 20, 2);
 
+/**
+ * WooCommerce/local checkout customizations may omit billing_phone completely.
+ * The theme template expects it, so restore the recipient phone as a required
+ * full-width field after all normal checkout-field filters have run.
+ */
+function cg_final_polish_restore_recipient_phone($fields) {
+    if (!isset($fields['billing']) || !is_array($fields['billing'])) {
+        $fields['billing'] = [];
+    }
+
+    $phone = isset($fields['billing']['billing_phone']) && is_array($fields['billing']['billing_phone'])
+        ? $fields['billing']['billing_phone']
+        : [];
+
+    $phone['type'] = 'tel';
+    $phone['label'] = 'Телефон получателя';
+    $phone['placeholder'] = '+7 (___) ___-__-__';
+    $phone['required'] = true;
+    $phone['priority'] = 30;
+    $phone['class'] = ['form-row-wide', 'cg-recipient-phone'];
+    $phone['autocomplete'] = 'tel';
+    $phone['validate'] = ['phone'];
+
+    $fields['billing']['billing_phone'] = $phone;
+    return $fields;
+}
+add_filter('woocommerce_checkout_fields', 'cg_final_polish_restore_recipient_phone', 90);
+
 /** Number of digits entered in a phone field. */
 function cg_final_polish_phone_digits($value) {
     return strlen((string) preg_replace('/\D+/', '', (string) $value));
@@ -94,6 +122,31 @@ body.tax-product_tag .site-header .header-search>.container{
         wp_add_inline_style('cg-premium-filters', $catalog_css);
     }
 
+    if (function_exists('is_cart') && is_cart()) {
+        $cart_css = '
+/* One useful price per cart row: product + price + quantity. */
+.woocommerce-cart .woocommerce-cart-form th.product-subtotal,
+.woocommerce-cart .woocommerce-cart-form td.product-subtotal{display:none!important}
+.woocommerce-cart .woocommerce-cart-form .product-price,
+.woocommerce-cart .woocommerce-cart-form .product-price .woocommerce-Price-amount,
+.woocommerce-cart .woocommerce-cart-form .product-price .woocommerce-Price-currencySymbol,
+.woocommerce-cart .woocommerce-cart-form .quantity .qty{
+    font-family:system-ui,-apple-system,"Segoe UI",Arial,sans-serif!important;
+    font-variant-numeric:lining-nums tabular-nums!important;
+    font-feature-settings:"lnum" 1,"tnum" 1!important;
+    letter-spacing:0!important;
+}
+.woocommerce-cart .woocommerce-cart-form .product-price .woocommerce-Price-amount,
+.woocommerce-cart .woocommerce-cart-form .product-price .woocommerce-Price-currencySymbol{font-weight:800!important}
+@media(min-width:761px){
+.woocommerce-cart .woocommerce-cart-form .product-name{width:auto!important}
+.woocommerce-cart .woocommerce-cart-form .product-price{min-width:130px!important;font-size:15px!important}
+.woocommerce-cart .woocommerce-cart-form .product-quantity{min-width:150px!important;text-align:center!important}
+}
+';
+        wp_add_inline_style('cg-cart-premium', $cart_css);
+    }
+
     if (function_exists('is_checkout') && is_checkout() && !is_order_received_page()) {
         $checkout_css = '
 .woocommerce-checkout .cg-classic-checkout .woocommerce-checkout-review-order-table tfoot th{width:36%!important}
@@ -102,6 +155,7 @@ body.tax-product_tag .site-header .header-search>.container{
 .woocommerce-checkout .cg-classic-checkout .woocommerce-checkout-review-order-table .shipping td{padding-left:16px!important;vertical-align:middle!important;text-align:right!important;white-space:normal!important;line-height:1.4!important;overflow-wrap:anywhere}
 .woocommerce-checkout .cg-classic-checkout .woocommerce-checkout-review-order-table .shipping td .woocommerce-Price-amount{white-space:nowrap}
 .woocommerce-checkout .cg-classic-checkout .woocommerce-checkout-review-order-table .shipping td ul{margin:0!important;padding:0!important;list-style:none!important;text-align:right!important}
+.woocommerce-checkout .cg-classic-checkout #billing_phone_field{grid-column:1/-1!important}
 ';
         wp_add_inline_style('cg-classic-checkout-template', $checkout_css);
     }
