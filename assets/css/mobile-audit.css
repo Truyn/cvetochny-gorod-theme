@@ -42,9 +42,9 @@ main input,main select,main textarea,main button{max-width:100%}
 .woocommerce-cart .woocommerce-cart-form .product-thumbnail,.woocommerce-cart .woocommerce-cart-form .product-name,.woocommerce-cart .woocommerce-cart-form .product-price,.woocommerce-cart .woocommerce-cart-form .product-quantity,.woocommerce-cart .woocommerce-cart-form .product-subtotal,.woocommerce-cart .woocommerce-cart-form .product-remove{background:transparent!important;background-color:transparent!important;background-image:none!important;box-shadow:none!important}
 .woocommerce-cart .woocommerce-cart-form .product-thumbnail a{display:block!important;background:transparent!important;box-shadow:none!important}
 .woocommerce-cart .woocommerce-cart-form .product-thumbnail img{background:#fff7f4!important;box-shadow:none!important}
-.woocommerce-cart .woocommerce-cart-form .product-name{padding-top:2px!important}
-.woocommerce-cart .woocommerce-cart-form .product-name>a{display:block!important;margin:0!important;line-height:1.2!important}
-.woocommerce-cart .woocommerce-cart-form .product-price,.woocommerce-cart .woocommerce-cart-form .product-subtotal{padding-top:7px!important}
+.woocommerce-cart .woocommerce-cart-form .product-name{min-width:0!important;padding-top:2px!important}
+.woocommerce-cart .woocommerce-cart-form .product-name>a{display:block!important;margin:0!important;line-height:1.2!important;overflow-wrap:anywhere!important}
+.woocommerce-cart .woocommerce-cart-form .product-price,.woocommerce-cart .woocommerce-cart-form .product-subtotal{padding-top:7px!important;font-variant-numeric:tabular-nums lining-nums}
 .woocommerce-cart .woocommerce-cart-form .product-quantity{padding-top:9px!important}
 
 /* Вместо шрифтового × — две ровные линии, всегда строго по центру. */
@@ -57,8 +57,9 @@ main input,main select,main textarea,main button{max-width:100%}
 
 /* Удобнее нажимать пальцем и ровнее выглядит счётчик. */
 .woocommerce-cart .quantity.cg-quantity-ready{grid-template-columns:42px 50px 42px!important;min-height:44px!important;border-radius:14px!important}
-.woocommerce-cart .quantity.cg-quantity-ready .qty{width:50px!important;height:44px!important;font-size:16px!important}
+.woocommerce-cart .quantity.cg-quantity-ready .qty{width:50px!important;height:44px!important;font-size:16px!important;font-variant-numeric:tabular-nums lining-nums}
 .woocommerce-cart .cg-qty-button{width:42px!important;height:44px!important;font-size:21px!important}
+.woocommerce-cart .cg-qty-button:focus-visible{outline:2px solid rgba(183,117,109,.38)!important;outline-offset:-2px!important}
 
 /* На мобильном явно различаем цену за единицу и сумму позиции. */
 .woocommerce-cart .woocommerce-cart-form table.shop_table_responsive tbody tr.cart_item>td.product-price:before,.woocommerce-cart .woocommerce-cart-form table.shop_table_responsive tbody tr.cart_item>td.product-subtotal:before{display:block!important;margin:0 0 3px!important;color:#9a8984!important;font-size:9px!important;font-weight:850!important;line-height:1.1!important;letter-spacing:.09em!important;text-transform:uppercase!important}
@@ -66,6 +67,22 @@ main input,main select,main textarea,main button{max-width:100%}
 .woocommerce-cart .woocommerce-cart-form table.shop_table_responsive tbody tr.cart_item>td.product-subtotal:before{content:"Сумма"!important}
 .woocommerce-cart .woocommerce-cart-form .product-price{font-size:13px!important;line-height:1.2!important}
 .woocommerce-cart .woocommerce-cart-form .product-subtotal{font-size:17px!important;line-height:1.2!important}
+}
+
+/* Очень узкие телефоны: одна колонка кабинета и компактная, но не тесная корзина. */
+@media (max-width:430px){
+.cg-account-page .woocommerce-MyAccount-navigation{padding:12px!important}
+.cg-account-page .woocommerce-MyAccount-navigation ul{grid-template-columns:1fr!important;gap:7px!important}
+.cg-account-page .woocommerce-MyAccount-navigation-link--customer-logout{grid-column:auto!important}
+.cg-account-page .woocommerce-MyAccount-navigation a{grid-template-columns:40px minmax(0,1fr)!important;min-height:56px!important;padding:8px 10px!important;font-size:13px!important}
+.cg-account-page .woocommerce-MyAccount-navigation a:before{width:40px!important;height:40px!important;min-width:40px!important;max-width:40px!important;min-height:40px!important;max-height:40px!important;background-size:20px 20px!important}
+.woocommerce-cart .woocommerce-cart-form table.shop_table_responsive tr.cart_item{grid-template-columns:76px minmax(0,1fr) 42px!important;gap:0 10px!important}
+.woocommerce-cart .woocommerce-cart-form .product-thumbnail{width:76px!important}
+.woocommerce-cart .woocommerce-cart-form .product-thumbnail img{width:74px!important;height:74px!important;border-radius:13px!important}
+.woocommerce-cart .woocommerce-cart-form .product-name>a{font-size:18px!important;line-height:1.18!important}
+.woocommerce-cart .quantity.cg-quantity-ready{grid-template-columns:40px 46px 40px!important}
+.woocommerce-cart .quantity.cg-quantity-ready .qty{width:46px!important}
+.woocommerce-cart .cg-qty-button{width:40px!important}
 }
 
 @media (max-width:560px){
