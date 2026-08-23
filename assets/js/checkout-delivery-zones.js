@@ -7,6 +7,12 @@
         return window.cgDeliveryZones || { zones: {}, messages: {} };
     }
 
+    function plainPriceText(value) {
+        var decoder = document.createElement('textarea');
+        decoder.innerHTML = String(value || '');
+        return decoder.value.replace(/\u00a0/g, ' ');
+    }
+
     function requestCheckoutUpdate() {
         window.clearTimeout(checkoutUpdateTimer);
         checkoutUpdateTimer = window.setTimeout(function () {
@@ -44,7 +50,7 @@
 
         if (zone) {
             var message = config.messages.known || 'Стоимость доставки: %s.';
-            $note.addClass('is-priced').text(message.replace('%s', zone.price));
+            $note.addClass('is-priced').text(message.replace('%s', plainPriceText(zone.price)));
             return;
         }
 
