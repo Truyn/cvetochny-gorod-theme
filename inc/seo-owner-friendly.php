@@ -7,10 +7,10 @@
 
 if (!defined('ABSPATH')) exit;
 
-/** Add one plain-language help page under WooCommerce. */
+/** Add one plain-language help page without exposing it as a separate menu item. */
 function cg_seo_owner_friendly_menu() {
     add_submenu_page(
-        'woocommerce',
+        'admin.php',
         'Поиск и продвижение',
         'Поиск и продвижение',
         'manage_woocommerce',
@@ -112,9 +112,7 @@ function cg_seo_owner_friendly_admin_assets($hook) {
     $is_category = $screen->taxonomy === 'product_cat';
     if (!$is_product && !$is_category) return;
 
-    $css = '
-.cg-owner-seo-help{margin:10px 0 14px;padding:11px 12px;border:1px solid #dcdcde;border-radius:8px;background:#f6f7f7;color:#50575e;line-height:1.5}.cg-owner-seo-help strong{color:#1d2327}.cg-owner-seo-example{display:block;margin-top:5px;color:#646970;font-size:12px;line-height:1.45}
-';
+    $css = '\n.cg-owner-seo-help{margin:10px 0 14px;padding:11px 12px;border:1px solid #dcdcde;border-radius:8px;background:#f6f7f7;color:#50575e;line-height:1.5}.cg-owner-seo-help strong{color:#1d2327}.cg-owner-seo-example{display:block;margin-top:5px;color:#646970;font-size:12px;line-height:1.45}\n';
     wp_register_style('cg-seo-owner-friendly-admin', false);
     wp_enqueue_style('cg-seo-owner-friendly-admin');
     wp_add_inline_style('cg-seo-owner-friendly-admin', $css);
@@ -161,10 +159,8 @@ function cg_seo_owner_friendly_product_notice() {
 add_action('admin_notices', 'cg_seo_owner_friendly_product_notice');
 
 function cg_seo_owner_friendly_page_assets($hook) {
-    if ($hook !== 'woocommerce_page_cg-search-promotion-guide') return;
-    $css = '
-.cg-owner-guide{max-width:1100px}.cg-owner-guide__lead{font-size:16px;max-width:820px;color:#50575e}.cg-owner-guide__cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-top:22px}.cg-owner-guide__card{padding:20px;border:1px solid #dcdcde;border-radius:14px;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.03)}.cg-owner-guide__card.is-main{grid-column:1/-1;border-color:#e4b8bd;background:#fffafa}.cg-owner-guide__card h2{margin:8px 0 12px;font-size:19px}.cg-owner-guide__card p,.cg-owner-guide__card li{font-size:14px;line-height:1.65}.cg-owner-guide__badge{display:inline-block;padding:4px 9px;border-radius:999px;background:#f4d8dc;color:#8b4850;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em}.cg-owner-guide__badge.is-optional,.cg-owner-guide__badge.is-later{background:#f0f0f1;color:#50575e}.cg-owner-guide__badge.is-useful{background:#e7f4ea;color:#206b36}.cg-owner-guide__badge.is-auto{background:#e9f2fb;color:#245b8a}@media(max-width:782px){.cg-owner-guide__cards{grid-template-columns:1fr}.cg-owner-guide__card.is-main{grid-column:auto}}
-';
+    if (!in_array($hook, ['admin_page_cg-search-promotion-guide', 'woocommerce_page_cg-search-promotion-guide'], true)) return;
+    $css = '\n.cg-owner-guide{max-width:1100px}.cg-owner-guide__lead{font-size:16px;max-width:820px;color:#50575e}.cg-owner-guide__cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-top:22px}.cg-owner-guide__card{padding:20px;border:1px solid #dcdcde;border-radius:14px;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.03)}.cg-owner-guide__card.is-main{grid-column:1/-1;border-color:#e4b8bd;background:#fffafa}.cg-owner-guide__card h2{margin:8px 0 12px;font-size:19px}.cg-owner-guide__card p,.cg-owner-guide__card li{font-size:14px;line-height:1.65}.cg-owner-guide__badge{display:inline-block;padding:4px 9px;border-radius:999px;background:#f4d8dc;color:#8b4850;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em}.cg-owner-guide__badge.is-optional,.cg-owner-guide__badge.is-later{background:#f0f0f1;color:#50575e}.cg-owner-guide__badge.is-useful{background:#e7f4ea;color:#206b36}.cg-owner-guide__badge.is-auto{background:#e9f2fb;color:#245b8a}@media(max-width:782px){.cg-owner-guide__cards{grid-template-columns:1fr}.cg-owner-guide__card.is-main{grid-column:auto}}\n';
     wp_register_style('cg-seo-owner-guide', false);
     wp_enqueue_style('cg-seo-owner-guide');
     wp_add_inline_style('cg-seo-owner-guide', $css);
