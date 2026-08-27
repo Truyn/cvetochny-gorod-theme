@@ -23,6 +23,36 @@ function cg_simple_store_hide_helper_menus() {
 }
 add_action('admin_menu', 'cg_simple_store_hide_helper_menus', 10000);
 
+/**
+ * Register hidden compatibility endpoints for helper screens.
+ *
+ * Some WordPress/WooCommerce combinations can reject a direct request after
+ * a submenu is removed from the visible menu. The tools hub keeps these pages
+ * hidden, but they must remain valid admin routes.
+ */
+function cg_simple_store_register_helper_access_bridges() {
+    $slugs = [
+        'cg-commerce-analytics',
+        'cg-catalog-quality',
+        'cg-order-readiness',
+    ];
+
+    foreach ($slugs as $slug) {
+        add_submenu_page(
+            null,
+            'Инструменты магазина',
+            'Инструменты магазина',
+            'manage_woocommerce',
+            $slug,
+            static function () use ($slug) {
+                if (!current_user_can('manage_woocommerce')) return;
+                do_action('woocommerce_page_' . $slug);
+            }
+        );
+    }
+}
+add_action('admin_menu', 'cg_simple_store_register_helper_access_bridges', 10001);
+
 /** Remove optional SEO boxes from the normal product-editing workflow. */
 function cg_simple_store_remove_product_meta_boxes() {
     remove_meta_box('cg-product-seo-checklist', 'product', 'side');
