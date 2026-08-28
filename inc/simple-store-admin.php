@@ -70,3 +70,30 @@ remove_action('product_cat_edit_form_fields', 'cg_seo_three_category_edit_fields
 /** Remove old helper notices that are no longer useful in the simple workflow. */
 remove_action('admin_notices', 'cg_seo_owner_friendly_product_notice');
 remove_action('admin_notices', 'cg_admin_notice');
+
+/** Load the visual polish layer after the theme's existing WooCommerce CSS. */
+function cg_product_page_polish_assets() {
+    if (!class_exists('WooCommerce')) return;
+
+    $path = get_template_directory() . '/assets/css/product-page-polish.css';
+    $version = file_exists($path) ? filemtime($path) : wp_get_theme()->get('Version');
+
+    if (is_product()) {
+        wp_enqueue_style(
+            'cg-product-page-polish',
+            get_template_directory_uri() . '/assets/css/product-page-polish.css',
+            ['cg-product-hotfix'],
+            $version
+        );
+    }
+
+    if (is_shop() || is_product_taxonomy()) {
+        wp_enqueue_style(
+            'cg-catalog-controls-polish',
+            get_template_directory_uri() . '/assets/css/product-page-polish.css',
+            ['cg-premium-filters'],
+            $version
+        );
+    }
+}
+add_action('wp_enqueue_scripts', 'cg_product_page_polish_assets', 100);
