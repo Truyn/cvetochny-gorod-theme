@@ -1,6 +1,5 @@
 /* Targeted storefront fixes after cart, checkout and single-product styles. */
 
-/* The settlement is selected only in the custom card above the totals. */
 .woocommerce-cart .cart_totals ul#shipping_method,
 .woocommerce-cart .cart_totals .woocommerce-shipping-methods{margin:0!important;padding:0!important;list-style:none!important}
 .woocommerce-cart .cart_totals ul#shipping_method li,
@@ -20,7 +19,6 @@
 .woocommerce-cart .woocommerce>.cart-collaterals{grid-area:totals!important;align-self:stretch!important}
 .woocommerce-cart .woocommerce>.cg-order-reassurance{grid-area:reassurance!important}
 .woocommerce-cart .cart-collaterals .cart_totals{width:100%!important}
-
 .woocommerce-cart .cg-cart-addons__grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
 .woocommerce-cart .cg-cart-addon{grid-template-columns:116px minmax(0,1fr)!important;min-height:132px!important}
 .woocommerce-cart .cg-cart-addon__image{display:grid!important;place-items:center!important;min-height:0!important;aspect-ratio:1/1!important;padding:10px!important;background:#fffaf8!important;box-sizing:border-box!important;overflow:hidden!important}
@@ -30,8 +28,9 @@
 .woocommerce-cart .woocommerce-cart-form .coupon button[name="apply_coupon"]{display:inline-flex!important;align-items:center!important;justify-content:center!important;white-space:nowrap!important;text-align:center!important}
 html.cg-cart-js .woocommerce-cart .woocommerce-cart-form button[name="update_cart"]{display:none!important}
 
-/* Stable product-image stage. Thumbnail changes update the existing image node,
- * so the browser never collapses the stage while a new source is loading. */
+/* Legacy manual-gallery rules are retained for backwards compatibility but are
+ * no longer activated by storefront-visual-fixes.js. Native WooCommerce owns
+ * slide changes in the current implementation. */
 .single-product .woocommerce-product-gallery .flex-control-thumbs img{cursor:pointer!important}
 .single-product .woocommerce-product-gallery.cg-gallery-manual .flex-viewport{overflow:hidden!important;height:auto!important;min-height:0!important}
 .single-product .woocommerce-product-gallery.cg-gallery-manual .woocommerce-product-gallery__wrapper{display:block!important;width:100%!important;height:auto!important;transform:none!important;margin-left:0!important}
@@ -40,11 +39,38 @@ html.cg-cart-js .woocommerce-cart .woocommerce-cart-form button[name="update_car
 .single-product .woocommerce-product-gallery.cg-gallery-manual .woocommerce-product-gallery__wrapper>.woocommerce-product-gallery__image:first-child>a{display:block!important;width:100%!important;aspect-ratio:3/4!important;overflow:hidden!important;background:#f7f1ef!important}
 .single-product .woocommerce-product-gallery.cg-gallery-manual .woocommerce-product-gallery__wrapper>.woocommerce-product-gallery__image:first-child img{display:block!important;width:100%!important;height:100%!important;aspect-ratio:3/4!important;object-fit:cover!important;object-position:center!important;margin:0!important}
 .single-product .woocommerce-product-gallery.cg-gallery-manual .woocommerce-product-gallery__image--placeholder{aspect-ratio:3/4!important}
+
+/* Native WooCommerce/FlexSlider gallery: keep a stable stage while allowing
+ * WooCommerce to change slides normally. No click interception, no src rewrite,
+ * and no removal of srcset/sizes. This prevents both mobile non-switching and
+ * desktop low-resolution candidates. */
+.single-product .cg-single-product__gallery .woocommerce-product-gallery .flex-viewport,
+.single-product .cg-product-detail__gallery .woocommerce-product-gallery .flex-viewport{width:100%!important;height:auto!important;min-height:0!important;aspect-ratio:3/4!important;overflow:hidden!important;background:#f7f1ef!important;border-radius:22px!important}
+.single-product .cg-single-product__gallery .woocommerce-product-gallery .woocommerce-product-gallery__wrapper,
+.single-product .cg-product-detail__gallery .woocommerce-product-gallery .woocommerce-product-gallery__wrapper{width:100%!important;margin:0!important}
+.single-product .cg-single-product__gallery .woocommerce-product-gallery .woocommerce-product-gallery__image,
+.single-product .cg-product-detail__gallery .woocommerce-product-gallery .woocommerce-product-gallery__image{width:100%!important;margin:0!important;padding:0!important}
+.single-product .cg-single-product__gallery .woocommerce-product-gallery .woocommerce-product-gallery__image>a,
+.single-product .cg-product-detail__gallery .woocommerce-product-gallery .woocommerce-product-gallery__image>a{display:block!important;width:100%!important;height:100%!important;margin:0!important}
+.single-product .cg-single-product__gallery .woocommerce-product-gallery .woocommerce-product-gallery__image img,
+.single-product .cg-product-detail__gallery .woocommerce-product-gallery .woocommerce-product-gallery__image img{display:block!important;width:100%!important;height:100%!important;aspect-ratio:3/4!important;object-fit:contain!important;object-position:center!important;margin:0!important;border-radius:22px!important}
+.single-product .cg-single-product__gallery .woocommerce-product-gallery .flex-control-thumbs,
+.single-product .cg-product-detail__gallery .woocommerce-product-gallery .flex-control-thumbs{position:relative!important;display:flex!important;gap:12px!important;margin:14px 0 0!important;padding:0!important;overflow-x:auto!important;overflow-y:hidden!important;list-style:none!important;scrollbar-width:none!important}
+.single-product .cg-single-product__gallery .woocommerce-product-gallery .flex-control-thumbs::-webkit-scrollbar,
+.single-product .cg-product-detail__gallery .woocommerce-product-gallery .flex-control-thumbs::-webkit-scrollbar{display:none!important}
+.single-product .cg-single-product__gallery .woocommerce-product-gallery .flex-control-thumbs li,
+.single-product .cg-product-detail__gallery .woocommerce-product-gallery .flex-control-thumbs li{flex:0 0 108px!important;width:108px!important;margin:0!important;padding:0!important;float:none!important}
+.single-product .cg-single-product__gallery .woocommerce-product-gallery .flex-control-thumbs img,
+.single-product .cg-product-detail__gallery .woocommerce-product-gallery .flex-control-thumbs img{display:block!important;width:108px!important;height:108px!important;aspect-ratio:1/1!important;object-fit:cover!important;object-position:center!important;margin:0!important;border:2px solid transparent!important;border-radius:18px!important;opacity:.62!important;cursor:pointer!important;box-sizing:border-box!important;transition:opacity .18s ease,border-color .18s ease,transform .18s ease!important}
+.single-product .cg-single-product__gallery .woocommerce-product-gallery .flex-control-thumbs img.flex-active,
+.single-product .cg-product-detail__gallery .woocommerce-product-gallery .flex-control-thumbs img.flex-active{opacity:1!important;border-color:#d58c98!important}
+.single-product .cg-single-product__gallery .woocommerce-product-gallery .flex-control-thumbs img:hover,
+.single-product .cg-product-detail__gallery .woocommerce-product-gallery .flex-control-thumbs img:hover{opacity:1!important}
+
 .single-product #tab-title-reviews,.single-product #tab-reviews{display:none!important}
 .single-product .woocommerce-tabs ul.tabs,.single-product .woocommerce-tabs ul.tabs li{list-style:none!important}
 .single-product .woocommerce-tabs ul.tabs::before,.single-product .woocommerce-tabs ul.tabs::after,.single-product .woocommerce-tabs ul.tabs li::before,.single-product .woocommerce-tabs ul.tabs li::after{content:none!important;display:none!important;width:0!important;height:0!important;border:0!important;box-shadow:none!important}
 
-/* Recipient, settlement, address, date and wishes form one numbered step. */
 .woocommerce-checkout .cg-checkout-card--combined{padding-bottom:30px!important}
 .woocommerce-checkout .cg-checkout-combined{display:grid;gap:18px}
 .woocommerce-checkout .cg-checkout-combined__section{min-width:0;padding:21px;border:1px solid #eadbd7;border-radius:18px;background:#fffdfc}
@@ -67,11 +93,21 @@ html.cg-cart-js .woocommerce-cart .woocommerce-cart-form button[name="update_car
 .woocommerce-cart .woocommerce-cart-form .coupon{display:grid!important;grid-template-columns:minmax(0,1fr)!important;gap:10px!important;width:100%!important;float:none!important}
 .woocommerce-cart .woocommerce-cart-form .coupon .input-text,.woocommerce-cart .woocommerce-cart-form .coupon button[name="apply_coupon"]{width:100%!important;min-height:50px!important;margin:0!important}
 .single-product .woocommerce-tabs ul.tabs{margin-left:0!important;padding-left:8px!important}
+.single-product .cg-single-product__gallery .woocommerce-product-gallery .flex-control-thumbs li,
+.single-product .cg-product-detail__gallery .woocommerce-product-gallery .flex-control-thumbs li{flex-basis:82px!important;width:82px!important}
+.single-product .cg-single-product__gallery .woocommerce-product-gallery .flex-control-thumbs img,
+.single-product .cg-product-detail__gallery .woocommerce-product-gallery .flex-control-thumbs img{width:82px!important;height:82px!important;border-radius:14px!important}
 .woocommerce-checkout .cg-checkout-combined__section{padding:17px;border-radius:16px}
 }
 @media(max-width:420px){
 .woocommerce-cart .cg-cart-addon{grid-template-columns:92px minmax(0,1fr)!important}
 .woocommerce-cart .cg-cart-addon__image{padding:7px!important}
+.single-product .cg-single-product__gallery .woocommerce-product-gallery .flex-control-thumbs,
+.single-product .cg-product-detail__gallery .woocommerce-product-gallery .flex-control-thumbs{gap:9px!important}
+.single-product .cg-single-product__gallery .woocommerce-product-gallery .flex-control-thumbs li,
+.single-product .cg-product-detail__gallery .woocommerce-product-gallery .flex-control-thumbs li{flex-basis:72px!important;width:72px!important}
+.single-product .cg-single-product__gallery .woocommerce-product-gallery .flex-control-thumbs img,
+.single-product .cg-product-detail__gallery .woocommerce-product-gallery .flex-control-thumbs img{width:72px!important;height:72px!important}
 .woocommerce-checkout .cg-checkout-card--recipient .cg-checkout-delivery-selector{padding:15px!important}
 .woocommerce-checkout .cg-checkout-subheading h3{font-size:20px!important}
 }
