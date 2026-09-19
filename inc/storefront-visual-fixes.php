@@ -7,12 +7,10 @@
 
 if (!defined('ABSPATH')) exit;
 
-/** Whether the current request is a WooCommerce AJAX request. */
 function cg_storefront_is_woocommerce_ajax() {
     return wp_doing_ajax() || (defined('WC_DOING_AJAX') && WC_DOING_AJAX);
 }
 
-/** Cart, checkout and their AJAX refresh requests use the custom delivery selector. */
 function cg_storefront_uses_custom_delivery_selector() {
     return is_cart()
         || is_checkout()
@@ -20,12 +18,6 @@ function cg_storefront_uses_custom_delivery_selector() {
         || cg_storefront_is_woocommerce_ajax();
 }
 
-/**
- * Clear a stale package cache once before totals are calculated.
- *
- * Old cached WooCommerce rates could otherwise reappear below the custom
- * settlement selector even after the customer selected another settlement.
- */
 function cg_storefront_reset_delivery_rate_cache($cart) {
     static $reset = false;
 
@@ -41,12 +33,6 @@ function cg_storefront_reset_delivery_rate_cache($cart) {
 }
 add_action('woocommerce_before_calculate_totals', 'cg_storefront_reset_delivery_rate_cache', 1);
 
-/**
- * Always leave WooCommerce with exactly one rate generated from our selector.
- *
- * This is deliberately later than regular shipping methods and plugins, so the
- * native radio list cannot disagree with the settlement selected above totals.
- */
 function cg_storefront_force_selected_delivery_rate($rates, $package) {
     if (!cg_storefront_uses_custom_delivery_selector()) return $rates;
     if (is_admin() && !cg_storefront_is_woocommerce_ajax()) return $rates;
@@ -69,39 +55,24 @@ function cg_storefront_force_selected_delivery_rate($rates, $package) {
         $label = 'Доставка — стоимость уточняется';
     }
 
-    $rate = new WC_Shipping_Rate(
-        'cg_delivery_zone',
-        $label,
-        $cost,
-        [],
-        $method_id,
-        $instance_id
-    );
-
+    $rate = new WC_Shipping_Rate('cg_delivery_zone', $label, $cost, [], $method_id, $instance_id);
     return ['cg_delivery_zone' => $rate];
 }
 add_filter('woocommerce_package_rates', 'cg_storefront_force_selected_delivery_rate', 9999, 2);
 
-/** Keep the generated custom delivery rate selected after every totals refresh. */
 function cg_storefront_keep_custom_delivery_chosen($chosen_method, $available_methods) {
-    return isset($available_methods['cg_delivery_zone'])
-        ? 'cg_delivery_zone'
-        : $chosen_method;
+    return isset($available_methods['cg_delivery_zone']) ? 'cg_delivery_zone' : $chosen_method;
 }
 add_filter('woocommerce_shipping_chosen_method', 'cg_storefront_keep_custom_delivery_chosen', 9999, 2);
 
-/** Use customer-friendly promo-code wording in the cart. */
 function cg_storefront_promo_code_wording($translation, $text, $domain) {
     if ($domain !== 'woocommerce' || !is_cart()) return $translation;
-
     if ($text === 'Coupon code') return 'Промокод';
     if ($text === 'Apply coupon') return 'Применить промокод';
-
     return $translation;
 }
 add_filter('gettext_woocommerce', 'cg_storefront_promo_code_wording', 20, 3);
 
-/** The shop does not collect or display product reviews. */
 function cg_storefront_remove_product_reviews_tab($tabs) {
     unset($tabs['reviews']);
     return $tabs;
@@ -114,14 +85,13 @@ function cg_storefront_close_product_comments($open, $post_id) {
 }
 add_filter('comments_open', 'cg_storefront_close_product_comments', 100, 2);
 
-/** Remove rating output together with the disabled review system. */
 function cg_storefront_remove_product_rating_ui() {
     remove_action('woocommerce_single_product_summary', 'woocommerce_template_single_rating', 10);
     remove_action('woocommerce_after_shop_loop_item_title', 'woocommerce_template_loop_rating', 5);
 }
 add_action('wp', 'cg_storefront_remove_product_rating_ui', 20);
 
-/** Load late CSS overrides after the cart, checkout and product styles. */
+/** Load late CSS overrides. Product gallery behavior itself stays with WooCommerce. */
 function cg_storefront_visual_fixes_assets() {
     if (!class_exists('WooCommerce')) return;
 
@@ -143,124 +113,55 @@ function cg_storefront_visual_fixes_assets() {
         $style_version
     );
 
-    if (is_product()) {
-        $script_path = get_template_directory() . '/assets/js/storefront-visual-fixes.js';
-        $script_version = file_exists($script_path) ? filemtime($script_path) : wp_get_theme()->get('Version');
-        $script_dependencies = ['jquery'];
-
-        if (wp_script_is('wc-single-product', 'registered')) {
-            $script_dependencies[] = 'wc-single-product';
-        }
-
-        wp_enqueue_script(
-            'cg-storefront-visual-fixes',
-            get_template_directory_uri() . '/assets/js/storefront-visual-fixes.js',
-            $script_dependencies,
-            $script_version,
-            true
-        );
-    }
+    /*
+     * Intentionally do not enqueue assets/js/storefront-visual-fixes.js.
+     * WooCommerce owns the product gallery and its FlexSlider lifecycle. The
+     * previous custom click interception caused thumbnail changes to stop on
+     * touch devices and could leave a low-resolution image on desktop.
+     */
 }
 add_action('wp_enqueue_scripts', 'cg_storefront_visual_fixes_assets', 45);
 
-/** Load final contrast and color corrections for the About and Contacts pages. */
 function cg_information_page_polish_assets() {
     $is_about = is_page('about') || is_page_template('page-templates/about.php');
     $is_contacts = is_page('contacts') || is_page_template('page-templates/contacts.php');
     if (!$is_about && !$is_contacts) return;
 
     $style_path = get_template_directory() . '/assets/css/information-page-polish.css';
-    wp_enqueue_style(
-        'cg-information-page-polish',
-        get_template_directory_uri() . '/assets/css/information-page-polish.css',
-        [],
-        file_exists($style_path) ? filemtime($style_path) : wp_get_theme()->get('Version')
-    );
+    wp_enqueue_style('cg-information-page-polish', get_template_directory_uri() . '/assets/css/information-page-polish.css', [], file_exists($style_path) ? filemtime($style_path) : wp_get_theme()->get('Version'));
 }
 add_action('wp_enqueue_scripts', 'cg_information_page_polish_assets', 60);
 
-/** Load conservative mobile guards after the page-specific styles. */
 function cg_mobile_audit_assets() {
     $style_path = get_template_directory() . '/assets/css/mobile-audit.css';
-    wp_enqueue_style(
-        'cg-mobile-audit',
-        get_template_directory_uri() . '/assets/css/mobile-audit.css',
-        [],
-        file_exists($style_path) ? filemtime($style_path) : wp_get_theme()->get('Version')
-    );
+    wp_enqueue_style('cg-mobile-audit', get_template_directory_uri() . '/assets/css/mobile-audit.css', [], file_exists($style_path) ? filemtime($style_path) : wp_get_theme()->get('Version'));
 }
 add_action('wp_enqueue_scripts', 'cg_mobile_audit_assets', 90);
 
-/** Load the store-manager integration for VK order notifications. */
 require_once get_template_directory() . '/inc/vk-order-notifications.php';
-
-/** Keep signed-in favorites synchronized across devices. */
 require_once get_template_directory() . '/inc/favorites-account-sync.php';
-
-/** Register the public delivery and payment information page. */
 require_once get_template_directory() . '/inc/delivery-payment-page.php';
-
-/** Add quantity, layout and scale controls to the homepage photo gallery. */
 require_once get_template_directory() . '/inc/home-gallery-layout.php';
-
-/** Add conservative SEO defaults and a launch-readiness checklist. */
 require_once get_template_directory() . '/inc/launch-readiness.php';
-
-/** Mirror delivery/order details into Custom Fields for the WooCommerce mobile app. */
 require_once get_template_directory() . '/inc/mobile-order-fields.php';
-
-/** Fix legacy navigation targets and catalog expand/collapse controls. */
 require_once get_template_directory() . '/inc/catalog-links-polish.php';
-
-/** Register draft legal documents, seller settings and checkout legal notices. */
 require_once get_template_directory() . '/inc/legal-commerce.php';
-
-/** Use flower-specific, legally conservative wording for returns and claims. */
 require_once get_template_directory() . '/inc/legal-returns-policy.php';
-
-/** Final alignment, catalog-header and checkout-phone polish from the visual audit. */
 require_once get_template_directory() . '/inc/final-layout-phone-polish.php';
-
-/** Add automatic order-flow diagnostics and a real-order verification checklist. */
 require_once get_template_directory() . '/inc/order-readiness.php';
-
-/** Simplify occasion/holiday assignment in products and move «Повод» up in filters. */
 require_once get_template_directory() . '/inc/catalog-occasion-admin.php';
-
-/** Add manually curated SEO landing pages and conversion-oriented selections. */
 require_once get_template_directory() . '/inc/seo-landing-pages.php';
-
-/** Category SEO, faceted-index guards and curated conversion/internal links. */
 require_once get_template_directory() . '/inc/seo-stage-two.php';
-
-/** Ecommerce funnel events and optional GA4 transport. */
 require_once get_template_directory() . '/inc/commerce-analytics.php';
-
-/** Editable snippets and conservative structured data. */
 require_once get_template_directory() . '/inc/seo-stage-three.php';
-
-/** Conservative LCP/preload improvements without changing WooCommerce behavior. */
 require_once get_template_directory() . '/inc/performance-safe.php';
-
-/** Keep technical SEO/analytics understandable for the store owner. */
 require_once get_template_directory() . '/inc/seo-owner-friendly.php';
-
-/** Reduce checkout friction and let visitors return to recently viewed bouquets. */
 require_once get_template_directory() . '/inc/cart-checkout-retention.php';
-
-/** Make repeat purchases easier and add a simple launch catalog summary. */
 require_once get_template_directory() . '/inc/customer-retention-launch.php';
-
-/** Explain order statuses and make daily order handling faster for the store manager. */
 require_once get_template_directory() . '/inc/order-operations.php';
-
-/** Brand customer emails, add the delivery board and combine final launch signals. */
 require_once get_template_directory() . '/inc/delivery-email-launch.php';
-
-/** Add daily price, stock and catalog-visibility checks to the existing quality screen. */
 require_once get_template_directory() . '/inc/catalog-operations.php';
 
-/** Put curated SEO selections on the homepage without hard-coding them into the template. */
 function cg_storefront_render_home_seo_landings_before_footer() {
     if (!is_front_page() || !function_exists('cg_seo_stage_two_home_landings')) return;
     cg_seo_stage_two_home_landings();
