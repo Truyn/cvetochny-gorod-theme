@@ -123,6 +123,38 @@ function cg_launch_meta_description() {
     $description = trim(wp_strip_all_tags(strip_shortcodes($description)));
     $description = preg_replace('/\s+/u', ' ', $description);
 
+    /*
+     * A number of older products/pages have no excerpt or body text. Do not
+     * leave their description empty: Yandex can report those URLs as pages
+     * without a description even though the page itself is indexable.
+     */
+    if ($description === '' && function_exists('is_product') && is_product()) {
+        $product = function_exists('wc_get_product') ? wc_get_product(get_queried_object_id()) : false;
+        if ($product) {
+            $name = trim((string) $product->get_name());
+            $categories = function_exists('wc_get_product_category_list')
+                ? trim(wp_strip_all_tags((string) wc_get_product_category_list($product->get_id(), ', ')))
+                : '';
+            $description = $name !== ''
+                ? $name . ($categories !== '' ? ' — ' . $categories . '.' : '.') . ' Заказ цветов с доставкой по Нововоронежу.'
+                : '';
+        }
+    }
+
+    if ($description === '' && is_singular()) {
+        $post = get_queried_object();
+        if ($post instanceof WP_Post) {
+            $title = trim((string) get_the_title($post));
+            if ($title !== '') {
+                $description = $title . ' — Цветочный город, цветы и букеты с доставкой по Нововоронежу.';
+            }
+        }
+    }
+
+    if ($description === '' && function_exists('is_shop') && is_shop()) {
+        $description = 'Каталог цветов и букетов «Цветочный город». Заказ цветов с доставкой по Нововоронежу.';
+    }
+
     if ($description === '') {
         $description = trim((string) get_bloginfo('description'));
     }
