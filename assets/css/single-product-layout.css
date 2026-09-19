@@ -31,13 +31,13 @@
 /* Do not force a width on the slide itself: WooCommerce FlexSlider writes the
  * correct pixel width inline. Only the anchor should fill the active slide. */
 .single-product .cg-single-product__gallery .woocommerce-product-gallery__image,
-.single-product .cg-product-detail__gallery .woocommerce-product-gallery__image{display:block!important;margin:0!important;padding:0!important}
+.single-product .cg-product-detail__gallery .woocommerce-product-gallery__image{display:block!important;float:left!important;width:100%!important;box-sizing:border-box!important;margin:0!important;padding:0!important}
 
 .single-product .cg-single-product__gallery .woocommerce-product-gallery__image>a,
-.single-product .cg-product-detail__gallery .woocommerce-product-gallery__image>a{display:block!important;width:100%!important;margin:0!important;padding:0!important}
+.single-product .cg-product-detail__gallery .woocommerce-product-gallery__image>a{display:block!important;width:100%!important;height:auto!important;aspect-ratio:auto!important;margin:0!important;padding:0!important}
 
 .single-product .cg-single-product__gallery .woocommerce-product-gallery__image img,
-.single-product .cg-product-detail__gallery .woocommerce-product-gallery__image img{display:block!important;width:100%!important;height:auto!important;aspect-ratio:1/1;object-fit:cover;margin:0!important;border-radius:22px}
+.single-product .cg-product-detail__gallery .woocommerce-product-gallery__image img{display:block!important;width:100%!important;max-width:100%!important;height:auto!important;min-height:0!important;aspect-ratio:auto!important;object-fit:contain!important;object-position:center!important;margin:0!important;border-radius:22px}
 
 .single-product .cg-single-product form.cart:not(.variations_form),
 .single-product .cg-product-detail form.cart:not(.variations_form),
