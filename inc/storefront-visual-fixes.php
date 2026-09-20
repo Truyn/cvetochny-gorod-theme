@@ -114,11 +114,19 @@ function cg_storefront_visual_fixes_assets() {
     );
 
     /*
-     * Intentionally do not enqueue assets/js/storefront-visual-fixes.js.
-     * WooCommerce owns the product gallery and its FlexSlider lifecycle. The
-     * previous custom click interception caused thumbnail changes to stop on
-     * touch devices and could leave a low-resolution image on desktop.
+     * The theme uses a custom single-product wrapper, so keep a small gallery
+     * interaction bridge loaded after WooCommerce. It only handles thumbnail
+     * selection and swaps the active image; layout/slide positioning remains
+     * owned by WooCommerce/CSS.
      */
+    $gallery_script = get_template_directory() . '/assets/js/storefront-visual-fixes.js';
+    wp_enqueue_script(
+        'cg-storefront-gallery-interaction',
+        get_template_directory_uri() . '/assets/js/storefront-visual-fixes.js',
+        ['jquery'],
+        file_exists($gallery_script) ? filemtime($gallery_script) : wp_get_theme()->get('Version'),
+        true
+    );
 }
 add_action('wp_enqueue_scripts', 'cg_storefront_visual_fixes_assets', 45);
 
