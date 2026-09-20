@@ -2,10 +2,8 @@
 .single-product .cg-product-delivery-snapshot,
 .single-product .cg-product-benefits,
 .single-product .cg-order-confidence { display:none!important; }
-/* Keep WooCommerce FlexSlider's horizontal slide model intact. Each slide is
- * one full gallery width; the active image keeps its natural aspect ratio. */
-.single-product .cg-single-product__gallery .woocommerce-product-gallery__image,
-.single-product .cg-product-detail__gallery .woocommerce-product-gallery__image{display:block!important;float:left!important;width:100%!important;box-sizing:border-box!important;margin:0!important;padding:0!important}
+/* Leave FlexSlider's slide <li> display, width and positioning untouched.
+ * WooCommerce changes these values when a thumbnail is selected. */
 .single-product .cg-single-product__gallery .woocommerce-product-gallery__image>a,
 .single-product .cg-product-detail__gallery .woocommerce-product-gallery__image>a{display:block!important;width:100%!important;height:auto!important;aspect-ratio:auto!important;background:#f8f3f1}
 .single-product .cg-single-product__gallery .woocommerce-product-gallery__image img,
