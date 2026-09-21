@@ -150,8 +150,50 @@
             return true;
         }
 
+        /*
+         * WooCommerce's zoom/FlexSlider can restore the first slide after
+         * pointer/zoom lifecycle events. Keep the user's selected frame as
+         * the source of truth and restore it if another handler changes the
+         * stage image.
+         */
+        var restoring = false;
+
+        function keepSelectedFrame() {
+            if (restoring) return;
+            var selected = frames[galleryState.index];
+            if (!selected || !selected.src) return;
+
+            var currentSrc = stageImage.getAttribute('src') || '';
+            var currentLarge = stageImage.getAttribute('data-large_image') || '';
+            if (currentSrc === selected.src && currentLarge === selected.src) return;
+
+            restoring = true;
+            show(galleryState.index);
+            restoring = false;
+        }
+
         frames.forEach(preload);
         gallery._cgSharpGallery = { show: show, frames: frames };
+
+        /*
+         * Do not let hover/zoom reset the selected thumbnail. This is also
+         * useful for themes/plugins that asynchronously replace the image
+         * attributes when the pointer leaves the gallery.
+         */
+        gallery.addEventListener('mouseleave', function () {
+            window.requestAnimationFrame(keepSelectedFrame);
+        });
+
+        if (window.MutationObserver) {
+            var observer = new MutationObserver(function () {
+                window.requestAnimationFrame(keepSelectedFrame);
+            });
+            observer.observe(stageImage, {
+                attributes: true,
+                attributeFilter: ['src', 'srcset', 'sizes', 'data-large_image']
+            });
+            gallery._cgGalleryObserver = observer;
+        }
 
         var activeItem = gallery.querySelector('.flex-control-thumbs img.flex-active');
         var initialIndex = activeItem ? thumbItems.indexOf(activeItem.closest('li')) : 0;
