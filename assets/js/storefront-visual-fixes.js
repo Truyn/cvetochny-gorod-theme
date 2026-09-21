@@ -184,16 +184,7 @@
             window.requestAnimationFrame(keepSelectedFrame);
         });
 
-        if (window.MutationObserver) {
-            var observer = new MutationObserver(function () {
-                window.requestAnimationFrame(keepSelectedFrame);
-            });
-            observer.observe(stageImage, {
-                attributes: true,
-                attributeFilter: ['src', 'srcset', 'sizes', 'data-large_image']
-            });
-            gallery._cgGalleryObserver = observer;
-        }
+
 
         var activeItem = gallery.querySelector('.flex-control-thumbs img.flex-active');
         var initialIndex = activeItem ? thumbItems.indexOf(activeItem.closest('li')) : 0;
@@ -232,7 +223,9 @@
 
     /* Pointer events make this work consistently on touch devices where a
      * synthetic click can be swallowed by the gallery carousel. */
-    document.addEventListener('pointerup', handleThumbnail, true);
+    /* Use one click path only. Handling both pointerup and click can make
+     * WooCommerce/FlexSlider process the same thumbnail twice and leave the
+     * gallery stuck on one frame. */
     document.addEventListener('click', handleThumbnail, true);
 
     function initAll() {
