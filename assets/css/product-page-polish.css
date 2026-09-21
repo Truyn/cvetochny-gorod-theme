@@ -43,3 +43,17 @@
 .cg-custom-catalog .cg-event-filter-cluster__groups .cg-filter-group__body{padding:6px 4px 4px}
 
 @media(max-width:760px){.single-product .cg-product-delivery-tab-grid{grid-template-columns:1fr}.single-product .cg-product-delivery-tab-grid section{padding:20px}.single-product .cg-product-delivery-tab-more a.button,.single-product .cg-product-delivery-tab-more a.button.button--ghost{width:100%}}
+
+/* Product gallery: keep the selected image crisp even when WooCommerce zoom is active. */
+.single-product .cg-single-product__gallery .woocommerce-product-gallery__image img,
+.single-product .cg-product-detail__gallery .woocommerce-product-gallery__image img{
+  filter:none!important;
+  opacity:1!important;
+  transform:none!important;
+  image-rendering:auto!important;
+}
+.single-product .cg-single-product__gallery .woocommerce-product-gallery__image img:hover,
+.single-product .cg-product-detail__gallery .woocommerce-product-gallery__image img:hover{
+  filter:none!important;
+  opacity:1!important;
+}
