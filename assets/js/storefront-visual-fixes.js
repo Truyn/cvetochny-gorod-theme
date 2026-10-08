@@ -193,49 +193,11 @@
         return gallery._cgSharpGallery;
     }
 
-    function findGalleryFromEvent(event) {
-        var target = event.target;
-        if (!target || !target.closest) return null;
-        return target.closest('.single-product .woocommerce-product-gallery');
-    }
-
     function findGalleryFromEvent(event, item) {
         var target = item || event.target;
         if (!target || !target.closest) return null;
         return target.closest('.woocommerce-product-gallery') ||
             document.querySelector('.single-product .woocommerce-product-gallery');
-    }
-
-    function applyFrameDirectly(gallery, index, frame) {
-        if (!gallery || !frame || !frame.src) return false;
-
-        var slides = getSlides(gallery);
-        var stage = slides[0];
-        var image = stage && stage.querySelector('img');
-        var link = stage && stage.querySelector('a');
-        if (!image) return false;
-
-        /* Use the selected slide's full image URL, not the thumbnail URL.
-         * Update the existing image node to preserve the gallery's layout. */
-        image.removeAttribute('srcset');
-        image.removeAttribute('sizes');
-        if (frame.srcset) image.setAttribute('srcset', frame.srcset);
-        if (frame.sizes) image.setAttribute('sizes', frame.sizes);
-        image.setAttribute('src', frame.src);
-        image.setAttribute('data-large_image', frame.src);
-        if (frame.width) image.setAttribute('data-large_image_width', frame.width);
-        if (frame.height) image.setAttribute('data-large_image_height', frame.height);
-        image.setAttribute('loading', 'eager');
-        image.setAttribute('decoding', 'async');
-        image.setAttribute('fetchpriority', 'high');
-        image.setAttribute('alt', frame.alt || 'Изображение товара');
-        if (frame.title) image.setAttribute('title', frame.title);
-        else image.removeAttribute('title');
-        if (link) link.setAttribute('href', frame.src);
-
-        gallery.setAttribute('data-cg-active-image', String(index));
-        markActive(gallery, index);
-        return true;
     }
 
     function handleThumbnail(event) {
@@ -252,24 +214,21 @@
         var index = items.indexOf(item);
         if (index < 0) return;
 
-        /* Read the current slide at click time. Do not rely on a cached frame
-         * list: WooCommerce, variation changes, and lazy-loading can replace
-         * image attributes after initialisation. */
-        var slides = getSlides(gallery);
-        var frame = slides[index] ? readImage(slides[index]) : null;
-        if (!frame || !frame.src) frame = readThumb(item);
-
-        var changed = applyFrameDirectly(gallery, index, frame);
-        if (!changed) {
-            var controller = init(gallery);
-            if (controller) changed = controller.show(index);
-        }
-        if (!changed) return;
+        /*
+         * IMPORTANT: never read the selected frame from slides[index] here.
+         * The controller intentionally reuses the first slide's image node;
+         * after the first click, that node no longer represents frame zero.
+         * The controller's immutable frame list is captured before any swaps
+         * and is the single source of truth for every subsequent click.
+         */
+        var controller = gallery._cgSharpGallery || init(gallery);
+        if (!controller || typeof controller.show !== 'function') return;
 
         event.preventDefault();
         event.stopPropagation();
         if (event.stopImmediatePropagation) event.stopImmediatePropagation();
-        $(gallery).trigger('woocommerce_gallery_image_changed', [index]);
+
+        controller.show(index);
     }
 
     /* Pointer events make this work consistently on touch devices where a
