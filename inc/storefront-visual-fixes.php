@@ -113,6 +113,19 @@ function cg_storefront_visual_fixes_assets() {
         $style_version
     );
 
+    /* The product gallery controller is required for the theme's stable single-stage gallery. */
+
+    if (is_product()) {
+        $gallery_script = get_template_directory() . '/assets/js/storefront-visual-fixes.js';
+        wp_enqueue_script(
+            'cg-storefront-gallery-interaction',
+            get_template_directory_uri() . '/assets/js/storefront-visual-fixes.js',
+            ['jquery', 'wc-single-product'],
+            file_exists($gallery_script) ? filemtime($gallery_script) : wp_get_theme()->get('Version'),
+            true
+        );
+    }
+
     /*
      * Product gallery interaction is intentionally not overridden here.
      * WooCommerce owns FlexSlider thumbnail selection and image swapping.
