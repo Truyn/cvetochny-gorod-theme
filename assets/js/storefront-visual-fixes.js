@@ -103,7 +103,15 @@
             return;
         }
 
-        var frame = getImageSource(slides[index]);
+        /*
+         * The fallback reuses the first slide's image node. Cache the original
+         * frame metadata once so later clicks never read an already-replaced
+         * image as though it were the original first frame.
+         */
+        if (!gallery._cgGalleryFallbackFrames) {
+            gallery._cgGalleryFallbackFrames = slides.map(getImageSource);
+        }
+        var frame = gallery._cgGalleryFallbackFrames[index];
         var stage = slides[0];
         var stageImage = stage && stage.querySelector('img');
         var stageLink = stage && stage.querySelector('a');
