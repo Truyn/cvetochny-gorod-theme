@@ -114,11 +114,23 @@ function cg_storefront_visual_fixes_assets() {
     );
 
     /*
-     * Product gallery interaction is intentionally not overridden here.
-     * WooCommerce owns FlexSlider thumbnail selection and image swapping.
-     * A previous custom click bridge intercepted thumbnail events and could
-     * leave the gallery stuck on the current image on mobile and desktop.
+     * The custom single-product template still uses WooCommerce's standard
+     * gallery markup. Explicitly enqueue its controller and then load a small
+     * compatibility bridge after it; the bridge delegates to FlexSlider when
+     * initialized and provides a safe fallback when initialization fails.
      */
+    if (is_product()) {
+        wp_enqueue_script('wc-single-product');
+
+        $gallery_script_path = get_template_directory() . '/assets/js/storefront-visual-fixes.js';
+        wp_enqueue_script(
+            'cg-product-gallery-navigation',
+            get_template_directory_uri() . '/assets/js/storefront-visual-fixes.js',
+            ['jquery', 'wc-single-product'],
+            file_exists($gallery_script_path) ? filemtime($gallery_script_path) : wp_get_theme()->get('Version'),
+            true
+        );
+    }
 }
 add_action('wp_enqueue_scripts', 'cg_storefront_visual_fixes_assets', 45);
 
