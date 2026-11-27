@@ -1,7 +1,7 @@
 <?php if (!defined('ABSPATH')) exit;
 
 $cg_topbar_address_url = get_theme_mod('cg_address_url', home_url('/contacts/#cg-contacts-map-title'));
-$cg_topbar_delivery_url = get_theme_mod('cg_delivery_url', home_url('/delivery/'));
+$cg_topbar_delivery_url = function_exists('cg_delivery_payment_url') ? cg_delivery_payment_url() : home_url('/delivery/');
 ?>
 <!doctype html>
 <html <?php language_attributes(); ?>>
