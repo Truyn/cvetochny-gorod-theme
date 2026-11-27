@@ -58,6 +58,7 @@ html.cg-cart-js .woocommerce-cart .woocommerce-cart-form button[name="update_car
 }
 .single-product .woocommerce-product-gallery .flex-control-thumbs{
   display:flex!important;
+  justify-content:safe center;
   gap:12px!important;
   margin:14px 0 0!important;
   padding:0!important;
