@@ -106,7 +106,7 @@ function cg_single_product_delivery_snapshot() {
     $threshold = function_exists('cg_get_novovoronezh_free_delivery_threshold')
         ? (float) cg_get_novovoronezh_free_delivery_threshold()
         : 10000;
-    $delivery_url = (string) get_theme_mod('cg_delivery_url', home_url('/delivery/'));
+    $delivery_url = (string) (function_exists('cg_delivery_payment_url') ? cg_delivery_payment_url() : home_url('/delivery/'));
 
     echo '<div class="cg-product-delivery-snapshot" aria-label="Доставка и оплата">';
     echo '<div class="cg-product-delivery-snapshot__item"><span class="cg-product-delivery-snapshot__icon" aria-hidden="true">'.cg_product_benefit_icon('delivery').'</span><span><strong>Доставка</strong><small>По Нововоронежу бесплатно от '.wp_kses_post(wc_price($threshold, ['decimals' => 0])).'</small></span></div>';
@@ -153,7 +153,7 @@ function cg_product_delivery_tab_content() {
     $threshold = function_exists('cg_get_novovoronezh_free_delivery_threshold')
         ? (float) cg_get_novovoronezh_free_delivery_threshold()
         : 10000;
-    $delivery_url = (string) get_theme_mod('cg_delivery_url', home_url('/delivery/'));
+    $delivery_url = (string) (function_exists('cg_delivery_payment_url') ? cg_delivery_payment_url() : home_url('/delivery/'));
     $payment_titles = [];
 
     if (function_exists('WC') && WC()->payment_gateways()) {
