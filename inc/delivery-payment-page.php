@@ -11,6 +11,17 @@ if (!defined('ABSPATH')) exit;
 function cg_delivery_payment_url() {
     $fallback = home_url('/delivery/');
     $custom_url = (string) get_theme_mod('cg_delivery_url', $fallback);
+    $custom_url = $custom_url !== '' ? $custom_url : $fallback;
+
+    // Never expose expired Customizer preview/changeset parameters in public links.
+    $custom_url = remove_query_arg([
+        'customize_changeset_uuid',
+        'customize_autosaved',
+        'customize_messenger_channel',
+        'customize_theme',
+        'customize_changeset_title',
+    ], $custom_url);
+
     return $custom_url !== '' ? $custom_url : $fallback;
 }
 
