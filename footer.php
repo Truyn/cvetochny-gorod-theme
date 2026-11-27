@@ -3,7 +3,7 @@
 $cg_footer_delivery_default = function_exists('cg_delivery_payment_url')
     ? cg_delivery_payment_url()
     : home_url('/delivery/');
-$cg_footer_delivery_url = get_theme_mod('cg_delivery_url', $cg_footer_delivery_default) ?: $cg_footer_delivery_default;
+$cg_footer_delivery_url = $cg_footer_delivery_default;
 $cg_footer_contacts_url = get_theme_mod('cg_contacts_url', home_url('/contacts/')) ?: home_url('/contacts/');
 $cg_footer_phone = get_theme_mod('cg_phone', '+7 (930) 411-98-55');
 $cg_footer_address = get_theme_mod('cg_address', 'Нововоронеж, ул. Победы, 1Б');
